@@ -1,0 +1,127 @@
+{% extends "core/base.html" %}
+
+{% block title %}Pochita S.A | Cuidado veterinario integral{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <div class="hero-copy">
+        <div class="pill">Cuidado veterinario 24/7 - Tecnologia y carino</div>
+        <h1>Hospital veterinario con atencion humana y tecnologica que cuida a tu familia peluda.</h1>
+        <p>Conecta con nuestro equipo o inicia sesión para agendar horas, revisar historiales clínicos y recibir recordatorios de vacunación.</p>
+        <ul class="hero-list">
+            <li><span></span>Personal médico con acceso seguro a fichas clínicas y a la agenda interna.</li>
+            <li><span></span>Clientes con portal para reservas, seguimiento y facturación transparente.</li>
+            <li><span></span>Monitoreo de hospitalización con reportes en tiempo real.</li>
+
+        </ul>
+        <div class="cta-group">
+            <a class="btn btn-primary" href="/login/">Ingresar como cliente</a>
+            <a class="btn btn-outline" href="/admin/login/">Ingresar como personal</a>
+        </div>
+        <div>ㅤ</div>
+        <div class="badges">
+            <div class="badge">Agendas rapidas</div>
+            <div class="badge">Urgencias 24/7</div>
+            <div class="badge">Hospitalizacion monitoreada</div>
+        </div>
+    </div>
+
+    <div class="hero-card">
+        <h2 class="hero-title">Tu mascota, en buenas manos</h2>
+        <p>Seguimiento clinico, comunicacion simple y fotos del estado de tu companero.</p>
+        <div class="stats">
+            <div class="stat">
+                <strong>2800+</strong>
+                <span>familias confian en Pochita S.A</span>
+            </div>
+            <div class="stat">
+                <strong>20</strong>
+                <span>veterinarios y especialistas activos</span>
+            </div>
+            <div class="stat">
+                <strong>12</strong>
+                <span>quirofanos y salas de hospitalizacion</span>
+            </div>
+        </div>
+        <div class="gallery">
+            <img src="https://images.unsplash.com/photo-1576201836106-db1758fd1c97?auto=format&fit=crop&w=600&q=80" alt="Consulta veterinaria">
+            <img src="https://www.consumer.es/app/uploads/2024/04/golder_retriever-3.jpg" alt="Cuidado de mascota">
+            <img src="https://images.unsplash.com/photo-1548199973-03cce0bbc87b?auto=format&fit=crop&w=600&q=80" alt="Perro feliz">
+            <img src="https://www.zooplus.es/magazine/wp-content/uploads/2019/06/fotolia_132644817-768x513.webp" alt="Gato en revision">
+        </div>
+    </div>
+</section>
+
+<section id="servicios">
+    <div class="section-head">
+        <div>
+            <small class="pill alt-pill">Servicios destacados</small>
+            <h2>Lo mejor para tu mascota, en un solo lugar.</h2>
+            <p>Con tecnologia, protocolos certificados y el toque humano de nuestro equipo, mantenemos a tu companero seguro y comodo.</p>
+        </div>
+    </div>
+    <div class="grid">
+        <div class="service-card" style="--photo: url('https://images.unsplash.com/photo-1517849845537-4d257902454a?auto=format&fit=crop&w=900&q=80');">
+            <small>Consultas y chequeos</small>
+            <h3>Medicina preventiva</h3>
+            <p>Vacunas, desparasitacion y planes completos para perros, gatos y exoticos.</p>
+        </div>
+        <div class="service-card" style="--photo: url('https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=900&q=80');">
+            <small>Emergencias</small>
+            <h3>Urgencias 24/7</h3>
+            <p>Equipo listo en minutos, quirofanos equipados y reportes al instante en tu portal.</p>
+        </div>
+        <div class="service-card" style="--photo: url('https://images.unsplash.com/photo-1574158622682-e40e69881006?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTZ8fGNhdHxlbnwwfHwwfHx8MA%3D%3DHospital veterinario con atencion humana y tecnologia que cuida a tu f');">
+            <small>Hospitalizacion</small>
+            <h3>Cuidados intensivos</h3>
+            <p>Monitoreo continuo, camaras en sala y visitas programadas con tu veterinario.</p>
+        </div>
+        <div class="service-card" style="--photo: url('https://images.unsplash.com/photo-1517423440428-a5a00ad493e8?auto=format&fit=crop&w=900&q=80');">
+            <small>Bienestar</small>
+            <h3>Estetica y rehabilitacion</h3>
+            <p>Fisioterapia, bano medicado y planes de nutricion personalizados.</p>
+        </div>
+    </div>
+</section>
+
+<section id="equipo">
+    <div class="section-head">
+        <div>
+            <h2>Accesos segun tu perfil.</h2>
+            <p>Autenticate para entrar al panel que te corresponde. Personal y clientes tienen experiencias dedicadas para trabajar en equipo.</p>
+        </div>
+        <a class="btn btn-outline" href="/login/">Ir a login</a>
+    </div>
+    <div class="login-paths" id="clientes">
+        <div class="path">
+            <strong>Clientes y tutores</strong>
+            <p>Agenda citas, carga documentos, revisa facturas y recibe recordatorios.</p>
+            <a class="btn btn-primary" href="/login/">Entrar a portal de clientes</a>
+        </div>
+        <div class="path">
+            <strong>Personal del hospital</strong>
+            <p>Gestiona agenda, expide ordenes, sigue hospitalizaciones y reporta incidencias.</p>
+            <a class="btn btn-outline" href="/admin/login/">Entrar al panel interno</a>
+        </div>
+    </div>
+</section>
+
+<section id="contacto">
+    <div class="section-head">
+        <div>
+            <h2>Listo para agendar?</h2>
+            <p>Inicia sesion con tu perfil. Si aun no tienes acceso, contactanos para crear tu cuenta y conectar a tu mascota con nuestra red de especialistas.</p>
+        </div>
+    </div>
+    <div class="cta-strip">
+        <div>
+            <h3 class="cta-title">Atencion directa en Pochita S.A</h3>
+            <p class="cta-text">Av. Salud Animal 123 - (01) 555-0123 - emergencias@pochita.vet</p>
+        </div>
+        <div class="cta-group">
+            <a class="btn btn-primary" href="/login/">Ingresar ahora</a>
+            <a class="btn btn-outline" href="mailto:contacto@pochita.vet">Solicitar acceso</a>
+        </div>
+    </div>
+</section>
+{% endblock %}
