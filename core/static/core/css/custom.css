@@ -1,0 +1,116 @@
+
+    body { 
+      font-family: 'Roboto', sans-serif; 
+      background: #0a0a0a; 
+      color: #eee; 
+    }
+    h1, h2 { 
+      font-family: 'Nosifer', cursive; 
+      color: #f44336; 
+    }
+
+    /* Navbar */
+    .navbar { background-color: #000 !important; border-bottom: 2px solid #f44336; }
+    .navbar-brand { 
+      font-family: 'Nosifer', cursive; 
+      color: #f44336 !important; 
+      text-shadow: 0 0 6px #ff0000;
+    }
+    .nav-link { 
+      color: #eee !important; 
+      transition: color 0.3s ease, text-shadow 0.3s ease;
+    }
+    .nav-link:hover { 
+      color: #f44336 !important; 
+      text-shadow: 0 0 5px #f44336; 
+    }
+
+    /* Banner con efecto glitch */
+    .banner {
+      background-color: #000;
+      background-size: cover;
+      padding: 100px 0;
+      text-align: center;
+      color: #ffa500;
+      text-shadow: 2px 2px 8px #000;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .banner h1 {
+      font-size: 3rem;
+      animation: glitch 2s infinite;
+    }
+
+    @keyframes glitch {
+      0% { text-shadow: 2px 2px #ff0000, -2px -2px #00ffea; }
+      20% { text-shadow: -2px -2px #ff0000, 2px 2px #00ffea; }
+      40% { text-shadow: 2px -2px #00ffea, -2px 2px #ff0000; }
+      60% { text-shadow: -2px 2px #00ffea, 2px -2px #ff0000; }
+      80% { text-shadow: 2px 2px #ff0000, -2px -2px #00ffea; }
+      100% { text-shadow: none; }
+    }
+
+    footer { 
+      background: #000; 
+      color: #777; 
+      padding: 20px; 
+      border-top: 2px solid #f44336;
+    }
+    footer a { 
+      color: #e91e63; 
+      margin: 0 10px; 
+      text-decoration: none; 
+    }
+    footer a:hover { color: #fff; }
+
+  .form-label {
+    color: #FFFFFF !important;
+    font-weight: bold;
+}
+
+
+.form-control,
+.form-select {
+    background-color: #1a1a1a !important; 
+    color: #FFFFFF !important; 
+    border: 1px solid #f44336 !important; 
+}
+
+.form-select option {
+    background-color: #1a1a1a;
+    color: #FFFFFF;
+}
+.btn-primary {
+    background-color: #f44336 !important; 
+    border-color: #f44336 !important; 
+    color: #000000 !important; 
+    font-weight: bold;
+}
+
+.btn-primary:hover {
+    background-color: #cc0000 !important; 
+    border-color: #cc0000 !important;
+    color: #000000 !important;
+}
+
+.card {
+    background-color: #111111 !important;
+    border: 1px solid #f44336 !important;
+    color: #FFFFFF !important;
+    height: 100%;
+}
+
+.card-title {
+    color: #f44336 !important; 
+    font-weight: bold;
+    font-size: 1.5rem;
+}
+
+.card-text {
+    color: #E0E0E0 !important; 
+}
+
+.gallery-empty h3, .gallery-empty p {
+    color: #FFFFFF !important; 
+}
