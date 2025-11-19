@@ -1,0 +1,41 @@
+{% extends "core/base.html" %}
+
+{% block title %}Login Clientes | Pochita S.A{% endblock %}
+
+{% block content %}
+<section class="hero small-hero">
+    <div class="hero-copy">
+        <div class="pill">Login clientes</div>
+        <div>ㅤ</div>
+        <h1>Accede a tu portal de cliente</h1>
+        <p>Inicia sesion para gestionar citas, historiales y facturacion.</p>
+    </div>
+</section>
+
+<section class="auth-card">
+    <h3>Ingresar como cliente</h3>
+    <form method="post" class="auth-form">
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+            <div class="form-errors">
+                {{ form.non_field_errors }}
+            </div>
+        {% endif %}
+        <div class="form-grid">
+            <div class="form-field">
+                <label for="{{ form.username.id_for_label }}">Usuario o correo</label>
+                {{ form.username }}
+            </div>
+            <div class="form-field">
+                <label for="{{ form.password.id_for_label }}">Contraseña</label>
+                {{ form.password }}
+            </div>
+        </div>
+        <div class="form-actions">
+            <a class="btn btn-outline" href="{% url 'usuarios:login_selector' %}">Cambiar perfil</a>
+            <a class="btn btn-outline" href="mailto:contacto@pochita.vet?subject=Solicitud%20registro%20cliente">Solicitar registro</a>
+            <button class="btn btn-primary push-right" type="submit">Ingresar</button>
+        </div>
+    </form>
+</section>
+{% endblock %}
