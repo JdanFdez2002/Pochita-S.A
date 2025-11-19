@@ -6,19 +6,19 @@
 <section class="hero">
     <div class="hero-copy">
         <div class="pill">Cuidado veterinario 24/7 - Tecnologia y carino</div>
-        <h1>Hospital veterinario con atencion humana y tecnologica que cuida a tu familia peluda.</h1>
-        <p>Conecta con nuestro equipo o inicia sesión para agendar horas, revisar historiales clínicos y recibir recordatorios de vacunación.</p>
+        <h1>Hospital veterinario con atencion humana y tecnologia que cuida a tu familia peluda.</h1>
+        <p>Conecta con nuestro equipo o inicia sesion para agendar horas, revisar historiales clinicos y recibir recordatorios de vacunacion.</p>
         <ul class="hero-list">
-            <li><span></span>Personal médico con acceso seguro a fichas clínicas y a la agenda interna.</li>
-            <li><span></span>Clientes con portal para reservas, seguimiento y facturación transparente.</li>
-            <li><span></span>Monitoreo de hospitalización con reportes en tiempo real.</li>
+            <li><span></span>Personal medico con acceso seguro a fichas clinicas y a la agenda interna.</li>
+            <li><span></span>Clientes con portal para reservas, seguimiento y facturacion transparente.</li>
+            <li><span></span>Monitoreo de hospitalizacion con reportes en tiempo real.</li>
 
         </ul>
         <div class="cta-group">
-            <a class="btn btn-primary" href="/login/">Ingresar como cliente</a>
-            <a class="btn btn-outline" href="/admin/login/">Ingresar como personal</a>
+            <a class="btn btn-primary" href="{% url 'usuarios:login_clientes' %}">Ingresar como cliente</a>
+            <a class="btn btn-outline" href="{% url 'usuarios:login_personal' %}">Ingresar como personal</a>
         </div>
-        <div>ㅤ</div>
+        ㅤ
         <div class="badges">
             <div class="badge">Agendas rapidas</div>
             <div class="badge">Urgencias 24/7</div>
@@ -71,7 +71,7 @@
             <h3>Urgencias 24/7</h3>
             <p>Equipo listo en minutos, quirofanos equipados y reportes al instante en tu portal.</p>
         </div>
-        <div class="service-card" style="--photo: url('https://images.unsplash.com/photo-1574158622682-e40e69881006?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTZ8fGNhdHxlbnwwfHwwfHx8MA%3D%3DHospital veterinario con atencion humana y tecnologia que cuida a tu f');">
+        <div class="service-card" style="--photo: url('https://images.unsplash.com/photo-1555109307-08ade2d6d86f?auto=format&fit=crop&w=900&q=80');">
             <small>Hospitalizacion</small>
             <h3>Cuidados intensivos</h3>
             <p>Monitoreo continuo, camaras en sala y visitas programadas con tu veterinario.</p>
@@ -90,18 +90,18 @@
             <h2>Accesos segun tu perfil.</h2>
             <p>Autenticate para entrar al panel que te corresponde. Personal y clientes tienen experiencias dedicadas para trabajar en equipo.</p>
         </div>
-        <a class="btn btn-outline" href="/login/">Ir a login</a>
+        <a class="btn btn-outline" href="{% url 'usuarios:login_selector' %}">Ir a login</a>
     </div>
     <div class="login-paths" id="clientes">
         <div class="path">
             <strong>Clientes y tutores</strong>
             <p>Agenda citas, carga documentos, revisa facturas y recibe recordatorios.</p>
-            <a class="btn btn-primary" href="/login/">Entrar a portal de clientes</a>
+            <a class="btn btn-primary" href="{% url 'usuarios:login_clientes' %}">Entrar a portal de clientes</a>
         </div>
         <div class="path">
             <strong>Personal del hospital</strong>
             <p>Gestiona agenda, expide ordenes, sigue hospitalizaciones y reporta incidencias.</p>
-            <a class="btn btn-outline" href="/admin/login/">Entrar al panel interno</a>
+            <a class="btn btn-outline" href="{% url 'usuarios:login_personal' %}">Entrar al panel interno</a>
         </div>
     </div>
 </section>
@@ -119,7 +119,7 @@
             <p class="cta-text">Av. Salud Animal 123 - (01) 555-0123 - emergencias@pochita.vet</p>
         </div>
         <div class="cta-group">
-            <a class="btn btn-primary" href="/login/">Ingresar ahora</a>
+            <a class="btn btn-primary" href="{% url 'usuarios:login_selector' %}">Ingresar ahora</a>
             <a class="btn btn-outline" href="mailto:contacto@pochita.vet">Solicitar acceso</a>
         </div>
     </div>

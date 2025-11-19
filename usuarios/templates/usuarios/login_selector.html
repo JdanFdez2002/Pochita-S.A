@@ -1,0 +1,22 @@
+{% extends "core/base.html" %}
+
+{% block title %}Ingresar | Pochita S.A{% endblock %}
+
+{% block content %}
+<section class="hero small-hero">
+
+    <div class="hero-copy">
+        <div class="pill">Acceso</div>
+        <div>ㅤ</div>
+        <h1>Elige como quieres ingresar</h1>
+        <p>Selecciona si eres cliente o personal del hospital para mostrar el formulario correspondiente.</p>
+        <div>ㅤ</div>
+        <div class="cta-group">
+            <a class="btn btn-primary" href="{% url 'usuarios:login_clientes' %}">Soy cliente</a>
+            <a class="btn btn-outline" href="{% url 'usuarios:login_personal' %}">Soy personal</a>
+        </div>
+
+    </div>
+</section>
+
+{% endblock %}

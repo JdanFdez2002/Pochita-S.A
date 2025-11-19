@@ -14,8 +14,8 @@
             <a href="/contacto/">Contacto</a>
         </div>
         <div class="cta-group">
-            <a class="btn btn-outline" href="/admin/login/">Personal</a>
-            <a class="btn btn-primary" href="/login/">Clientes</a>
+            <a class="btn btn-outline" href="{% url 'usuarios:login_personal' %}">Personal</a>
+            <a class="btn btn-primary" href="{% url 'usuarios:login_clientes' %}">Clientes</a>
         </div>
     </div>
 </header>
