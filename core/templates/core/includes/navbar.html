@@ -1,21 +1,44 @@
-<header class="site-header">
-    <div class="nav">
-        <a href="/" class="logo">
-            <img src="{{ MEDIA_URL }}logos/logo.png" alt="Pochita S.A logo">
-            <div class="logo-words">
+{% load static %}
+
+<aside class="sidebar">
+    <div class="sidebar-header">
+        <a href="/" class="logo-vertical">
+            <img src="{{ MEDIA_URL }}logos/logo.png" alt="Logo">
+            <div class="logo-text">
                 <strong>Pochita</strong>
                 <span class="mark">S.A</span>
             </div>
         </a>
-        <div class="nav-links">
-            <a href="/">Inicio</a>
-            <a href="/servicios/">Servicios</a>
-            <a href="/equipo/">Equipo</a>
-            <a href="/contacto/">Contacto</a>
-        </div>
-        <div class="cta-group">
-            <a class="btn btn-outline" href="{% url 'usuarios:login_personal' %}">Personal</a>
-            <a class="btn btn-primary" href="{% url 'usuarios:login_clientes' %}">Clientes</a>
-        </div>
     </div>
-</header>
+
+    <nav class="sidebar-nav">
+        <div class="nav-section">
+            <span class="nav-label">Menú</span>
+            
+            <a href="/" class="nav-item {% if request.path == '/' %}active{% endif %}">
+                <span class="icon">🏠</span> Inicio
+            </a>
+            
+            <a href="/servicios/" class="nav-item {% if '/servicios/' in request.path %}active{% endif %}">
+                <span class="icon">🛠️</span> Servicios
+            </a>
+            
+            <a href="/equipo/" class="nav-item {% if '/equipo/' in request.path %}active{% endif %}">
+                <span class="icon">👥</span> Equipo
+            </a>
+            
+            <a href="/contacto/" class="nav-item {% if '/contacto/' in request.path %}active{% endif %}">
+                <span class="icon">📞</span> Contacto
+            </a>
+        </div>
+    </nav>
+
+    <div class="sidebar-footer">
+        <a href="{% url 'usuarios:login_personal' %}" class="btn-sidebar btn-outline">
+            🔒 Personal
+        </a>
+        <a href="{% url 'usuarios:login_clientes' %}" class="btn-sidebar btn-fill">
+            🐾 Clientes
+        </a>
+    </div>
+</aside>

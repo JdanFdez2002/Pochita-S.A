@@ -1,0 +1,138 @@
+/* --- LAYOUT GENERAL (Para base.html) --- */
+.app-wrapper {
+    display: flex;
+    min-height: 100vh;
+    background-color: #0f172a; /* Fondo general */
+}
+
+/* --- SIDEBAR (Barra Lateral) --- */
+.sidebar {
+    width: 280px; /* Ancho fijo como Gemini */
+    background-color: #1e293b; /* Color gris azulado oscuro */
+    border-right: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    position: sticky;
+    top: 0;
+    padding: 1.5rem;
+    transition: transform 0.3s ease, width 0.3s ease;
+    flex-shrink: 0; /* Evita que se aplaste */
+    z-index: 100;
+}
+
+/* Cabecera del Sidebar */
+.sidebar-header {
+    margin-bottom: 2rem;
+    padding-left: 0.5rem;
+}
+
+.logo-vertical {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+    color: #f1f5f9;
+}
+
+.logo-vertical img { width: 40px; height: 40px; }
+.logo-text strong { font-size: 1.2rem; display: block; }
+.logo-text .mark { 
+    background: #2dd4bf; color: #0f172a; 
+    padding: 0px 4px; border-radius: 4px; font-size: 0.8rem; 
+}
+
+/* Navegación (Lista de enlaces) */
+.sidebar-nav { flex: 1; }
+
+.nav-section { display: flex; flex-direction: column; gap: 5px; }
+.nav-label {
+    font-size: 0.75rem; color: #94a3b8; 
+    margin-bottom: 10px; padding-left: 12px;
+    text-transform: uppercase; letter-spacing: 1px;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 12px 15px;
+    color: #cbd5e1;
+    text-decoration: none;
+    border-radius: 50px; /* Forma de píldora como Gemini */
+    transition: background 0.2s, color 0.2s;
+    font-weight: 500;
+}
+
+.nav-item:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+    color: #fff;
+}
+
+/* Estilo para el enlace activo (Pochita Blue) */
+.nav-item.active {
+    background-color: rgba(45, 212, 191, 0.2);
+    color: #2dd4bf;
+}
+
+/* Footer del Sidebar (Botones) */
+.sidebar-footer {
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.btn-sidebar {
+    text-align: center;
+    padding: 10px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: 0.2s;
+}
+
+.btn-outline { border: 1px solid rgba(255,255,255,0.2); color: #fff; }
+.btn-outline:hover { border-color: #2dd4bf; color: #2dd4bf; }
+
+.btn-fill { background-color: #2dd4bf; color: #0f172a; }
+.btn-fill:hover { background-color: #14b8a6; }
+
+/* --- CONTENIDO PRINCIPAL --- */
+.page-content {
+    flex: 1; /* Ocupa el resto del espacio */
+    padding: 2rem;
+    position: relative;
+    width: 100%;
+}
+
+/* Botón Hamburguesa (Flotante arriba a la izquierda) */
+.hamburger-btn {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 1.8rem;
+    cursor: pointer;
+    margin-bottom: 1rem;
+    display: none; /* Oculto en escritorio grande por defecto */
+}
+
+/* --- RESPONSIVE (Móviles y Tablets) --- */
+@media (max-width: 900px) {
+    .sidebar {
+        position: fixed;
+        left: -280px; /* Oculto a la izquierda */
+    }
+    
+    /* Cuando se activa la clase collapsed (que aquí usaremos para ABRIR) */
+    .sidebar.collapsed {
+        transform: translateX(280px);
+    }
+    
+    .hamburger-btn {
+        display: block; /* Mostrar botón en móvil */
+    }
+}
