@@ -14,31 +14,37 @@
     <nav class="sidebar-nav">
         <div class="nav-section">
             <span class="nav-label">Menú</span>
-            
+
             <a href="/" class="nav-item {% if request.path == '/' %}active{% endif %}">
-                <span class="icon">🏠</span> Inicio
+                <span class="icon">🏠
+</span> Inicio
             </a>
-            
+
             <a href="/servicios/" class="nav-item {% if '/servicios/' in request.path %}active{% endif %}">
-                <span class="icon">🛠️</span> Servicios
+                <span class="icon">🛠️
+</span> Servicios
             </a>
-            
+
             <a href="/equipo/" class="nav-item {% if '/equipo/' in request.path %}active{% endif %}">
-                <span class="icon">👥</span> Equipo
+                <span class="icon">👥
+</span> Equipo
             </a>
-            
+
             <a href="/contacto/" class="nav-item {% if '/contacto/' in request.path %}active{% endif %}">
-                <span class="icon">📞</span> Contacto
+                <span class="icon">📞
+</span> Contacto
             </a>
         </div>
     </nav>
 
     <div class="sidebar-footer">
         <a href="{% url 'usuarios:login_personal' %}" class="btn-sidebar btn-outline">
-            🔒 Personal
+            🔒
+ Personal
         </a>
         <a href="{% url 'usuarios:login_clientes' %}" class="btn-sidebar btn-fill">
-            🐾 Clientes
+            🐾
+ Clientes
         </a>
     </div>
 </aside>

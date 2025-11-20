@@ -1,36 +1,86 @@
 {% extends "core/base.html" %}
-
+{% load static %}
 {% block title %}Servicios | Pochita S.A{% endblock %}
 
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'core/servicios.css' %}">
+{% endblock %}
+
 {% block content %}
-<section class="hero small-hero">
-    <div class="hero-copy">
-        <div class="pill">Servicios</div>
 
-        <h1>Rellenar: Titulo llamativo para la seccion</h1>
-        <p>Rellenar: Aqui van a ir los servicios de consultas, urgencias, hospitalizacion y bienestar.</p>
+<div class="services-section-wrapper">
 
+    <!-- HERO -->
+    <section class="hero-services">
+        <span class="hero-badge">Nuestros Servicios</span>
+        <h1>Atención profesional para tu mascota</h1>
+        <p>Conoce los servicios especializados que ofrecemos para cuidar la salud, bienestar y estética de tu compañero.</p>
+    </section>
 
+    <!-- ESTADÍSTICAS -->
+    <div class="stats-container">
+        <div class="stat-item">
+            <span class="stat-number">+15</span>
+            <span class="stat-label">Años de Experiencia</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-number">10k+</span>
+            <span class="stat-label">Mascotas Atendidas</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-number">24/7</span>
+            <span class="stat-label">Urgencias</span>
+        </div>
+    </div>
 
-    </div>
-</section>
+    <!-- SERVICIOS -->
+    <section class="services-grid">
 
-<section class="grid">
-    <div class="card">
-        <h3>Consultas y chequeos</h3>
-        <p>Rellenar</p>
-    </div>
-    <div class="card">
-        <h3>Urgencias 24/7</h3>
-        <p>Rellenar</p>
-    </div>
-    <div class="card">
-        <h3>Hospitalizacion</h3>
-        <p>Rellenar</p>
-    </div>
-    <div class="card">
-        <h3>Bienestar y rehabilitacion</h3>
-        <p>Rellenar</p>
-    </div>
-</section>
+        <div class="service-card">
+            <img src="https://purina.cl/sites/default/files/2022-10/purina-consulta-veterinaria-para-mascotas-lo-que-debes-saber.jpg" alt="Consulta General" class="service-img">
+            <h3 class="service-title">🩺 Consulta General</h3>
+            <p class="service-desc">Evaluación completa del estado de salud de tu mascota.</p>
+        </div>
+
+        <div class="service-card">
+            <img src="https://farmahigiene.es/modules/dbblog/views/img/post/vacuna%20perro%20farma%20higiene%20(2).jpg" alt="Vacunación" class="service-img">
+            <h3 class="service-title">💉 Vacunación</h3>
+            <p class="service-desc">Aplicación de vacunas preventivas y refuerzos obligatorios.</p>
+        </div>
+
+        <div class="service-card">
+            <img src="https://i.pinimg.com/736x/64/db/60/64db60a72f46e9b8ee88258b3c108e24.jpg" alt="Peluquería y Estética" class="service-img">
+            <h3 class="service-title">✂️ Peluquería y Estética</h3>
+            <p class="service-desc">Baño, corte de pelo, limpieza y tratamientos estéticos.</p>
+        </div>
+
+        <div class="service-card">
+            <img src="https://cdn.nubika.es/wp-content/uploads/2023/11/20135933/pruebas-laboratorio.jpg" alt="Exámenes Clínicos" class="service-img">
+            <h3 class="service-title">🧪 Exámenes Clínicos</h3>
+            <p class="service-desc">Laboratorio, análisis de sangre, radiografías y más.</p>
+        </div>
+
+        <div class="service-card">
+            <img src="https://axoncomunicacion.net/wp-content/uploads/2024/04/11803.jpg" alt="Cirugías" class="service-img">
+            <h3 class="service-title">❤️‍🩹 Cirugías</h3>
+            <p class="service-desc">Procedimientos quirúrgicos con equipamiento moderno.</p>
+        </div>
+
+        <div class="service-card">
+            <img src="https://cdn.discordapp.com/attachments/854936281629065246/1441122514750406831/75704d63ba82376f60d039754c34abd1.jpg?ex=6920a56e&is=691f53ee&hm=42d7ba54de07fe2106aadb246bcf538e1712a77b22d393db76a3692f2ed9074b&" alt="Urgencias 24/7" class="service-img">
+            <h3 class="service-title">🚨 Urgencias 24/7</h3>
+            <p class="service-desc">Atención inmediata para situaciones de riesgo.</p>
+        </div>
+
+    </section>
+
+    <!-- CTA FINAL -->
+    <section class="cta-banner">
+        <h2 style="color:white;">¿Necesitas atención para tu mascota?</h2>
+        <p style="color:#94a3b8;">Nuestro equipo está listo para ayudarte en cualquier momento.</p>
+        <button class="btn-primary">Agendar Servicio</button>
+    </section>
+
+</div>
+
 {% endblock %}
