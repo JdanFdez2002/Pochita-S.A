@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
@@ -20,12 +20,3 @@ urlpatterns = [
     if settings.DEBUG
     else []
 )
-=======
-from django.contrib import admin
-from django.urls import path, include
-
-urlpatterns = [
-    path('admin/', admin.site.urls),    
-    path('', include('core.urls')),
-]
->>>>>>> ec21c5c66944626218901d3105a8b9f6425b2f4d
