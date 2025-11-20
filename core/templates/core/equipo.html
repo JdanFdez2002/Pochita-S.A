@@ -1,36 +1,117 @@
 {% extends "core/base.html" %}
-
+{% load static %}
 {% block title %}Equipo | Pochita S.A{% endblock %}
 
 {% block content %}
-<section class="hero small-hero">
-    <div class="hero-copy">
-        <div class="pill">Equipo</div>
 
-        <h1>Rellenar: Titulo llamativo para la seccion</h1>
-        <p>Rellenar: Aqui van a ir perfiles, especialidades y el equipo humano.</p>
+<link rel="stylesheet" href="{% static 'core/equipo.css' %}">
 
+<div class="team-section-wrapper">
+    
+    <section class="hero-team">
+        <span class="hero-badge">Nuestro Equipo</span>
+        <h1>Expertos dedicados a tu mascota</h1>
+        <p>Conoce a los profesionales detrás de Pochita S.A., comprometidos con la salud y felicidad animal.</p>
+    </section>
 
+    <div class="stats-container">
+        <div class="stat-item">
+            <span class="stat-number">+15</span>
+            <span class="stat-label">Años cuidando</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-number">5k+</span>
+            <span class="stat-label">Pacientes Felices</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-number">24/7</span>
+            <span class="stat-label">Urgencias</span>
+        </div>
+    </div>
 
-    </div>
-</section>
+    <section class="team-grid">
 
-<section class="grid">
-    <div class="card">
-        <h3>Medicos veterinarios</h3>
-        <p>Rellenar</p>
-    </div>
-    <div class="card">
-        <h3>Especialistas</h3>
-        <p>Rellenar</p>
-    </div>
-    <div class="card">
-        <h3>Equipo de enfermeria</h3>
-        <p>Rellenar</p>
-    </div>
-    <div class="card">
-        <h3>Apoyo y atencion al cliente</h3>
-        <p>Rellenar</p>
-    </div>
-</section>
+        <div class="category-card">
+            <h3 class="category-title">🩺 Médicos Veterinarios</h3>
+            <div class="members-list">
+                <div class="member-item">
+                    <img src="PONER_LINK_IMAGEN_AQUI" alt="Dr. Juan" class="avatar">
+                    <div class="member-info">
+                        <span class="member-name">Dr. Juan Pérez</span>
+                        <span class="member-role">Director Médico</span>
+                    </div>
+                </div>
+                 <div class="member-item">
+                    <img src="PONER_LINK_IMAGEN_AQUI" alt="Dr. Giorgio" class="avatar">
+                    <div class="member-info">
+                        <span class="member-name">Dr. Giorgio</span>
+                        <span class="member-role">Veterinario General</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="category-card">
+            <h3 class="category-title">🔬 Especialistas</h3>
+            <div class="members-list">
+                <div class="member-item">
+                    <img src="PONER_LINK_IMAGEN_AQUI" alt="Dr. Roberto" class="avatar">
+                    <div class="member-info">
+                        <span class="member-name">Dr. Roberto Alarcón</span>
+                        <span class="member-role">Traumatología</span>
+                    </div>
+                </div>
+                 <div class="member-item">
+                    <img src="PONER_LINK_IMAGEN_AQUI" alt="Dra. Sofia" class="avatar">
+                    <div class="member-info">
+                        <span class="member-name">Dra. Sofía Méndez</span>
+                        <span class="member-role">Cardiología</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="category-card">
+            <h3 class="category-title">❤️‍🩹 Enfermería</h3>
+            <div class="members-list">
+                <div class="member-item">
+                    <img src="PONER_LINK_IMAGEN_AQUI" alt="Enf. Laura" class="avatar">
+                    <div class="member-info">
+                        <span class="member-name">Laura Tapia</span>
+                        <span class="member-role">Enfermera Jefe</span>
+                    </div>
+                </div>
+                <div class="member-item">
+                    <img src="PONER_LINK_IMAGEN_AQUI" alt="Carlos" class="avatar">
+                    <div class="member-info">
+                        <span class="member-name">Carlos Ruiz</span>
+                        <span class="member-role">Técnico Veterinario</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="category-card">
+            <h3 class="category-title">🎧 Atención al Cliente</h3>
+            <div class="members-list">
+                <div class="member-item">
+                    <img src="PONER_LINK_IMAGEN_AQUI" alt="Ana" class="avatar">
+                    <div class="member-info">
+                        <span class="member-name">Ana Torres</span>
+                        <span class="member-role">Recepción</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </section>
+
+    <section class="cta-banner">
+        <h2 style="color:white;">¿Necesitas ayuda con tu mascota?</h2>
+        <p style="color: #94a3b8;">Nuestro equipo está listo para recibirte.</p>
+        <button class="btn-primary">Reservar Cita</button>
+    </section>
+
+</div>
+
 {% endblock %}

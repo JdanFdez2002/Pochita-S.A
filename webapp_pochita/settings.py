@@ -1,3 +1,7 @@
+<<<<<<< HEAD
+=======
+import os 
+>>>>>>> ec21c5c66944626218901d3105a8b9f6425b2f4d
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -24,8 +28,17 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+<<<<<<< HEAD
     'core',
     'usuarios',
+=======
+    'agenda',
+    'core',
+    'pacientes',
+    'usuarios',
+    'veterinarios',
+    'webapp_pochita',
+>>>>>>> ec21c5c66944626218901d3105a8b9f6425b2f4d
 ]
 
 MIDDLEWARE = [
@@ -93,9 +106,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'es-es'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'America/Santiago'
 
 USE_I18N = True
 
