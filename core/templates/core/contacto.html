@@ -1,37 +1,119 @@
 {% extends "core/base.html" %}
+{% load static %}
 
 {% block title %}Contacto | Pochita S.A{% endblock %}
 
+{% block extra_head %}
+<style>
+    .contact-quick .stat span,
+    .contact-quick .stat strong {
+        word-break: break-word;
+        display: block;
+    }
+    .contact-paths .path a,
+    .contact-paths .path small {
+        word-break: normal;
+        overflow-wrap: anywhere;
+        display: block;
+    }
+    .contact-paths {
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        column-gap: 24px;
+    }
+    @media (min-width: 1024px) {
+        .contact-paths {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<section class="hero small-hero">
-    <div class="hero-copy">
-        <div class="pill">Contacto</div>
-        
-        <h1>Rellenar: Titulo llamativo para la seccion</h1>
-        <p>Rellenar: Aqui van a ir las formas de contacto, ubicaciones e informacion para emergencias.</p>
+<div class="page">
+    <section class="hero small-hero">
+        <div class="hero-copy">
+            <div class="pill">Contacto</div>
+            <h1>Habla con el equipo que cuida a tu mascota</h1>
+            <p>Tienes dudas? emergencias y consultas en una sola linea. Responde gente real del equipo medico y de atencion.</p>
+            <div class="badge">Clinica: Av. Salud Animal 123, Santiago</div>
+        </div>
 
+        <div class="hero-card">
+            <h2 class="hero-title">Primeras necesidades</h2>
+            <div class="stats contact-quick">
+                <div class="stat">
+                    <strong>Urgencias</strong>
+                    <span>emergencias@pochita.vet - +56 9 5550 9112</span>
+                </div>
+                <div class="stat">
+                    <strong>Hospitalizacion</strong>
+                    <span>laura.tapia@pochita.vet - +56 9 4597 5626</span>
+                </div>
+            </div>
+        </div>
+    </section>
 
+    <section id="canales">
+        <div class="section-head">
+            <div>
+                <small class="pill alt-pill">Correos del equipo</small>
+                <h2>Contacta con nuestros médicos especializados.</h2>
+                <p>Médicos profesionales para consultar en caso de emergencias veterinarias puntuales, cualquier tipo de Spam o acoso a los mismos provocará un bloqueo inmediato del correo emitente.</p>
+            </div>
+        </div>
 
+        <div class="login-paths contact-paths">
+            <div class="path">
+                <strong>Direccion medica</strong>
+                <p>Dra. Marcela Diaz coordina casos complejos y segundas opiniones.</p>
+                <a class="btn btn-outline" href="mailto:marcela.diaz@pochita.vet">marcela.diaz@pochita.vet</a>
+            </div>
 
-    </div>
-</section>
+            <div class="path">
+                <strong>Consulta general</strong>
+                <p>Dra. Mariana Alcoholado agenda chequeos y controles preventivos.</p>
+                <a class="btn btn-outline" href="mailto:marian.alcoholado@pochita.vet">marian.alcoholado@pochita.vet</a>
+            </div>
 
-<section class="grid">
+            <div class="path">
+                <strong>Traumatologia</strong>
+                <p>Dr. Roberto Alarcon para fracturas, cirugias ortopedicas y postoperatorios.</p>
+                <a class="btn btn-outline" href="mailto:roberto.alarcon@pochita.vet">roberto.alarcon@pochita.vet</a>
+            </div>
 
-    <div class="card">
-        <h3>Agendar cita</h3>
-        <p>Rellenar</p>
-    </div>
+            <div class="path">
+                <strong>Cardiologia</strong>
+                <p>Dra. Sofia Mendez responde ecos, electrocardiogramas y monitoreo.</p>
+                <a class="btn btn-outline" href="mailto:sofia.mendez@pochita.vet">sofia.mendez@pochita.vet</a>
+            </div>
 
-    <div class="card">
-        <h3>Urgencias 24/7</h3>
-        <p>Rellenar</p>
-    </div>
+            <div class="path">
+                <strong>Hospitalizacion y enfermeria</strong>
+                <p>Laura Tapia y Carlos Ruiz actualizan signos vitales, medicamentos y visitas.</p>
+                <a class="btn btn-outline" href="mailto:laura.tapia@pochita.vet">laura.tapia@pochita.vet</a>
+                <a class="btn btn-outline" href="mailto:carlos.ruiz@pochita.vet">carlos.ruiz@pochita.vet</a>
+            </div>
 
-    <div class="card">
-        <h3>Consultas generales</h3>
-        <p>Rellenar</p>
-    </div>
+            <div class="path">
+                <strong>Atencion al cliente</strong>
+                <p>Ana Torres gestiona pagos, boletas, reembolsos y cambios de hora.</p>
+                <a class="btn btn-primary" href="mailto:ana.torres@pochita.vet">ana.torres@pochita.vet</a>
+                <small>Tel: +56 9 5550 1202</small>
+            </div>
+        </div>
+    </section>
 
-</section>
+    <section>
+        <div class="cta-strip">
+            <div>
+                <h3 class="cta-title">Necesitas una respuesta ahora?</h3>
+                <p class="cta-text">Llamanos al +56 2 5550 911 o escribe a emergencias@pochita.vet. En horario laboral respondemos correos en menos de 30 minutos.</p>
+            </div>
+            <div class="cta-group">
+                <a class="btn btn-primary" href="tel:+5625550911">Llamar</a>
+                <a class="btn btn-outline" href="mailto:emergencias@pochita.vet">Enviar correo</a>
+            </div>
+        </div>
+    </section>
+</div>
 {% endblock %}

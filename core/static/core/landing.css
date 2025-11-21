@@ -6,6 +6,8 @@
     --text: #e9f0fb;
     --muted: #9cb0c5;
     --stroke: rgba(255, 255, 255, 0.08);
+    --sidebar-expanded: 280px;
+    --sidebar-collapsed: 64px;
 }
 
 * {
@@ -303,13 +305,15 @@ section {
     flex-direction: column;
     justify-content: flex-end;
     gap: 10px;
-    background: linear-gradient(180deg, rgba(0, 0, 0, 0) 20%, rgba(6, 12, 20, 0.9) 95%), var(--photo);
+    background: linear-gradient(180deg, rgba(11, 19, 32, 0) 10%, rgba(11, 19, 32, 0.78) 68%, rgba(11, 19, 32, 0.96) 100%), var(--photo);
     background-size: cover;
     background-position: center;
+    background-repeat: no-repeat;
     border-radius: 16px;
     padding: 18px;
     border: 1px solid var(--stroke);
-    box-shadow: 0 25px 45px rgba(0, 0, 0, 0.35);
+    box-shadow: 0 22px 40px rgba(0, 0, 0, 0.32);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .service-card small {
@@ -320,6 +324,11 @@ section {
 .service-card h3 {
     margin: 0;
     font-size: 1.15rem;
+}
+
+.service-card:hover {
+    transform: translateY(-6px) scale(1.02);
+    box-shadow: 0 28px 60px rgba(0, 0, 0, 0.42);
 }
 
 .login-paths {
@@ -391,6 +400,17 @@ section {
     color: var(--muted);
     font-size: 0.95rem;
     text-align: center;
+    margin-left: var(--sidebar-expanded);
+}
+
+body.sidebar-collapsed .site-footer {
+    margin-left: var(--sidebar-collapsed);
+}
+
+@media (max-width: 900px) {
+    .site-footer {
+        margin-left: var(--sidebar-collapsed);
+    }
 }
 
 @media (max-width: 720px) {

@@ -13,6 +13,8 @@ urlpatterns = [
         include(("usuarios.urls", "usuarios"), namespace="usuarios"),
     ),
     path("login/", RedirectView.as_view(pattern_name="usuarios:login_selector", permanent=False)),
+    path("login/clientes/", RedirectView.as_view(pattern_name="usuarios:login_clientes", permanent=False)),
+    path("login/personal/", RedirectView.as_view(pattern_name="usuarios:login_personal", permanent=False)),
     path("admin/", admin.site.urls),
 ] + (
     static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

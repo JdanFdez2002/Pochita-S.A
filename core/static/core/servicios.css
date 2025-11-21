@@ -100,3 +100,9 @@
     font-size: 1.1rem !important;
     border-radius: 10px;
 }
+
+.cta-banner .cta-group {
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}

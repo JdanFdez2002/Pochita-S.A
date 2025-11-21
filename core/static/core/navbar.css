@@ -12,7 +12,8 @@
     border-right: 1px solid rgba(255, 255, 255, 0.05);
     display: flex;
     flex-direction: column;
-    height: 100vh;
+    height: auto;
+    min-height: 100vh;
     position: sticky;
     top: 0;
     padding: 1.5rem;
@@ -21,10 +22,20 @@
     z-index: 100;
 }
 
+.sidebar.collapsed {
+    width: 64px;
+    transform: translateX(0); /* libera espacio al contenido */
+    padding: 0.75rem 0.5rem;
+}
+
 /* Cabecera del Sidebar */
 .sidebar-header {
     margin-bottom: 2rem;
     padding-left: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
 }
 
 .logo-vertical {
@@ -42,8 +53,26 @@
     padding: 0px 4px; border-radius: 4px; font-size: 0.8rem; 
 }
 
+.sidebar.collapsed .logo-text {
+    display: none;
+}
+
+.sidebar.collapsed .logo-vertical {
+    justify-content: center;
+}
+
+.sidebar.collapsed .logo-vertical img {
+    width: 48px;
+    height: 48px;
+}
+
 /* Navegación (Lista de enlaces) */
 .sidebar-nav { flex: 1; }
+
+.sidebar.collapsed .sidebar-nav,
+.sidebar.collapsed .sidebar-footer {
+    display: none;
+}
 
 .nav-section { display: flex; flex-direction: column; gap: 5px; }
 .nav-label {
@@ -114,25 +143,27 @@
     background: none;
     border: none;
     color: #fff;
-    font-size: 1.8rem;
+    font-size: 1.6rem;
     cursor: pointer;
-    margin-bottom: 1rem;
-    display: none; /* Oculto en escritorio grande por defecto */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.05);
 }
 
 /* --- RESPONSIVE (Móviles y Tablets) --- */
 @media (max-width: 900px) {
     .sidebar {
         position: fixed;
-        left: -280px; /* Oculto a la izquierda */
+        left: 0;
+        transform: translateX(0);
     }
     
-    /* Cuando se activa la clase collapsed (que aquí usaremos para ABRIR) */
     .sidebar.collapsed {
-        transform: translateX(280px);
-    }
-    
-    .hamburger-btn {
-        display: block; /* Mostrar botón en móvil */
+        transform: translateX(0);
     }
 }

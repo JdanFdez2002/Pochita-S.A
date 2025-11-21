@@ -22,9 +22,6 @@
     <div class="app-wrapper">
         {% include "core/includes/navbar.html" %}
         <main class="page-content">
-            <button id="sidebar-toggle" class="hamburger-btn">
-                ☰
-            </button>
             {% block content %}{% endblock %}
         </main>
     </div>
@@ -33,11 +30,28 @@
     <script>
         const toggleBtn = document.getElementById('sidebar-toggle');
         const sidebar = document.querySelector('.sidebar');
+        const bodyEl = document.body;
 
-        toggleBtn.addEventListener('click', () => {
+        const syncBodySidebarState = () => {
+            bodyEl.classList.toggle('sidebar-collapsed', sidebar.classList.contains('collapsed'));
+        };
+
+        toggleBtn.addEventListener('click', (event) => {
+            event.stopPropagation();
             sidebar.classList.toggle('collapsed');
+            syncBodySidebarState();
         });
+
+        sidebar.addEventListener('click', () => {
+            if (sidebar.classList.contains('collapsed')) {
+                sidebar.classList.remove('collapsed');
+                syncBodySidebarState();
+            }
+        });
+
+        syncBodySidebarState();
     </script>
 </body>
 
 </html>
+

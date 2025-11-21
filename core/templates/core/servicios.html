@@ -38,49 +38,53 @@
 
         <div class="service-card">
             <img src="https://purina.cl/sites/default/files/2022-10/purina-consulta-veterinaria-para-mascotas-lo-que-debes-saber.jpg" alt="Consulta General" class="service-img">
-            <h3 class="service-title">🩺 Consulta General</h3>
+            <h3 class="service-title">Consulta General</h3>
             <p class="service-desc">Evaluación completa del estado de salud de tu mascota.</p>
         </div>
 
         <div class="service-card">
             <img src="https://farmahigiene.es/modules/dbblog/views/img/post/vacuna%20perro%20farma%20higiene%20(2).jpg" alt="Vacunación" class="service-img">
-            <h3 class="service-title">💉 Vacunación</h3>
+            <h3 class="service-title">Vacunación</h3>
             <p class="service-desc">Aplicación de vacunas preventivas y refuerzos obligatorios.</p>
         </div>
 
         <div class="service-card">
-            <img src="https://i.pinimg.com/736x/64/db/60/64db60a72f46e9b8ee88258b3c108e24.jpg" alt="Peluquería y Estética" class="service-img">
-            <h3 class="service-title">✂️ Peluquería y Estética</h3>
+            <img src="https://images.unsplash.com/photo-1719464454959-9cf304ef4774?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Peluquería y Estética" class="service-img">
+            <h3 class="service-title">Peluquería y Estética</h3>
             <p class="service-desc">Baño, corte de pelo, limpieza y tratamientos estéticos.</p>
         </div>
 
         <div class="service-card">
             <img src="https://cdn.nubika.es/wp-content/uploads/2023/11/20135933/pruebas-laboratorio.jpg" alt="Exámenes Clínicos" class="service-img">
-            <h3 class="service-title">🧪 Exámenes Clínicos</h3>
+            <h3 class="service-title">Exámenes Clínicos</h3>
             <p class="service-desc">Laboratorio, análisis de sangre, radiografías y más.</p>
         </div>
 
         <div class="service-card">
             <img src="https://axoncomunicacion.net/wp-content/uploads/2024/04/11803.jpg" alt="Cirugías" class="service-img">
-            <h3 class="service-title">❤️‍🩹 Cirugías</h3>
+            <h3 class="service-title">Cirugías</h3>
             <p class="service-desc">Procedimientos quirúrgicos con equipamiento moderno.</p>
         </div>
 
         <div class="service-card">
-            <img src="https://cdn.discordapp.com/attachments/854936281629065246/1441122514750406831/75704d63ba82376f60d039754c34abd1.jpg?ex=6920a56e&is=691f53ee&hm=42d7ba54de07fe2106aadb246bcf538e1712a77b22d393db76a3692f2ed9074b&" alt="Urgencias 24/7" class="service-img">
-            <h3 class="service-title">🚨 Urgencias 24/7</h3>
+            <img src="https://www.animalhome.com.mx/wp-content/uploads/2023/05/urgencias-veterinarias-mexico-animal-home-jpg.webp" alt="Urgencias 24/7" class="service-img">
+            <h3 class="service-title">Urgencias 24/7</h3>
             <p class="service-desc">Atención inmediata para situaciones de riesgo.</p>
         </div>
 
     </section>
 
-    <!-- CTA FINAL -->
+            <!-- CTA FINAL -->
     <section class="cta-banner">
-        <h2 style="color:white;">¿Necesitas atención para tu mascota?</h2>
-        <p style="color:#94a3b8;">Nuestro equipo está listo para ayudarte en cualquier momento.</p>
-        <button class="btn-primary">Agendar Servicio</button>
+        <h2 style="color:white;">Necesitas atencion para tu mascota?</h2>
+        <p style="color:#94a3b8;">Nuestro equipo esta listo para ayudarte en cualquier momento.</p>
+        <div class="cta-group">
+            <a class="btn-primary" href="{% url 'usuarios:login_selector' %}">Iniciar Sesion</a>
+            <a class="btn btn-outline" href="{% url 'usuarios:login_clientes' %}">Entrar como cliente</a>
+        </div>
     </section>
 
 </div>
 
 {% endblock %}
+

@@ -11,11 +11,11 @@ class ClienteLoginView(LoginView):
     template_name = "usuarios/login_clientes.html"
     authentication_form = AuthenticationForm
     extra_context = {"perfil": "cliente"}
-    redirect_authenticated_user = True
+    redirect_authenticated_user = False
 
 
 class PersonalLoginView(LoginView):
     template_name = "usuarios/login_personal.html"
     authentication_form = AuthenticationForm
     extra_context = {"perfil": "personal"}
-    redirect_authenticated_user = True
+    redirect_authenticated_user = False
