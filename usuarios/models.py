@@ -25,3 +25,16 @@ class Cliente(models.Model):
 
     def __str__(self):
         return f"Cliente {self.perfil.user.username}"
+
+
+class Personal(models.Model):
+    perfil = models.OneToOneField(Perfil, on_delete=models.CASCADE)
+    rut = models.CharField(max_length=20)
+    telefono = models.CharField(max_length=50)
+    direccion = models.CharField(max_length=255, blank=True, null=True)
+    especialidad = models.CharField(max_length=255, blank=True, null=True)
+    turno = models.CharField(max_length=255, blank=True, null=True)
+    permisos_extra = models.CharField(max_length=255, blank=True, null=True)
+
+    def __str__(self):
+        return f"Personal {self.perfil.user.username}"

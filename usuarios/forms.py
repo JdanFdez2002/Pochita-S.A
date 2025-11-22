@@ -15,6 +15,14 @@ class RegistroClienteForm(forms.Form):
     telefono = forms.CharField(max_length=50)
     recibe_noticias = forms.BooleanField(required=False)
 
+    def clean_email(self):
+        email = self.cleaned_data.get("email")
+        if email and User.objects.filter(email=email).exists():
+            msg = "Este correo ya está registrado."
+            self.add_error(None, msg)
+            raise forms.ValidationError(msg)
+        return email
+
     def clean(self):
         cleaned_data = super().clean()
         password1 = cleaned_data.get("password1")
