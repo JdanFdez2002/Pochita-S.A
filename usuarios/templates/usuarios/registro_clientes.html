@@ -1,0 +1,86 @@
+{% extends "core/base.html" %}
+
+{% block title %}Registro Clientes | Pochita S.A{% endblock %}
+
+{% block content %}
+<div class="page">
+    <section class="hero small-hero">
+        <div class="hero-copy">
+            <div class="pill">Registro clientes</div>
+            <h1>Crea tu cuenta de cliente</h1>
+            <p>Registra tus datos para acceder a tu dashboard y gestionar tus servicios.</p>
+        </div>
+    </section>
+
+    <section class="auth-card">
+        <h3>Formulario de registro</h3>
+        <form method="post" class="auth-form" id="registro-clientes">
+            {% csrf_token %}
+            <div class="form-grid">
+                <div class="form-field">
+                    <label for="nombres">Nombres</label>
+                    <input type="text" id="nombres" name="nombres" class="input" required>
+                </div>
+                <div class="form-field">
+                    <label for="apellidos">Apellidos</label>
+                    <input type="text" id="apellidos" name="apellidos" class="input" required>
+                </div>
+                <div class="form-field">
+                    <label for="rut">RUT</label>
+                    <input type="text" id="rut" name="rut" class="input" placeholder="12.345.678-9" required>
+                </div>
+                <div class="form-field">
+                    <label for="direccion">Direccion</label>
+                    <input type="text" id="direccion" name="direccion" class="input" required>
+                </div>
+                <div class="form-field">
+                    <label for="email">Correo</label>
+                    <input type="email" id="email" name="email" class="input" required>
+                </div>
+                <div class="form-field">
+                    <label for="telefono">Numero de contacto</label>
+                    <input type="tel" id="telefono" name="telefono" class="input" required>
+                </div>
+                <div class="form-field">
+                    <label for="password">Contrasena</label>
+                    <input type="password" id="password" name="password" class="input" required>
+                </div>
+                <div class="form-field">
+                    <label for="password_confirm">Confirmar contrasena</label>
+                    <input type="password" id="password_confirm" name="password_confirm" class="input" required>
+                </div>
+            </div>
+            <div class="form-checks">
+                <label class="checkbox">
+                    <input type="checkbox" id="acepta_terminos" name="acepta_terminos" required>
+                    <span>Acepto terminos y condiciones</span>
+                </label>
+                <label class="checkbox">
+                    <input type="checkbox" id="recibir_noticias" name="recibir_noticias">
+                    <span>Deseo recibir noticias a mi correo</span>
+                </label>
+            </div>
+            <div class="form-actions">
+                <button class="btn btn-primary push-right" type="submit">Crear cuenta</button>
+            </div>
+        </form>
+    </section>
+</div>
+<script>
+(function() {
+    const form = document.getElementById("registro-clientes");
+    if (!form) return;
+    const password = form.querySelector("#password");
+    const confirm = form.querySelector("#password_confirm");
+    const validatePasswords = () => {
+        if (password.value !== confirm.value) {
+            confirm.setCustomValidity("Las contrasenas deben coincidir");
+        } else {
+            confirm.setCustomValidity("");
+        }
+    };
+    password.addEventListener("input", validatePasswords);
+    confirm.addEventListener("input", validatePasswords);
+})();
+</script>
+{% endblock %}
