@@ -18,12 +18,12 @@
             {% csrf_token %}
             <div class="form-grid">
                 <div class="form-field">
-                    <label for="nombres">Nombres</label>
-                    <input type="text" id="nombres" name="nombres" class="input" required>
+                    <label for="first_name">Nombres</label>
+                    <input type="text" id="first_name" name="first_name" class="input" required>
                 </div>
                 <div class="form-field">
-                    <label for="apellidos">Apellidos</label>
-                    <input type="text" id="apellidos" name="apellidos" class="input" required>
+                    <label for="last_name">Apellidos</label>
+                    <input type="text" id="last_name" name="last_name" class="input" required>
                 </div>
                 <div class="form-field">
                     <label for="rut">RUT</label>
@@ -42,12 +42,12 @@
                     <input type="tel" id="telefono" name="telefono" class="input" required>
                 </div>
                 <div class="form-field">
-                    <label for="password">Contrasena</label>
-                    <input type="password" id="password" name="password" class="input" required>
+                    <label for="password1">Contrasena</label>
+                    <input type="password" id="password1" name="password1" class="input" required>
                 </div>
                 <div class="form-field">
-                    <label for="password_confirm">Confirmar contrasena</label>
-                    <input type="password" id="password_confirm" name="password_confirm" class="input" required>
+                    <label for="password2">Confirmar contrasena</label>
+                    <input type="password" id="password2" name="password2" class="input" required>
                 </div>
             </div>
             <div class="form-checks">
@@ -70,8 +70,8 @@
 (function() {
     const form = document.getElementById("registro-clientes");
     if (!form) return;
-    const password = form.querySelector("#password");
-    const confirm = form.querySelector("#password_confirm");
+    const password = form.querySelector("#password1");
+    const confirm = form.querySelector("#password2");
     const validatePasswords = () => {
         if (password.value !== confirm.value) {
             confirm.setCustomValidity("Las contrasenas deben coincidir");

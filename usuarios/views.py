@@ -1,7 +1,9 @@
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.views import LoginView
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 from django.views.generic import TemplateView
+
+from .forms import RegistroClienteForm
 
 
 class LoginSelectorView(TemplateView):
@@ -23,4 +25,11 @@ class PersonalLoginView(LoginView):
 
 
 def registro_clientes_view(request):
-    return render(request, "usuarios/registro_clientes.html")
+    if request.method == "POST":
+        form = RegistroClienteForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect("usuarios:login_clientes")
+    else:
+        form = RegistroClienteForm()
+    return render(request, "usuarios/registro_clientes.html", {"form": form})
