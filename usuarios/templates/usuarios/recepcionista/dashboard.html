@@ -1,0 +1,22 @@
+{% extends "usuarios/base.html" %}
+{% block title %}Dashboard Recepcionista | Pochita S.A{% endblock %}
+{% block sidebar_menu %}
+    <a href="#" data-target="ejemplo1">Ejemplo 1</a>
+    <a href="#" data-target="ejemplo2">Ejemplo 2</a>
+    <a href="#" data-target="ejemplo3">Ejemplo 3</a>
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="page">
+    <h1>Dashboard Recepcionista</h1>
+    <section id="ejemplo1" class="card mt-3 dashboard-section">
+        {% include "usuarios/recepcionista/include/ejemplo1.html" %}
+    </section>
+    <section id="ejemplo2" class="card mt-3 dashboard-section">
+        {% include "usuarios/recepcionista/include/ejemplo2.html" %}
+    </section>
+    <section id="ejemplo3" class="card mt-3 dashboard-section">
+        {% include "usuarios/recepcionista/include/ejemplo3.html" %}
+    </section>
+</div>
+{% endblock %}

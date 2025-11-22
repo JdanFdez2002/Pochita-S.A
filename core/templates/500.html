@@ -1,0 +1,17 @@
+{% extends "core/base.html" %}
+{% block title %}Error interno | Pochita S.A{% endblock %}
+
+{% block content %}
+<div class="page">
+    <section class="hero small-hero">
+        <div class="hero-copy">
+            <div class="pill">Lo sentimos</div>
+            <h1>Ocurrió un error inesperado</h1>
+            <p>Estamos trabajando para solucionarlo. Vuelve al inicio o intenta más tarde.</p>
+            <div class="cta-group">
+                <a class="btn btn-primary" href="{% url 'core:landing' %}">Ir al inicio</a>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}

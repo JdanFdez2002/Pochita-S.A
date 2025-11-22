@@ -1,4 +1,5 @@
 from django.views.generic import TemplateView
+from django.shortcuts import render
 
 
 class LandingView(TemplateView):
@@ -15,3 +16,7 @@ class TeamView(TemplateView):
 
 class ContactView(TemplateView):
     template_name = "core/contacto.html"
+
+
+def error_403(request, exception=None):
+    return render(request, "403.html", status=403)

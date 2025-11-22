@@ -5,6 +5,7 @@ from django.contrib import admin
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.urls import include, path
 from django.views.generic import RedirectView
+from core import views as core_views
 
 urlpatterns = [
     path("", include("core.urls")),
@@ -22,3 +23,5 @@ urlpatterns = [
     if settings.DEBUG
     else []
 )
+
+handler403 = core_views.error_403
