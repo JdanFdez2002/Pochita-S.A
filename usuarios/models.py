@@ -15,6 +15,10 @@ class Perfil(models.Model):
     def __str__(self):
         return f"{self.user.username} ({self.rol})"
 
+    class Meta:
+        verbose_name = "Perfil"
+        verbose_name_plural = "Perfiles"
+
 
 class Cliente(models.Model):
     perfil = models.OneToOneField(Perfil, on_delete=models.CASCADE)
@@ -25,6 +29,10 @@ class Cliente(models.Model):
 
     def __str__(self):
         return f"Cliente {self.perfil.user.username}"
+
+    class Meta:
+        verbose_name = "Cliente"
+        verbose_name_plural = "Clientes"
 
 
 class Personal(models.Model):
@@ -38,3 +46,7 @@ class Personal(models.Model):
 
     def __str__(self):
         return f"Personal {self.perfil.user.username}"
+
+    class Meta:
+        verbose_name = "Personal"
+        verbose_name_plural = "Personal"
