@@ -1,4 +1,5 @@
 from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.views import LoginView
 from django.shortcuts import redirect, render
 from django.urls import reverse, reverse_lazy
@@ -50,20 +51,42 @@ class PersonalLoginView(LoginView):
         return reverse_lazy("usuarios:login_selector")
 
 
-class DashboardClienteView(TemplateView):
-    template_name = "usuarios/dashboard_cliente.html"
+class RolRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
+    required_role = None
+    login_url = reverse_lazy("usuarios:login_selector")
+    raise_exception = True
+
+    def test_func(self):
+        user = self.request.user
+        try:
+            perfil = user.perfil
+        except Perfil.DoesNotExist:
+            return False
+        return perfil.rol == self.required_role
 
 
-class DashboardRecepcionistaView(TemplateView):
-    template_name = "usuarios/dashboard_recepcionista.html"
+class DashboardClienteView(RolRequiredMixin, TemplateView):
+    required_role = Perfil.Roles.CLIENTE
+    login_url = reverse_lazy("usuarios:login_clientes")
+    template_name = "usuarios/cliente/dashboard.html"
 
 
-class DashboardVeterinarioView(TemplateView):
-    template_name = "usuarios/dashboard_veterinario.html"
+class DashboardRecepcionistaView(RolRequiredMixin, TemplateView):
+    required_role = Perfil.Roles.RECEPCIONISTA
+    login_url = reverse_lazy("usuarios:login_personal")
+    template_name = "usuarios/recepcionista/dashboard.html"
 
 
-class DashboardAdministradorView(TemplateView):
-    template_name = "usuarios/dashboard_administrador.html"
+class DashboardVeterinarioView(RolRequiredMixin, TemplateView):
+    required_role = Perfil.Roles.VETERINARIO
+    login_url = reverse_lazy("usuarios:login_personal")
+    template_name = "usuarios/veterinario/dashboard.html"
+
+
+class DashboardAdministradorView(RolRequiredMixin, TemplateView):
+    required_role = Perfil.Roles.ADMINISTRADOR
+    login_url = reverse_lazy("usuarios:login_personal")
+    template_name = "usuarios/administrador/dashboard.html"
 
 
 def registro_clientes_view(request):

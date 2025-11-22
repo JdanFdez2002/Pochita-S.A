@@ -1,0 +1,51 @@
+{% load static %}
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Dashboard | Pochita S.A{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'usuarios/dashboard.css' %}">
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="dashboard">
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="brand">Pochita</div>
+            <nav class="menu">
+                {% block sidebar_menu %}
+                {# agregar aqui el enlace a el otro html - aqui va el nombre del botón #}
+                {% endblock %}
+            </nav>
+        </aside>
+        <main class="content">
+            {% block dashboard_content %}{% endblock %}
+        </main>
+    </div>
+    {% block extra_js %}{% endblock %}
+    <script>
+    // Toggle secciones por data-target; muestra solo la seleccionada.
+    (function() {
+        const links = document.querySelectorAll(".menu a[data-target]");
+        const sections = document.querySelectorAll(".dashboard-section");
+        function showSection(id) {
+            sections.forEach(sec => {
+                sec.classList.toggle("is-active", sec.id === id);
+            });
+            links.forEach(link => {
+                link.classList.toggle("is-active", link.dataset.target === id);
+            });
+        }
+        links.forEach(link => {
+            link.addEventListener("click", (e) => {
+                e.preventDefault();
+                const target = link.dataset.target;
+                if (target) showSection(target);
+            });
+        });
+        const first = links.length ? links[0].dataset.target : null;
+        if (first) showSection(first);
+    })();
+    </script>
+</body>
+</html>

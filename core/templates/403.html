@@ -1,0 +1,17 @@
+{% extends "core/base.html" %}
+{% block title %}Acceso restringido | Pochita S.A{% endblock %}
+
+{% block content %}
+<div class="page">
+    <section class="hero small-hero">
+        <div class="hero-copy">
+            <div class="pill">403</div>
+            <h1>Acceso no permitido</h1>
+            <p>No tienes permisos para ver esta página. Inicia sesión con el perfil correcto o vuelve al inicio.</p>
+            <div class="cta-group">
+                <a class="btn btn-primary" href="{% url 'core:landing' %}">Ir al inicio</a>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}

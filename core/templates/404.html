@@ -1,0 +1,17 @@
+{% extends "core/base.html" %}
+{% block title %}Algo salió mal | Pochita S.A{% endblock %}
+
+{% block content %}
+<div class="page">
+    <section class="hero small-hero">
+        <div class="hero-copy">
+            <div class="pill">Ups</div>
+            <h1>No encontramos lo que buscas</h1>
+            <p>El recurso solicitado no existe o fue movido. Vuelve al inicio para continuar navegando.</p>
+            <div class="cta-group">
+                <a class="btn btn-primary" href="{% url 'core:landing' %}">Ir al inicio</a>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}

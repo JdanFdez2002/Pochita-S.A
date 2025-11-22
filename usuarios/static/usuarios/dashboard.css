@@ -1,0 +1,131 @@
+/* High-contrast dashboard theme (azul/morado) */
+body.dashboard {
+    margin: 0;
+    background: #0b0c10;
+    color: #e5e9f0;
+    font-family: 'Roboto', sans-serif;
+}
+
+.layout {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    min-height: 100vh;
+}
+
+.sidebar {
+    background: linear-gradient(180deg, #111827 0%, #0b1220 100%);
+    border-right: 2px solid #6b7bff;
+    padding: 20px 16px;
+}
+
+.sidebar .brand {
+    font-family: 'Nosifer', cursive;
+    color: #6b7bff;
+    margin-bottom: 24px;
+    text-shadow: 0 0 8px rgba(107,123,255,0.7);
+    letter-spacing: 0.5px;
+}
+
+.sidebar .menu {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.sidebar .menu a {
+    color: #e5e9f0;
+    text-decoration: none;
+    padding: 10px 12px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    background: rgba(255,255,255,0.02);
+}
+
+.sidebar .menu a:hover,
+.sidebar .menu a:focus {
+    color: #c4cbff;
+    border-color: #6b7bff;
+    background: rgba(107,123,255,0.12);
+    box-shadow: 0 0 12px rgba(107,123,255,0.35);
+}
+
+.content {
+    padding: 24px;
+}
+
+.dashboard-section {
+    display: none;
+}
+
+.dashboard-section.is-active {
+    display: block;
+}
+
+.card {
+    background: radial-gradient(circle at 20% 20%, rgba(107,123,255,0.08), transparent 40%), #0f172a;
+    border: 1px solid #6b7bff;
+    border-radius: 12px;
+    padding: 16px;
+    color: #e5e9f0;
+    box-shadow: 0 12px 32px rgba(0,0,0,0.35);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #6b7bff, #8f5bff);
+    border: 1px solid #6b7bff;
+    color: #0b0c10;
+    font-weight: 700;
+    padding: 8px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #5767ff, #7a4bff);
+    border-color: #5767ff;
+}
+
+.btn-outline {
+    background: transparent;
+    border: 1px solid #6b7bff;
+    color: #c4cbff;
+    padding: 8px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-outline:hover {
+    background: rgba(107,123,255,0.12);
+    color: #e5e9f0;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    color: #e5e9f0;
+}
+
+.table th, .table td {
+    padding: 10px;
+    border-bottom: 1px solid #1f2937;
+}
+
+.table th {
+    color: #c4cbff;
+    text-align: left;
+}
+
+.badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 8px;
+    font-size: 12px;
+}
+
+.badge-danger { background: #ff6b6b; color: #0b0c10; }
+.badge-warning { background: #f2c94c; color: #0b0c10; }
+.badge-info { background: #56ccf2; color: #0b0c10; }
+.badge-success { background: #6fcf97; color: #0b0c10; }
