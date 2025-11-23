@@ -1,22 +1,146 @@
-{% extends "usuarios/base.html" %}
-{% block title %}Dashboard Recepcionista | Pochita S.A{% endblock %}
-{% block sidebar_menu %}
-    <a href="#" data-target="ejemplo1">Ejemplo 1</a>
-    <a href="#" data-target="ejemplo2">Ejemplo 2</a>
-    <a href="#" data-target="ejemplo3">Ejemplo 3</a>
-{% endblock %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recepción | Pochita S.A</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="{% static 'usuarios/dashboard.css' %}">
 
-{% block dashboard_content %}
-<div class="page">
-    <h1>Dashboard Recepcionista</h1>
-    <section id="ejemplo1" class="card mt-3 dashboard-section">
-        {% include "usuarios/recepcionista/include/ejemplo1.html" %}
-    </section>
-    <section id="ejemplo2" class="card mt-3 dashboard-section">
-        {% include "usuarios/recepcionista/include/ejemplo2.html" %}
-    </section>
-    <section id="ejemplo3" class="card mt-3 dashboard-section">
-        {% include "usuarios/recepcionista/include/ejemplo3.html" %}
-    </section>
-</div>
-{% endblock %}
+    <style>
+        .table-responsive { width: 100%; overflow-x: auto; }
+        .recep-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.95rem; }
+        .recep-table th { text-align: left; padding: 12px; color: var(--primary); border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .recep-table td { padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); color: var(--text-muted); }
+        
+        .status-badge { padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; }
+        .status-wait { background: rgba(247, 201, 72, 0.2); color: #f7c948; } /* Amarillo */
+        .status-ok { background: rgba(65, 211, 190, 0.2); color: #41d3be; }   /* Turquesa */
+    </style>
+</head>
+<body>
+
+    <div class="dashboard-wrapper">
+        
+        <nav class="sidebar">
+            <div class="brand">
+                Pochita <span>S.A</span>
+            </div>
+            
+            <div class="nav-links">
+                <a href="#" class="nav-item active" data-target="sec-agenda">
+                    📅 Agenda Diaria
+                </a>
+                <a href="#" class="nav-item" data-target="sec-pacientes">
+                    🐾 Buscar Paciente
+                </a>
+                <a href="#" class="nav-item" data-target="sec-caja">
+                    💰 Caja
+                </a>
+                
+                <a href="/" class="nav-item logout" style="margin-top: auto; color: #ff6b6b; border-color: rgba(255,107,107,0.2);">
+                    Cerrar Turno
+                </a>
+            </div>
+        </nav>
+
+        <main class="main-content">
+            
+            <h1 class="header-title">Panel de Recepción</h1>
+
+            <section id="sec-agenda" class="dashboard-section active">
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px;">
+                    <div class="card" style="padding: 20px;">
+                        <h2 style="margin:0; font-size: 2.5rem; color: #fff;">08</h2>
+                        <span style="color: var(--text-muted);">Citas Restantes</span>
+                    </div>
+                    <div class="card" style="padding: 20px;">
+                        <h2 style="margin:0; font-size: 2.5rem; color: var(--primary);">03</h2>
+                        <span style="color: var(--text-muted);">En Sala de Espera</span>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>Pacientes Agendados</h2>
+                    <div class="table-responsive">
+                        <table class="recep-table">
+                            <thead>
+                                <tr>
+                                    <th>Hora</th>
+                                    <th>Paciente</th>
+                                    <th>Dueño</th>
+                                    <th>Doctor</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>10:00</td>
+                                    <td><strong>Firulais</strong></td>
+                                    <td>Juan Pérez</td>
+                                    <td>Dr. Roberto</td>
+                                    <td><span class="status-badge status-wait">En Espera</span></td>
+                                </tr>
+                                <tr>
+                                    <td>10:30</td>
+                                    <td><strong>Luna</strong></td>
+                                    <td>Maria G.</td>
+                                    <td>Dra. Sofia</td>
+                                    <td><span class="status-badge status-ok">Confirmado</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <section id="sec-pacientes" class="dashboard-section">
+                <div class="card">
+                    <h2>Buscar Paciente</h2>
+                    <p style="color: var(--text-muted); margin-bottom: 15px;">Busca por nombre, RUT o chip.</p>
+                    
+                    <input type="text" placeholder="Escribe aquí..." 
+                           style="width: 100%; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--stroke); color: white; border-radius: 8px;">
+                    
+                    <br><br>
+                    </div>
+            </section>
+
+            <section id="sec-caja" class="dashboard-section">
+                <div class="card">
+                    <h2>Caja y Facturación</h2>
+                    <p style="color: var(--text-muted);">Módulo de pagos en desarrollo.</p>
+                </div>
+            </section>
+
+        </main>
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const links = document.querySelectorAll('.nav-item[data-target]');
+            const sections = document.querySelectorAll('.dashboard-section');
+
+            links.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    // Reset
+                    links.forEach(l => l.classList.remove('active'));
+                    sections.forEach(s => s.classList.remove('active'));
+                    // Activar
+                    link.classList.add('active');
+                    const target = document.getElementById(link.dataset.target);
+                    if(target) target.classList.add('active');
+                });
+            });
+        });
+    </script>
+</body>
+</html>
