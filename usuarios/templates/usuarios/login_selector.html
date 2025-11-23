@@ -1,5 +1,22 @@
 {% extends "core/base.html" %}
 
+{% block extra_head %}
+<style>
+    body, .app-wrapper, .layout, .page-content {
+        background-color: #0e1726 !important;
+        background-image: 
+            radial-gradient(circle at 10% 10%, rgba(65, 211, 190, 0.15), transparent 40%), /* Luz Turquesa */
+            radial-gradient(circle at 90% 90%, rgba(247, 201, 72, 0.1), transparent 40%) !important; /* Luz Dorada */
+        
+        background-attachment: fixed !important;
+        background-size: cover !important;
+    }
+    .dashboard-wrapper, main {
+        background: transparent !important;
+    }
+</style>
+{% endblock %}
+
 {% block title %}Ingresar | Pochita S.A{% endblock %}
 
 {% block content %}

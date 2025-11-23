@@ -2,12 +2,13 @@
 .app-wrapper {
     display: flex;
     min-height: 100vh;
-    background-color: #0f172a; /* Fondo general */
+    /* CAMBIO IMPORTANTE: Transparente para dejar ver el fondo del body */
+    background-color: transparent; 
 }
 
 /* --- SIDEBAR (Barra Lateral) --- */
 .sidebar {
-    width: 280px; /* Ancho fijo como Gemini */
+    width: 280px;
     background-color: #1e293b; /* Color gris azulado oscuro */
     border-right: 1px solid rgba(255, 255, 255, 0.05);
     display: flex;
@@ -18,13 +19,13 @@
     top: 0;
     padding: 1.5rem;
     transition: transform 0.3s ease, width 0.3s ease;
-    flex-shrink: 0; /* Evita que se aplaste */
+    flex-shrink: 0;
     z-index: 100;
 }
 
+/* Estado Colapsado (Mini sidebar) */
 .sidebar.collapsed {
-    width: 64px;
-    transform: translateX(0); /* libera espacio al contenido */
+    width: 80px; /* Un poco más ancho para que quepa bien el icono */
     padding: 0.75rem 0.5rem;
 }
 
@@ -34,7 +35,7 @@
     padding-left: 0.5rem;
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: space-between; /* Separa logo del botón hamburguesa */
     gap: 12px;
 }
 
@@ -44,41 +45,43 @@
     gap: 12px;
     text-decoration: none;
     color: #f1f5f9;
+    overflow: hidden; /* Evita que el texto se rompa feo al colapsar */
+    white-space: nowrap;
 }
 
-.logo-vertical img { width: 40px; height: 40px; }
+.logo-vertical img { width: 40px; height: 40px; object-fit: contain; }
 .logo-text strong { font-size: 1.2rem; display: block; }
 .logo-text .mark { 
     background: #2dd4bf; color: #0f172a; 
     padding: 0px 4px; border-radius: 4px; font-size: 0.8rem; 
 }
 
-.sidebar.collapsed .logo-text {
+/* Ocultar texto al colapsar */
+.sidebar.collapsed .logo-text,
+.sidebar.collapsed .logo-words {
     display: none;
 }
 
 .sidebar.collapsed .logo-vertical {
     justify-content: center;
+    width: 100%;
 }
 
-.sidebar.collapsed .logo-vertical img {
-    width: 48px;
-    height: 48px;
-}
+/* Navegación */
+.sidebar-nav { flex: 1; overflow-x: hidden; }
 
-/* Navegación (Lista de enlaces) */
-.sidebar-nav { flex: 1; }
-
-.sidebar.collapsed .sidebar-nav,
-.sidebar.collapsed .sidebar-footer {
+/* Ocultar secciones al colapsar para limpiar la vista */
+.sidebar.collapsed .nav-label {
     display: none;
 }
 
 .nav-section { display: flex; flex-direction: column; gap: 5px; }
+
 .nav-label {
     font-size: 0.75rem; color: #94a3b8; 
     margin-bottom: 10px; padding-left: 12px;
     text-transform: uppercase; letter-spacing: 1px;
+    white-space: nowrap;
 }
 
 .nav-item {
@@ -88,9 +91,10 @@
     padding: 12px 15px;
     color: #cbd5e1;
     text-decoration: none;
-    border-radius: 50px; /* Forma de píldora como Gemini */
-    transition: background 0.2s, color 0.2s;
+    border-radius: 50px;
+    transition: all 0.2s;
     font-weight: 500;
+    white-space: nowrap; /* Evita textos en dos líneas */
 }
 
 .nav-item:hover {
@@ -98,13 +102,21 @@
     color: #fff;
 }
 
-/* Estilo para el enlace activo (Pochita Blue) */
 .nav-item.active {
     background-color: rgba(45, 212, 191, 0.2);
     color: #2dd4bf;
 }
 
-/* Footer del Sidebar (Botones) */
+/* Ajuste de iconos al colapsar */
+.sidebar.collapsed .nav-item {
+    justify-content: center;
+    padding: 12px 0;
+}
+.sidebar.collapsed .nav-item span:not(.icon) { /* Oculta el texto del link */
+    display: none;
+}
+
+/* Footer del Sidebar */
 .sidebar-footer {
     margin-top: auto;
     display: flex;
@@ -112,6 +124,10 @@
     gap: 10px;
     padding-top: 20px;
     border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.sidebar.collapsed .sidebar-footer {
+    display: none; /* Ocultamos botones grandes al colapsar */
 }
 
 .btn-sidebar {
@@ -132,13 +148,14 @@
 
 /* --- CONTENIDO PRINCIPAL --- */
 .page-content {
-    flex: 1; /* Ocupa el resto del espacio */
+    flex: 1;
     padding: 2rem;
     position: relative;
     width: 100%;
+    transition: margin-left 0.3s ease;
 }
 
-/* Botón Hamburguesa (Flotante arriba a la izquierda) */
+/* Botón Hamburguesa */
 .hamburger-btn {
     background: none;
     border: none;
@@ -153,17 +170,38 @@
     border-radius: 10px;
     border: 1px solid rgba(255,255,255,0.12);
     background: rgba(255,255,255,0.05);
+    transition: 0.2s;
 }
+.hamburger-btn:hover { background: rgba(255,255,255,0.1); }
 
 /* --- RESPONSIVE (Móviles y Tablets) --- */
 @media (max-width: 900px) {
     .sidebar {
         position: fixed;
         left: 0;
-        transform: translateX(0);
+        top: 0;
+        height: 100vh;
+        /* Por defecto ESCONDIDO a la izquierda en móvil */
+        transform: translateX(-100%); 
+        box-shadow: 5px 0 15px rgba(0,0,0,0.5);
     }
     
-    .sidebar.collapsed {
+    /* Clase para ABRIR el menú en móvil */
+    .sidebar.mobile-open {
         transform: translateX(0);
+    }
+
+    /* En móvil, 'collapsed' no tiene sentido, así que lo forzamos a full si se abre */
+    .sidebar.collapsed {
+        width: 280px;
+    }
+    .sidebar.collapsed .logo-text, 
+    .sidebar.collapsed .nav-item span:not(.icon),
+    .sidebar.collapsed .sidebar-footer {
+        display: block !important; /* Forzamos mostrar todo en móvil */
+    }
+    .sidebar.collapsed .nav-item {
+        justify-content: flex-start;
+        padding: 12px 15px;
     }
 }
