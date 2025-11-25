@@ -25,8 +25,20 @@
 
 /* Estado Colapsado (Mini sidebar) */
 .sidebar.collapsed {
-    width: 80px; /* Un poco más ancho para que quepa bien el icono */
+    width: var(--sidebar-collapsed, 64px);
     padding: 0.75rem 0.5rem;
+}
+
+.sidebar.collapsed .logo-vertical,
+.sidebar.collapsed .sidebar-nav,
+.sidebar.collapsed .sidebar-footer {
+    display: none;
+}
+
+.sidebar.collapsed .sidebar-header {
+    justify-content: center;
+    margin-bottom: 0;
+    padding: 0;
 }
 
 /* Cabecera del Sidebar */
