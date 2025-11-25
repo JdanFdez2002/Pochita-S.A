@@ -9,6 +9,7 @@ from .forms import RegistroClienteForm
 from .models import Perfil
 
 
+
 class LoginSelectorView(TemplateView):
     template_name = "usuarios/login_selector.html"
 

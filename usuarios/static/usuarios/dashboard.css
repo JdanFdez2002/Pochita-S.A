@@ -1,131 +1,181 @@
-/* High-contrast dashboard theme (azul/morado) */
-body.dashboard {
+/* static/usuarios/dashboard.css */
+
+/* =========================================
+   TEMA: POCHITA ORIGINAL (Tech Blue / Teal)
+   ========================================= */
+:root {
+    /* --- PALETA ORIGINAL --- */
+    --bg-body: #0e1726;       /* Azul profundo (Tu base original) */
+    --bg-sidebar: #111827;    /* Sidebar ligeramente más oscura */
+    --bg-card: #1e293b;       /* Fondo de tarjetas */
+    
+    /* --- ACENTOS --- */
+    --primary: #41d3be;       /* TU TURQUESA ORIGINAL */
+    --primary-hover: #2bc4ad; 
+    --accent: #f7c948;        /* Amarillo (para detalles pequeños) */
+
+    /* --- TEXTOS Y BORDES --- */
+    --text-main: #e9f0fb;     /* Blanco azulado */
+    --text-muted: #9cb0c5;    /* Gris azulado */
+    --border: rgba(255, 255, 255, 0.08); /* Borde sutil */
+    
+    /* --- EFECTOS --- */
+    --glow-primary: rgba(65, 211, 190, 0.25); /* Resplandor Turquesa */
+}
+
+/* RESET */
+* {
+    box-sizing: border-box;
     margin: 0;
-    background: #0b0c10;
-    color: #e5e9f0;
-    font-family: 'Roboto', sans-serif;
+    padding: 0;
 }
 
-.layout {
-    display: grid;
-    grid-template-columns: 240px 1fr;
-    min-height: 100vh;
+body, html {
+    height: 100%;
+    font-family: 'Plus Jakarta Sans', 'Manrope', sans-serif;
+    background-color: var(--bg-body);
+    color: var(--text-main);
+    
+    /* EL FONDO ORIGINAL CON LUCES SUAVES */
+    background-image: 
+        radial-gradient(circle at 10% 10%, rgba(65, 211, 190, 0.08), transparent 40%),
+        radial-gradient(circle at 90% 90%, rgba(247, 201, 72, 0.05), transparent 40%);
+    background-attachment: fixed;
 }
 
+/* --- LAYOUT --- */
+.dashboard-wrapper {
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* --- 1. SIDEBAR (IZQUIERDA) --- */
 .sidebar {
-    background: linear-gradient(180deg, #111827 0%, #0b1220 100%);
-    border-right: 2px solid #6b7bff;
-    padding: 20px 16px;
-}
-
-.sidebar .brand {
-    font-family: 'Nosifer', cursive;
-    color: #6b7bff;
-    margin-bottom: 24px;
-    text-shadow: 0 0 8px rgba(107,123,255,0.7);
-    letter-spacing: 0.5px;
-}
-
-.sidebar .menu {
+    width: 260px;
+    background-color: var(--bg-sidebar);
+    border-right: 1px solid var(--border);
     display: flex;
     flex-direction: column;
+    flex-shrink: 0;
+    padding: 24px 20px;
+    z-index: 10;
+}
+
+.brand {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--text-main);
+    margin-bottom: 40px;
+    padding-left: 10px;
+    display: flex;
+    align-items: center;
     gap: 10px;
 }
 
-.sidebar .menu a {
-    color: #e5e9f0;
+/* La pastilla "S.A" estilo tu logo */
+.brand span {
+    background: var(--primary);
+    color: #0e1726;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+.nav-links {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.nav-item {
+    padding: 12px 16px;
+    color: var(--text-muted);
     text-decoration: none;
-    padding: 10px 12px;
+    border-radius: 50px; /* Bordes redondeados como píldoras (Pill shape) */
+    transition: all 0.3s ease;
+    font-weight: 500;
     border: 1px solid transparent;
-    border-radius: 8px;
-    transition: all 0.2s ease;
-    background: rgba(255,255,255,0.02);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 0.95rem;
 }
 
-.sidebar .menu a:hover,
-.sidebar .menu a:focus {
-    color: #c4cbff;
-    border-color: #6b7bff;
-    background: rgba(107,123,255,0.12);
-    box-shadow: 0 0 12px rgba(107,123,255,0.35);
+/* Estado Hover y Activo (Estilo Turquesa) */
+.nav-item:hover, .nav-item.active {
+    background-color: rgba(65, 211, 190, 0.12); /* Fondo turquesa transparente */
+    color: var(--primary);
+    border-color: rgba(65, 211, 190, 0.3);
+    box-shadow: 0 0 15px rgba(65, 211, 190, 0.1);
 }
 
-.content {
-    padding: 24px;
+/* Botón de volver abajo */
+.nav-item.logout {
+    margin-top: auto;
+    color: #ef4444;
+    border-color: rgba(239, 68, 68, 0.2);
+}
+.nav-item.logout:hover {
+    background-color: rgba(239, 68, 68, 0.1);
 }
 
+/* --- 2. CONTENIDO (DERECHA) --- */
+.main-content {
+    flex-grow: 1;
+    padding: 40px;
+    overflow-y: auto;
+}
+
+.header-title {
+    font-size: 2rem;
+    margin-bottom: 10px;
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+.header-subtitle {
+    color: var(--text-muted);
+    margin-bottom: 30px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 20px;
+}
+
+/* --- TARJETAS (SECCIONES) --- */
 .dashboard-section {
     display: none;
+    animation: fadeIn 0.4s ease;
 }
 
-.dashboard-section.is-active {
+.dashboard-section.active {
     display: block;
 }
 
 .card {
-    background: radial-gradient(circle at 20% 20%, rgba(107,123,255,0.08), transparent 40%), #0f172a;
-    border: 1px solid #6b7bff;
-    border-radius: 12px;
-    padding: 16px;
-    color: #e5e9f0;
-    box-shadow: 0 12px 32px rgba(0,0,0,0.35);
+    background-color: var(--bg-card);
+    /* Borde sutil arriba para efecto de luz */
+    border: 1px solid var(--border);
+    border-top: 1px solid rgba(255,255,255,0.15); 
+    border-radius: 16px;
+    padding: 30px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+    position: relative;
 }
 
-.btn-primary {
-    background: linear-gradient(135deg, #6b7bff, #8f5bff);
-    border: 1px solid #6b7bff;
-    color: #0b0c10;
-    font-weight: 700;
-    padding: 8px 14px;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.2s ease;
+.card h2 {
+    color: var(--primary); /* Títulos en turquesa */
+    font-size: 1.5rem;
+    margin-bottom: 15px;
 }
 
-.btn-primary:hover {
-    background: linear-gradient(135deg, #5767ff, #7a4bff);
-    border-color: #5767ff;
+/* --- ANIMACIONES --- */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
-.btn-outline {
-    background: transparent;
-    border: 1px solid #6b7bff;
-    color: #c4cbff;
-    padding: 8px 14px;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.2s ease;
+/* Responsive */
+@media (max-width: 768px) {
+    .sidebar { display: none; }
+    .main-content { padding: 20px; }
 }
-
-.btn-outline:hover {
-    background: rgba(107,123,255,0.12);
-    color: #e5e9f0;
-}
-
-.table {
-    width: 100%;
-    border-collapse: collapse;
-    color: #e5e9f0;
-}
-
-.table th, .table td {
-    padding: 10px;
-    border-bottom: 1px solid #1f2937;
-}
-
-.table th {
-    color: #c4cbff;
-    text-align: left;
-}
-
-.badge {
-    display: inline-block;
-    padding: 4px 8px;
-    border-radius: 8px;
-    font-size: 12px;
-}
-
-.badge-danger { background: #ff6b6b; color: #0b0c10; }
-.badge-warning { background: #f2c94c; color: #0b0c10; }
-.badge-info { background: #56ccf2; color: #0b0c10; }
-.badge-success { background: #6fcf97; color: #0b0c10; }

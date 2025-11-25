@@ -1,0 +1,116 @@
+<style>
+    .search-container {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 25px;
+    }
+    
+    .search-input {
+        flex-grow: 1;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 12px 15px;
+        border-radius: 8px;
+        color: #fff;
+        font-family: inherit;
+        outline: none;
+        transition: 0.3s;
+    }
+    
+    .search-input:focus {
+        border-color: var(--primary); /* Turquesa */
+        box-shadow: 0 0 10px rgba(65, 211, 190, 0.2);
+    }
+
+    .btn-search {
+        background: var(--primary);
+        color: #0e1726;
+        border: none;
+        padding: 0 25px;
+        border-radius: 8px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .btn-search:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(65, 211, 190, 0.3);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 40px;
+        color: var(--text-muted);
+        border: 1px dashed rgba(255,255,255,0.1);
+        border-radius: 12px;
+    }
+</style>
+
+<form method="GET" action="." class="search-container">
+    <input type="text" 
+           name="q" 
+           class="search-input" 
+           placeholder="🔍 Buscar por nombre de mascota, RUT dueño o N° de chip..."
+           value="{{ request.GET.q }}">
+    
+    <button type="submit" class="btn-search">
+        Buscar
+    </button>
+</form>
+
+<div class="results-area">
+    
+    <h3 style="font-size: 1.1rem; color: var(--text-main); margin-bottom: 15px;">
+        Resultados Recientes
+    </h3>
+
+    <div class="table-responsive">
+        <table class="recep-table">
+            <thead>
+                <tr>
+                    <th>Mascota</th>
+                    <th>Especie</th>
+                    <th>Dueño</th>
+                    <th>RUT</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <div style="width:30px; height:30px; background:#334155; border-radius:50%;"></div>
+                            <strong>Firulais</strong>
+                        </div>
+                    </td>
+                    <td>Perro</td>
+                    <td>Juan Pérez</td>
+                    <td>12.345.678-9</td>
+                    <td>
+                        <a href="#" style="color: var(--primary); font-weight:bold; font-size:0.9rem;">Ver Ficha &rarr;</a>
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <div style="width:30px; height:30px; background:#334155; border-radius:50%;"></div>
+                            <strong>Michi</strong>
+                        </div>
+                    </td>
+                    <td>Gato</td>
+                    <td>Ana Torres</td>
+                    <td>9.876.543-2</td>
+                    <td>
+                        <a href="#" style="color: var(--primary); font-weight:bold; font-size:0.9rem;">Ver Ficha &rarr;</a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    </div>
