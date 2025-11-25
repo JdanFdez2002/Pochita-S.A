@@ -5,7 +5,11 @@ from django.shortcuts import redirect, render
 from django.urls import reverse, reverse_lazy
 from django.views.generic import TemplateView
 
-from .forms import RegistroClienteForm
+from .forms import (
+    ClienteAuthenticationForm,
+    PersonalAuthenticationForm,
+    RegistroClienteForm,
+)
 from .models import Perfil
 
 
@@ -16,7 +20,7 @@ class LoginSelectorView(TemplateView):
 
 class ClienteLoginView(LoginView):
     template_name = "usuarios/login_clientes.html"
-    authentication_form = AuthenticationForm
+    authentication_form = ClienteAuthenticationForm
     extra_context = {"perfil": "cliente"}
     redirect_authenticated_user = False
 
@@ -29,7 +33,7 @@ class ClienteLoginView(LoginView):
 
 class PersonalLoginView(LoginView):
     template_name = "usuarios/login_personal.html"
-    authentication_form = AuthenticationForm
+    authentication_form = PersonalAuthenticationForm
     extra_context = {"perfil": "personal"}
     redirect_authenticated_user = False
 
