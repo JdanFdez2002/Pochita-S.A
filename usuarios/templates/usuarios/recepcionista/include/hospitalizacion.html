@@ -1,0 +1,53 @@
+<div class="card" style="margin-bottom: 16px;">
+    <h2>Hospitalizacion</h2>
+    <p style="color:var(--text-muted);">Estado actual y operaciones.</p>
+</div>
+
+<div class="card" style="margin-bottom: 16px;">
+    <h3 style="margin-top:0;">Lista de pacientes hospitalizados</h3>
+    <div class="table-responsive">
+        <table class="recep-table">
+            <thead>
+                <tr>
+                    <th>Paciente</th>
+                    <th>Dueno</th>
+                    <th>Estado</th>
+                    <th>Accion</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Rocky</td>
+                    <td>Carlos S.</td>
+                    <td><span class="status-badge status-ok">Estable</span></td>
+                    <td><button class="btn-small btn-ghost">Ver</button></td>
+                </tr>
+                <tr>
+                    <td>Luna</td>
+                    <td>Maria G.</td>
+                    <td><span class="status-badge status-wait">Observacion</span></td>
+                    <td><button class="btn-small btn-ghost">Ver</button></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="card" style="margin-bottom: 16px;">
+    <h3 style="margin-top:0;">Ingresar paciente</h3>
+    <div class="form-inline" style="margin-bottom: 10px;">
+        <input class="input-lite" placeholder="Paciente">
+        <input class="input-lite" placeholder="Dueno">
+        <input class="input-lite" placeholder="Motivo/Notas">
+    </div>
+    <button class="btn-small btn-primary-lite" type="button">Ingresar</button>
+</div>
+
+<div class="card">
+    <h3 style="margin-top:0;">Dar de alta</h3>
+    <div class="form-inline" style="margin-bottom: 10px;">
+        <input class="input-lite" placeholder="Paciente">
+        <input class="input-lite" placeholder="Veterinario responsable">
+    </div>
+    <button class="btn-small btn-primary-lite" type="button">Confirmar alta</button>
+</div>

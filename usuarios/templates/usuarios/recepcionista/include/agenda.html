@@ -1,0 +1,65 @@
+<div class="card" style="margin-bottom: 16px;">
+    <h2>Agenda</h2>
+    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap:12px;">
+        <input class="input-lite" placeholder="Filtrar por veterinario">
+        <input class="input-lite" placeholder="Filtrar por horario">
+        <input class="input-lite" placeholder="Paciente / Cliente">
+    </div>
+    <div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap;">
+        <button class="btn-small btn-primary-lite" type="button">Agendar cita</button>
+        <button class="btn-small btn-ghost" type="button">Replanificar cita</button>
+        <button class="btn-small btn-ghost" type="button">Cancelar cita</button>
+    </div>
+</div>
+
+<div class="card">
+    <h3 style="margin-top:0;">Citas del día</h3>
+    <div class="table-responsive">
+        <table class="recep-table">
+            <thead>
+                <tr>
+                    <th>Hora</th>
+                    <th>Paciente</th>
+                    <th>Dueno</th>
+                    <th>Veterinario</th>
+                    <th>Estado</th>
+                    <th>Accion</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>10:00</td>
+                    <td>Firulais</td>
+                    <td>Juan Perez</td>
+                    <td>Dr. Roberto</td>
+                    <td><span class="status-badge status-wait">En espera</span></td>
+                    <td><button class="btn-small btn-ghost">Cancelar</button></td>
+                </tr>
+                <tr>
+                    <td>10:30</td>
+                    <td>Luna</td>
+                    <td>Maria G.</td>
+                    <td>Dra. Sofia</td>
+                    <td><span class="status-badge status-ok">Confirmado</span></td>
+                    <td><button class="btn-small btn-ghost">Replanificar</button></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="card" style="margin-top: 16px;">
+    <h3 style="margin-top:0;">Horas libres y por veterinario</h3>
+    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:12px;">
+        <div class="card" style="padding:12px;">
+            <small style="color:var(--text-muted);">Por veterinario</small>
+            <div class="slot free" style="margin-top:8px;">09:00 - Libre (Sofia)</div>
+            <div class="slot free">12:00 - Libre (Jose)</div>
+        </div>
+        <div class="card" style="padding:12px;">
+            <small style="color:var(--text-muted);">Horas libres en general</small>
+            <div class="slot free" style="margin-top:8px;">11:30 - Primer vete disponible</div>
+            <div class="slot free">16:00 - Primer vete disponible</div>
+        </div>
+    </div>
+</div>
