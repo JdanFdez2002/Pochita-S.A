@@ -1,0 +1,42 @@
+<div class="card" style="margin-bottom: 16px;">
+    <h2>Consulta actual</h2>
+    <div style="display:grid; grid-template-columns: 260px 1fr; gap:16px; align-items:start;">
+        <div class="card" style="padding:14px; text-align:center;">
+            <div style="background:#334155; width: 120px; height: 120px; border-radius:50%; margin: 0 auto 15px; display:flex; align-items:center; justify-content:center; font-size:3rem;">🐾</div>
+            <h3 style="margin:0 0 6px;">Rocky</h3>
+            <p style="color:var(--text-muted); margin:0;">Macho, 4 años</p>
+            <div style="margin-top:10px; color:var(--text-muted); font-size:0.9rem;">Dueño: Carlos Santana</div>
+        </div>
+        <div class="card" style="padding:16px;">
+            <h3 style="margin-top:0;">Registro clínico</h3>
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr)); gap:12px;">
+                <div>
+                    <small style="color:var(--text-muted);">Motivo</small>
+                    <input class="input-lite" placeholder="Ej: control oídos">
+                </div>
+                <div>
+                    <small style="color:var(--text-muted);">Diagnóstico</small>
+                    <input class="input-lite" placeholder="Presuntivo/definitivo">
+                </div>
+            </div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-top:12px;">
+                <div>
+                    <small style="color:var(--text-muted);">Anamnesis</small>
+                    <textarea class="input-lite" rows="3"></textarea>
+                </div>
+                <div>
+                    <small style="color:var(--text-muted);">Examen físico</small>
+                    <textarea class="input-lite" rows="3"></textarea>
+                </div>
+            </div>
+            <div style="margin-top:12px;">
+                <small style="color:var(--text-muted);">Tratamiento / Receta</small>
+                <textarea class="input-lite" rows="3"></textarea>
+            </div>
+            <div style="text-align:right; margin-top:12px;">
+                <button class="btn-small btn-ghost" type="button">Ver historial completo</button>
+                <button class="btn-small btn-primary-lite" type="button">Guardar ficha</button>
+            </div>
+        </div>
+    </div>
+</div>

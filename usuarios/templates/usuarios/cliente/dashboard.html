@@ -1,97 +1,25 @@
+{% extends "usuarios/base.html" %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Cliente | Pochita S.A</title>
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-    
-    <link rel="stylesheet" href="{% static 'usuarios/dashboard.css' %}">
-</head>
-<body>
 
-    <div class="dashboard-wrapper">
-        
-        <nav class="sidebar">
-            <div class="brand">
-                Pochita <span>S.A</span>
-            </div>
-            
-            <div class="nav-links">
-                <a href="#" class="nav-item active" data-target="sec-resumen">
-                    Resumen
-                </a>
-                <a href="#" class="nav-item" data-target="sec-mascotas">
-                    Mis Mascotas
-                </a>
-                <a href="#" class="nav-item" data-target="sec-citas">
-                    Citas Médicas
-                </a>
-                
-                <a href="/" class="nav-item logout">
-                    Cerrar Sesión
-                </a>
-            </div>
-        </nav>
+{% block title %}Cliente | Pochita S.A{% endblock %}
 
-        <main class="main-content">
-            
-            <h1 class="header-title">Hola, Cliente</h1>
-            <p class="header-subtitle">Bienvenido a tu panel de control veterinario.</p>
+{% block sidebar_menu %}
+    <a href="#" class="menu-link is-active" data-target="sec-inicio">Inicio</a>
+    <a href="#" class="menu-link" data-target="sec-mascotas">Mis Mascotas</a>
+    <a href="#" class="menu-link" data-target="sec-citas">Citas Medicas</a>
+    <a href="/" class="menu-link logout">Cerrar sesion</a>
+{% endblock %}
 
-            <section id="sec-resumen" class="dashboard-section active">
-                <div class="card">
-                    <h2>Estado General</h2>
-                    <p style="color: #9cb0c5;">Aquí verás el resumen de tu cuenta y notificaciones recientes.</p>
-                    <br>
-                    {% include "usuarios/cliente/include/ejemplo1.html" %}
-                </div>
-            </section>
+{% block dashboard_content %}
+    <section id="sec-inicio" class="dashboard-section is-active">
+        {% include "usuarios/cliente/include/inicio.html" %}
+    </section>
 
-            <section id="sec-mascotas" class="dashboard-section">
-                <div class="card">
-                    <h2>Mis Mascotas</h2>
-                    <p style="color: #9cb0c5;">Gestiona los perfiles de tus peludos.</p>
-                    <br>
-                    {% include "usuarios/cliente/include/ejemplo2.html" %}
-                </div>
-            </section>
+    <section id="sec-mascotas" class="dashboard-section">
+        {% include "usuarios/cliente/include/mascotas.html" %}
+    </section>
 
-            <section id="sec-citas" class="dashboard-section">
-                <div class="card">
-                    <h2>Próximas Citas</h2>
-                    <p style="color: #9cb0c5;">Historial y agenda de horas médicas.</p>
-                    <br>
-                    {% include "usuarios/cliente/include/ejemplo3.html" %}
-                </div>
-            </section>
-
-        </main>
-
-    </div>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const links = document.querySelectorAll('.nav-item[data-target]');
-            const sections = document.querySelectorAll('.dashboard-section');
-
-            links.forEach(link => {
-                link.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    // Reset
-                    links.forEach(l => l.classList.remove('active'));
-                    sections.forEach(s => s.classList.remove('active'));
-                    // Activar
-                    link.classList.add('active');
-                    const target = document.getElementById(link.dataset.target);
-                    if(target) target.classList.add('active');
-                });
-            });
-        });
-    </script>
-</body>
-</html>
+    <section id="sec-citas" class="dashboard-section">
+        {% include "usuarios/cliente/include/citas.html" %}
+    </section>
+{% endblock %}

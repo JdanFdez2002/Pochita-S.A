@@ -1,199 +1,30 @@
+{% extends "usuarios/base.html" %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Veterinario | Pochita S.A</title>
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-    
-    <link rel="stylesheet" href="{% static 'usuarios/dashboard.css' %}">
 
-    <style>
-        /* Layout de la Ficha Médica */
-        .medical-grid { display: grid; grid-template-columns: 300px 1fr; gap: 25px; }
-        
-        /* Perfil del Paciente (Izquierda) */
-        .patient-profile { text-align: center; }
-        .patient-avatar { width: 120px; height: 120px; border-radius: 50%; border: 4px solid var(--primary); object-fit: cover; margin-bottom: 15px; box-shadow: 0 0 20px rgba(65, 211, 190, 0.3); }
-        .vitals-strip { display: flex; justify-content: space-around; margin-top: 20px; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 10px; }
-        .vital-item { text-align: center; }
-        .vital-label { font-size: 0.75rem; color: var(--text-muted); display: block; }
-        .vital-value { font-size: 1.1rem; font-weight: bold; color: #fff; }
+{% block title %}Veterinario | Pochita S.A{% endblock %}
 
-        /* Formulario Médico (Derecha) */
-        .medical-form label { display: block; color: var(--primary); margin-bottom: 8px; font-size: 0.9rem; font-weight: 600; }
-        .medical-input { width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 12px; border-radius: 8px; margin-bottom: 20px; font-family: inherit; resize: vertical; }
-        .medical-input:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 10px rgba(65, 211, 190, 0.1); }
-        
-        /* Badges de Alerta */
-        .alert-badge { background: rgba(255, 107, 107, 0.2); color: #ff6b6b; padding: 5px 10px; border-radius: 4px; font-size: 0.8rem; border: 1px solid rgba(255,107,107,0.3); display: inline-block; margin-top: 5px;}
+{% block sidebar_menu %}
+    <a href="#" class="menu-link is-active" data-target="sec-inicio">Inicio</a>
+    <a href="#" class="menu-link" data-target="sec-consulta">Consulta actual</a>
+    <a href="#" class="menu-link" data-target="sec-agenda">Agenda</a>
+    <a href="#" class="menu-link" data-target="sec-historial">Historial</a>
+    <a href="/" class="menu-link logout">Cerrar turno</a>
+{% endblock %}
 
-        /* Responsive */
-        @media (max-width: 900px) { .medical-grid { grid-template-columns: 1fr; } }
-    </style>
-</head>
-<body>
+{% block dashboard_content %}
+    <section id="sec-inicio" class="dashboard-section is-active">
+        {% include "usuarios/veterinario/include/inicio.html" %}
+    </section>
 
-    <div class="dashboard-wrapper">
-        
-        <nav class="sidebar">
-            <div class="brand">Pochita <span>Vet</span></div>
-            
-            <div class="nav-links">
-                <a href="#" class="nav-item active" data-target="sec-consulta">🩺 Consulta Actual</a>
-                <a href="#" class="nav-item" data-target="sec-agenda">📅 Agenda Médica</a>
-                <a href="#" class="nav-item" data-target="sec-historial">📂 Historial Clínico</a>
-                
-                <a href="/" class="nav-item logout" style="margin-top: auto;">Finalizar Turno</a>
-            </div>
-        </nav>
+    <section id="sec-consulta" class="dashboard-section">
+        {% include "usuarios/veterinario/include/consulta.html" %}
+    </section>
 
-        <main class="main-content">
-            
-            <h1 class="header-title">Hola, Dr. Veterinario</h1>
+    <section id="sec-agenda" class="dashboard-section">
+        {% include "usuarios/veterinario/include/agenda.html" %}
+    </section>
 
-            <section id="sec-consulta" class="dashboard-section active">
-                
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <div class="card" style="padding: 15px 25px; border-left: 4px solid var(--primary); width: 100%; display: flex; justify-content: space-between; align-items: center;">
-                        <div>
-                            <span style="color: var(--text-muted); font-size: 0.9rem;">Paciente en curso:</span>
-                            <h3 style="margin: 0; color: #fff;">Rocky (Bulldog Francés)</h3>
-                        </div>
-                        <span style="background: var(--primary); color: #000; padding: 5px 15px; border-radius: 20px; font-weight: bold; font-size: 0.85rem;">En Consulta</span>
-                    </div>
-                </div>
-
-                <div class="medical-grid">
-                    
-                    <div class="card patient-profile">
-                        <div style="background: #334155; width: 120px; height: 120px; border-radius: 50%; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; font-size: 3rem;">🐶</div>
-                        
-                        <h2 style="margin-bottom: 5px;">Rocky</h2>
-                        <p style="color: var(--text-muted); margin: 0;">Macho, 4 Años</p>
-                        
-                        <div class="alert-badge">⚠ Alérgico a Penicilina</div>
-
-                        <div class="vitals-strip">
-                            <div class="vital-item">
-                                <span class="vital-label">Peso</span>
-                                <span class="vital-value">12.5 kg</span>
-                            </div>
-                            <div class="vital-item">
-                                <span class="vital-label">Temp</span>
-                                <span class="vital-value">38.5°C</span>
-                            </div>
-                            <div class="vital-item">
-                                <span class="vital-label">BPM</span>
-                                <span class="vital-value">90</span>
-                            </div>
-                        </div>
-
-                        <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 20px 0;">
-                        
-                        <div style="text-align: left;">
-                            <small style="color: var(--text-muted);">Dueño:</small>
-                            <div style="font-weight: bold;">Carlos Santana</div>
-                            <small style="color: var(--text-muted);">Última visita:</small>
-                            <div>12 Oct 2023 (Vacunación)</div>
-                        </div>
-                    </div>
-
-                    <div class="card medical-form">
-                        <h2 style="border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 15px; margin-bottom: 20px;">Registro Clínico</h2>
-                        
-                        <form action="" method="POST">
-                            {% csrf_token %}
-                            
-                            <label>Motivo de Consulta</label>
-                            <input type="text" class="medical-input" placeholder="Ej: Vómitos y decaimiento..." value="Control rutinario y revisión de oídos">
-
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                                <div>
-                                    <label>Anamnesis</label>
-                                    <textarea class="medical-input" rows="4" placeholder="Detalles observados..."></textarea>
-                                </div>
-                                <div>
-                                    <label>Examen Físico</label>
-                                    <textarea class="medical-input" rows="4" placeholder="Hallazgos..."></textarea>
-                                </div>
-                            </div>
-
-                            <label>Diagnóstico</label>
-                            <input type="text" class="medical-input" placeholder="Diagnóstico presuntivo o definitivo">
-
-                            <label>Tratamiento / Receta</label>
-                            <textarea class="medical-input" rows="3" placeholder="Indicaciones para el dueño..."></textarea>
-
-                            <div style="text-align: right;">
-                                <button type="button" style="background: transparent; border: 1px solid var(--text-muted); color: var(--text-main); padding: 10px 20px; border-radius: 8px; margin-right: 10px; cursor: pointer;">Ver Historial Completo</button>
-                                <button type="submit" style="background: var(--primary); border: none; color: #000; padding: 10px 30px; border-radius: 8px; font-weight: bold; cursor: pointer; box-shadow: 0 0 15px rgba(65, 211, 190, 0.4);">Guardar Ficha</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </section>
-
-            <section id="sec-agenda" class="dashboard-section">
-                <div class="card">
-                    <h2>Pacientes del Día</h2>
-                    <table style="width: 100%; border-collapse: collapse; margin-top: 20px; color: var(--text-muted);">
-                        <tr style="text-align: left; color: var(--primary);">
-                            <th style="padding: 10px;">Hora</th>
-                            <th>Paciente</th>
-                            <th>Motivo</th>
-                            <th>Estado</th>
-                            <th>Acción</th>
-                        </tr>
-                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
-                            <td style="padding: 15px 10px;">09:00</td>
-                            <td><strong>Rocky</strong></td>
-                            <td>Control</td>
-                            <td style="color: #41d3be;">En Consulta</td>
-                            <td><button style="padding: 5px 10px; border-radius: 5px; background: #41d3be; border: none; font-weight: bold;">Ver</button></td>
-                        </tr>
-                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
-                            <td style="padding: 15px 10px;">10:30</td>
-                            <td><strong>Pelusa</strong></td>
-                            <td>Vacuna</td>
-                            <td style="color: #f7c948;">En Espera</td>
-                            <td><button style="padding: 5px 10px; border-radius: 5px; background: transparent; border: 1px solid #fff; color: #fff;">Llamar</button></td>
-                        </tr>
-                    </table>
-                </div>
-            </section>
-
-            <section id="sec-historial" class="dashboard-section">
-                <div class="card">
-                    <h2>Buscador de Historiales</h2>
-                    <input type="text" class="medical-input" placeholder="Buscar por Chip o Nombre...">
-                    <p style="color: var(--text-muted);">Resultados...</p>
-                </div>
-            </section>
-
-        </main>
-    </div>
-
-    <script>
-        // Script de pestañas (Mismo que los anteriores)
-        document.addEventListener('DOMContentLoaded', () => {
-            const links = document.querySelectorAll('.nav-item[data-target]');
-            const sections = document.querySelectorAll('.dashboard-section');
-
-            links.forEach(link => {
-                link.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    links.forEach(l => l.classList.remove('active'));
-                    sections.forEach(s => s.classList.remove('active'));
-                    link.classList.add('active');
-                    document.getElementById(link.dataset.target).classList.add('active');
-                });
-            });
-        });
-    </script>
-</body>
-</html>
+    <section id="sec-historial" class="dashboard-section">
+        {% include "usuarios/veterinario/include/historial.html" %}
+    </section>
+{% endblock %}
