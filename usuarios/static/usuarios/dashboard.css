@@ -304,6 +304,35 @@ body, html {
     background: transparent;
 }
 
+.btn-small {
+    padding: 6px 10px;
+    font-size: 0.9rem;
+    border-radius: 8px;
+}
+
+.btn-primary-lite {
+    background: rgba(65, 211, 190, 0.12);
+    border-color: rgba(65, 211, 190, 0.4);
+    color: var(--primary);
+}
+
+.btn-primary-lite:hover:not(:disabled) {
+    background: rgba(65, 211, 190, 0.2);
+    border-color: rgba(65, 211, 190, 0.55);
+    color: #0e1726;
+}
+
+.btn-ghost {
+    background: transparent;
+    border-color: var(--border);
+    color: var(--text-muted);
+}
+
+.btn-ghost:hover:not(:disabled) {
+    color: var(--primary);
+    border-color: rgba(65, 211, 190, 0.4);
+}
+
 .alert-success {
     background: rgba(65, 211, 190, 0.12);
     border: 1px solid rgba(65, 211, 190, 0.35);
@@ -331,6 +360,164 @@ body, html {
 
 .alert-card {
     border-left: 3px solid rgba(239, 68, 68, 0.8);
+}
+
+/* --- Tablas y busquedas recepcion --- */
+.table-responsive {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.recep-table {
+    width: 100%;
+    border-collapse: collapse;
+    color: var(--text-main);
+}
+
+.recep-table thead {
+    background: rgba(255,255,255,0.02);
+}
+
+.recep-table th,
+.recep-table td {
+    text-align: left;
+    padding: 10px;
+    border-bottom: 1px solid var(--border);
+}
+
+.recep-table th {
+    color: var(--text-muted);
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.recep-table tr:hover {
+    background: rgba(255,255,255,0.02);
+}
+
+.recep-table.compact td {
+    padding: 8px;
+}
+
+.table-actions {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.tag-list {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.tag {
+    background: rgba(65, 211, 190, 0.12);
+    border: 1px solid rgba(65, 211, 190, 0.35);
+    color: var(--text-main);
+    border-radius: 999px;
+    padding: 4px 8px;
+    font-size: 0.8rem;
+}
+
+.paginator {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 12px;
+    flex-wrap: wrap;
+    gap: 10px;
+    color: var(--text-muted);
+}
+
+.pager-actions {
+    display: flex;
+    gap: 8px;
+}
+
+/* --- Modal cliente --- */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.65);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    z-index: 50;
+}
+
+.modal-overlay.is-open {
+    display: flex;
+}
+
+.modal-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    max-width: 1100px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.35);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 16px;
+    border-bottom: 1px solid var(--border);
+}
+
+.modal-header .pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: 10px;
+    background: rgba(65, 211, 190, 0.12);
+    border: 1px solid rgba(65, 211, 190, 0.35);
+    color: var(--primary);
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+.modal-body {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.quick-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.appointments-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px,1fr));
+    gap: 10px;
+}
+
+.appointments-grid .card.mini {
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: rgba(255,255,255,0.02);
+}
+
+.appointments-grid h5 {
+    margin: 0 0 6px;
+    color: var(--primary);
+}
+
+.appointments-grid ul {
+    margin: 0;
+    padding-left: 16px;
+    color: var(--text-muted);
+    line-height: 1.4;
 }
 
 /* Responsive */
