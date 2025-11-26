@@ -15,8 +15,10 @@
     flex-direction: column;
     height: auto;
     min-height: 100vh;
-    position: sticky;
+    position: fixed;
     top: 0;
+    left: 0;
+    height: 100vh;
     padding: 1.5rem;
     transition: transform 0.3s ease, width 0.3s ease;
     flex-shrink: 0;
@@ -25,8 +27,20 @@
 
 /* Estado Colapsado (Mini sidebar) */
 .sidebar.collapsed {
-    width: 80px; /* Un poco más ancho para que quepa bien el icono */
+    width: var(--sidebar-collapsed, 64px);
     padding: 0.75rem 0.5rem;
+}
+
+.sidebar.collapsed .logo-vertical,
+.sidebar.collapsed .sidebar-nav,
+.sidebar.collapsed .sidebar-footer {
+    display: none;
+}
+
+.sidebar.collapsed .sidebar-header {
+    justify-content: center;
+    margin-bottom: 0;
+    padding: 0;
 }
 
 /* Cabecera del Sidebar */
@@ -153,6 +167,11 @@
     position: relative;
     width: 100%;
     transition: margin-left 0.3s ease;
+    margin-left: var(--sidebar-expanded, 280px);
+}
+
+body.sidebar-collapsed .page-content {
+    margin-left: var(--sidebar-collapsed, 64px);
 }
 
 /* Botón Hamburguesa */
@@ -203,5 +222,8 @@
     .sidebar.collapsed .nav-item {
         justify-content: flex-start;
         padding: 12px 15px;
+    }
+    .page-content {
+        margin-left: 0;
     }
 }

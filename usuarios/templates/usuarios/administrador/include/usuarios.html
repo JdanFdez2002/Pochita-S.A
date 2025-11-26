@@ -1,0 +1,39 @@
+<div class="card">
+    <h2>Gestion de Usuarios</h2>
+    <div style="display:flex; justify-content: space-between; gap:12px; flex-wrap:wrap; margin-bottom: 12px;">
+        <div style="display:flex; gap:8px;">
+            <input class="input-lite" placeholder="Buscar usuario">
+            <input class="input-lite" placeholder="Filtrar por rol">
+        </div>
+        <button class="btn-small btn-primary-lite" type="button">Nuevo usuario</button>
+    </div>
+    <div class="table-responsive">
+        <table class="recep-table">
+            <thead>
+                <tr>
+                    <th>Usuario</th>
+                    <th>Email</th>
+                    <th>Rol</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Juan Perez</td>
+                    <td>juan.perez@pochita.cl</td>
+                    <td><span class="role-badge role-vet">Veterinario</span></td>
+                    <td><span style="color:#41d3be;">Activo</span></td>
+                    <td><button class="btn-small btn-ghost">Editar</button></td>
+                </tr>
+                <tr>
+                    <td>Maria Admin</td>
+                    <td>admin@pochita.cl</td>
+                    <td><span class="role-badge role-admin">Admin</span></td>
+                    <td><span style="color:#41d3be;">Activo</span></td>
+                    <td><button class="btn-small btn-ghost">Editar</button></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>

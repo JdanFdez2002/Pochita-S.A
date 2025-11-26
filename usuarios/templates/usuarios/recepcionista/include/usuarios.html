@@ -1,0 +1,98 @@
+<div class="card" style="margin-bottom: 16px;">
+    <h2>Listar usuarios</h2>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-bottom: 12px;">
+        <input class="input-lite" placeholder="Nombre">
+        <input class="input-lite" placeholder="Correo">
+        <input class="input-lite" placeholder="Mascota">
+    </div>
+    <div class="table-responsive">
+        <table class="recep-table">
+            <thead>
+                <tr>
+                    <th>Cliente</th>
+                    <th>Correo</th>
+                    <th>Mascota</th>
+                    <th>Accion</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Paula Diaz</td>
+                    <td>paula@correo.cl</td>
+                    <td>Loki (Caniche)</td>
+                    <td><button class="btn-small btn-ghost">Ver</button></td>
+                </tr>
+                <tr>
+                    <td>Carlos Silva</td>
+                    <td>carlos@correo.cl</td>
+                    <td>Kira (Labrador)</td>
+                    <td><button class="btn-small btn-ghost">Ver</button></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="card">
+    <h2>Perfil de usuario</h2>
+    <div style="display:grid; grid-template-columns: 260px 1fr; gap:14px; align-items: start;">
+        <div style="border:1px solid var(--border); border-radius:12px; padding:12px;">
+            <h3 style="margin-top:0;">Datos del cliente</h3>
+            <p style="color:var(--text-muted); margin: 6px 0;">Nombre: <strong>Paula Diaz</strong></p>
+            <p style="color:var(--text-muted); margin: 6px 0;">Correo: paula@correo.cl</p>
+            <p style="color:var(--text-muted); margin: 6px 0;">Telefono: +56 9 5555 1111</p>
+        </div>
+        <div style="border:1px solid var(--border); border-radius:12px; padding:12px;">
+            <h3 style="margin-top:0;">Mascotas</h3>
+            <div class="table-responsive">
+                <table class="recep-table">
+                    <thead>
+                        <tr>
+                            <th>Mascota</th>
+                            <th>Raza</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Loki</td>
+                            <td>Caniche</td>
+                            <td>
+                                <button class="btn-small btn-ghost">Registrar</button>
+                                <button class="btn-small btn-ghost">Editar</button>
+                                <button class="btn-small btn-ghost">Eliminar</button>
+                                <button class="btn-small btn-primary-lite">Ficha</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Kira</td>
+                            <td>Labrador</td>
+                            <td>
+                                <button class="btn-small btn-ghost">Registrar</button>
+                                <button class="btn-small btn-ghost">Editar</button>
+                                <button class="btn-small btn-ghost">Eliminar</button>
+                                <button class="btn-small btn-primary-lite">Ficha</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div style="margin-top:16px; display:grid; grid-template-columns: repeat(auto-fit, minmax(240px,1fr)); gap:12px;">
+        <div class="card" style="padding:14px;">
+            <h4 style="margin:0 0 6px;">Acciones rápidas</h4>
+            <div style="display:flex; flex-direction:column; gap:8px;">
+                <button class="btn-small btn-primary-lite">Agendar Cita</button>
+                <button class="btn-small btn-ghost">Replanificar Cita</button>
+                <button class="btn-small btn-ghost">Cancelar Cita</button>
+                <button class="btn-small btn-ghost">Historial de Citas</button>
+            </div>
+        </div>
+        <div class="card" style="padding:14px;">
+            <h4 style="margin:0 0 6px;">Ficha clínica (solo lectura)</h4>
+            <p style="color:var(--text-muted); margin:0;">Vacunas al día, alergia a penicilina, última visita 2024-11-02.</p>
+        </div>
+    </div>
+</div>

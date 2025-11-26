@@ -44,9 +44,10 @@ body, html {
 }
 
 /* --- LAYOUT --- */
+.layout,
 .dashboard-wrapper {
     display: flex;
-    height: 100vh;
+    min-height: 100vh;
     overflow: hidden;
 }
 
@@ -73,6 +74,26 @@ body, html {
     gap: 10px;
 }
 
+.menu {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.menu-link {
+    padding: 12px 16px;
+    color: var(--text-muted);
+    text-decoration: none;
+    border-radius: 50px;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    border: 1px solid transparent;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 0.95rem;
+}
+
 /* La pastilla "S.A" estilo tu logo */
 .brand span {
     background: var(--primary);
@@ -88,7 +109,8 @@ body, html {
     gap: 8px;
 }
 
-.nav-item {
+.nav-item,
+.menu-link {
     padding: 12px 16px;
     color: var(--text-muted);
     text-decoration: none;
@@ -103,7 +125,9 @@ body, html {
 }
 
 /* Estado Hover y Activo (Estilo Turquesa) */
-.nav-item:hover, .nav-item.active {
+.nav-item:hover, .nav-item.active,
+.menu-link:hover, .menu-link.is-active,
+.menu-link.active {
     background-color: rgba(65, 211, 190, 0.12); /* Fondo turquesa transparente */
     color: var(--primary);
     border-color: rgba(65, 211, 190, 0.3);
@@ -111,18 +135,26 @@ body, html {
 }
 
 /* Botón de volver abajo */
-.nav-item.logout {
+.nav-item.logout,
+.menu-link.logout {
     margin-top: auto;
     color: #ef4444;
     border-color: rgba(239, 68, 68, 0.2);
 }
-.nav-item.logout:hover {
+.nav-item.logout:hover,
+.menu-link.logout:hover {
     background-color: rgba(239, 68, 68, 0.1);
 }
 
 /* --- 2. CONTENIDO (DERECHA) --- */
 .main-content {
     flex-grow: 1;
+    padding: 40px;
+    overflow-y: auto;
+}
+
+.content {
+    flex: 1;
     padding: 40px;
     overflow-y: auto;
 }
@@ -147,7 +179,8 @@ body, html {
     animation: fadeIn 0.4s ease;
 }
 
-.dashboard-section.active {
+.dashboard-section.active,
+.dashboard-section.is-active {
     display: block;
 }
 
@@ -173,6 +206,20 @@ body, html {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
 }
+
+/* --- RECEPCIONISTA (helpers) --- */
+.recep-hero { margin-bottom: 24px; }
+.recep-hero .pill {
+    background: rgba(65, 211, 190, 0.15);
+    border: 1px solid rgba(65, 211, 190, 0.3);
+    color: #41d3be;
+    display: inline-flex;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-weight: 700;
+}
+.recep-hero h1 { margin: 10px 0 6px; color: #fff; }
+.recep-hero p { color: var(--text-muted); margin: 0; }
 
 /* Responsive */
 @media (max-width: 768px) {

@@ -1,273 +1,30 @@
+{% extends "usuarios/base.html" %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin | Pochita S.A</title>
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-    
-    <link rel="stylesheet" href="{% static 'usuarios/dashboard.css' %}">
 
-    <style>
-        /* Estilos de Tabla Admin */
-        .crud-table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 0.9rem; }
-        .crud-table th { text-align: left; padding: 15px; color: var(--primary); border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); }
-        .crud-table td { padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); color: var(--text-main); vertical-align: middle; }
-        .crud-table tr:hover { background: rgba(255,255,255,0.02); }
+{% block title %}Administrador | Pochita S.A{% endblock %}
 
-        /* Badges de Rol */
-        .role-badge { padding: 5px 10px; border-radius: 50px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
-        .role-admin { background: rgba(255, 107, 107, 0.2); color: #ff6b6b; border: 1px solid rgba(255,107,107,0.3); }
-        .role-vet { background: rgba(65, 211, 190, 0.2); color: #41d3be; border: 1px solid rgba(65,211,190,0.3); }
-        .role-recep { background: rgba(247, 201, 72, 0.2); color: #f7c948; border: 1px solid rgba(247,201,72,0.3); }
+{% block sidebar_menu %}
+    <a href="#" class="menu-link is-active" data-target="sec-inicio">Inicio</a>
+    <a href="#" class="menu-link" data-target="sec-usuarios">Usuarios</a>
+    <a href="#" class="menu-link" data-target="sec-finanzas">Finanzas</a>
+    <a href="#" class="menu-link" data-target="sec-config">Configuracion</a>
+    <a href="/" class="menu-link logout">Cerrar sesion</a>
+{% endblock %}
 
-        /* Botones de Acción */
-        .btn-icon {
-            width: 32px; height: 32px; border-radius: 8px; border: none; cursor: pointer;
-            display: inline-flex; align-items: center; justify-content: center;
-            transition: 0.2s; font-size: 1.1rem;
-        }
-        .btn-edit { background: rgba(65, 211, 190, 0.1); color: #41d3be; margin-right: 5px; }
-        .btn-edit:hover { background: #41d3be; color: #000; }
-        .btn-delete { background: rgba(255, 107, 107, 0.1); color: #ff6b6b; }
-        .btn-delete:hover { background: #ff6b6b; color: #fff; }
+{% block dashboard_content %}
+    <section id="sec-inicio" class="dashboard-section is-active">
+        {% include "usuarios/administrador/include/inicio.html" %}
+    </section>
 
-        /* Botón Nuevo */
-        .btn-create {
-            background: linear-gradient(135deg, var(--primary), #2bc4ad);
-            color: #0e1726; border: none; padding: 10px 20px; border-radius: 8px;
-            font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px;
-            box-shadow: 0 4px 15px rgba(65, 211, 190, 0.3); transition: 0.3s;
-        }
-        .btn-create:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(65, 211, 190, 0.5); }
+    <section id="sec-usuarios" class="dashboard-section">
+        {% include "usuarios/administrador/include/usuarios.html" %}
+    </section>
 
-        /* --- MODAL (Ventana Emergente) --- */
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(14, 23, 38, 0.8); backdrop-filter: blur(5px);
-            z-index: 1000; display: none; align-items: center; justify-content: center;
-            opacity: 0; transition: opacity 0.3s;
-        }
-        .modal-overlay.open { display: flex; opacity: 1; }
-        
-        .modal-content {
-            background: #1e293b; width: 500px; max-width: 90%;
-            border: 1px solid var(--primary); border-radius: 16px; padding: 30px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-            transform: scale(0.8); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-        .modal-overlay.open .modal-content { transform: scale(1); }
+    <section id="sec-finanzas" class="dashboard-section">
+        {% include "usuarios/administrador/include/finanzas.html" %}
+    </section>
 
-        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 15px; }
-        .modal-header h2 { margin: 0; color: #fff; font-size: 1.5rem; }
-        .close-modal { background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer; }
-        
-        /* Formulario del Modal */
-        .form-group { margin-bottom: 15px; }
-        .form-label { display: block; margin-bottom: 8px; color: var(--text-muted); font-size: 0.9rem; }
-        .form-control {
-            width: 100%; padding: 12px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 8px; color: #fff; outline: none;
-        }
-        .form-control:focus { border-color: var(--primary); }
-    </style>
-</head>
-<body>
-
-    <div class="dashboard-wrapper">
-        
-        <nav class="sidebar">
-            <div class="brand">Pochita <span>Admin</span></div>
-            
-            <div class="nav-links">
-                <a href="#" class="nav-item active" data-target="sec-resumen">📊 Resumen Global</a>
-                <a href="#" class="nav-item" data-target="sec-usuarios">👥 Gestión Usuarios</a> <a href="#" class="nav-item" data-target="sec-finanzas">💰 Finanzas</a>
-                <a href="#" class="nav-item" data-target="sec-config">⚙️ Configuración</a>
-                
-                <a href="/" class="nav-item logout">Cerrar Sesión</a>
-            </div>
-        </nav>
-
-        <main class="main-content">
-            
-            <h1 class="header-title">Panel de Administrador</h1>
-
-            <section id="sec-resumen" class="dashboard-section active">
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px;">
-                    <div class="card">
-                        <h3 style="margin:0; color:var(--text-muted); font-size:0.9rem;">Total Ingresos (Mes)</h3>
-                        <div style="font-size: 2.2rem; font-weight: 800; color: #fff; margin: 10px 0;">$ 4.2M</div>
-                        <span style="color: #41d3be; font-size: 0.85rem;">▲ 12% vs mes anterior</span>
-                    </div>
-                    <div class="card">
-                        <h3 style="margin:0; color:var(--text-muted); font-size:0.9rem;">Usuarios Activos</h3>
-                        <div style="font-size: 2.2rem; font-weight: 800; color: #fff; margin: 10px 0;">1,240</div>
-                        <span style="color: #f7c948; font-size: 0.85rem;">● 5 Nuevos hoy</span>
-                    </div>
-                    <div class="card">
-                        <h3 style="margin:0; color:var(--text-muted); font-size:0.9rem;">Citas Pendientes</h3>
-                        <div style="font-size: 2.2rem; font-weight: 800; color: #fff; margin: 10px 0;">45</div>
-                        <span style="color: #ff6b6b; font-size: 0.85rem;">▼ 2 Canceladas</span>
-                    </div>
-                </div>
-            </section>
-
-            <section id="sec-usuarios" class="dashboard-section">
-                <div class="card">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                        <div>
-                            <h2>Gestión de Personal y Clientes</h2>
-                            <p style="color: var(--text-muted);">Administra el acceso a la plataforma.</p>
-                        </div>
-                        <button class="btn-create" onclick="openModal()">
-                            <span>+</span> Nuevo Usuario
-                        </button>
-                    </div>
-
-                    <div style="overflow-x: auto;">
-                        <table class="crud-table">
-                            <thead>
-                                <tr>
-                                    <th>Usuario</th>
-                                    <th>Email</th>
-                                    <th>Rol</th>
-                                    <th>Estado</th>
-                                    <th>Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>
-                                        <div style="display:flex; align-items:center; gap:10px;">
-                                            <div style="width:35px; height:35px; background: #334155; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold;">JP</div>
-                                            <strong>Juan Pérez</strong>
-                                        </div>
-                                    </td>
-                                    <td>juan.perez@pochita.cl</td>
-                                    <td><span class="role-badge role-vet">Veterinario</span></td>
-                                    <td><span style="color:#41d3be;">● Activo</span></td>
-                                    <td>
-                                        <button class="btn-icon btn-edit" title="Editar">✎</button>
-                                        <button class="btn-icon btn-delete" title="Eliminar">🗑</button>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <div style="display:flex; align-items:center; gap:10px;">
-                                            <div style="width:35px; height:35px; background: #334155; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold;">MA</div>
-                                            <strong>Maria Admin</strong>
-                                        </div>
-                                    </td>
-                                    <td>admin@pochita.cl</td>
-                                    <td><span class="role-badge role-admin">Admin</span></td>
-                                    <td><span style="color:#41d3be;">● Activo</span></td>
-                                    <td>
-                                        <button class="btn-icon btn-edit" title="Editar">✎</button>
-                                        </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <div style="display:flex; align-items:center; gap:10px;">
-                                            <div style="width:35px; height:35px; background: #334155; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold;">LU</div>
-                                            <strong>Lucas Recepción</strong>
-                                        </div>
-                                    </td>
-                                    <td>lucas@pochita.cl</td>
-                                    <td><span class="role-badge role-recep">Recepción</span></td>
-                                    <td><span style="color:#ff6b6b;">● Inactivo</span></td>
-                                    <td>
-                                        <button class="btn-icon btn-edit" title="Editar">✎</button>
-                                        <button class="btn-icon btn-delete" title="Eliminar">🗑</button>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
-
-            <section id="sec-finanzas" class="dashboard-section">
-                <div class="card">
-                    <h2>Reporte Financiero</h2>
-                    <p style="color: var(--text-muted);">Gráficos y reportes en construcción.</p>
-                </div>
-            </section>
-
-        </main>
-    </div>
-
-    <div class="modal-overlay" id="userModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Nuevo Usuario</h2>
-                <button class="close-modal" onclick="closeModal()">×</button>
-            </div>
-            <form action="" method="POST"> {% csrf_token %}
-                <div class="form-group">
-                    <label class="form-label">Nombre Completo</label>
-                    <input type="text" class="form-control" placeholder="Ej: Dr. House">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Correo Electrónico</label>
-                    <input type="email" class="form-control" placeholder="correo@ejemplo.com">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Rol Asignado</label>
-                    <select class="form-control" style="background:#1e293b;">
-                        <option value="veterinario">Veterinario</option>
-                        <option value="recepcionista">Recepcionista</option>
-                        <option value="cliente">Cliente</option>
-                        <option value="admin">Administrador</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Contraseña Temporal</label>
-                    <input type="password" class="form-control" placeholder="******">
-                </div>
-                <div style="margin-top: 20px; text-align: right;">
-                    <button type="button" onclick="closeModal()" style="background:transparent; border:1px solid var(--text-muted); color:var(--text-main); padding:10px 20px; border-radius:8px; cursor:pointer; margin-right:10px;">Cancelar</button>
-                    <button type="submit" class="btn-create" style="display:inline-flex;">Guardar Usuario</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <script>
-        // Lógica de Pestañas
-        document.addEventListener('DOMContentLoaded', () => {
-            const links = document.querySelectorAll('.nav-item[data-target]');
-            const sections = document.querySelectorAll('.dashboard-section');
-
-            links.forEach(link => {
-                link.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    links.forEach(l => l.classList.remove('active'));
-                    sections.forEach(s => s.classList.remove('active'));
-                    
-                    link.classList.add('active');
-                    document.getElementById(link.dataset.target).classList.add('active');
-                });
-            });
-        });
-
-        // Lógica del Modal
-        function openModal() {
-            document.getElementById('userModal').classList.add('open');
-        }
-        function closeModal() {
-            document.getElementById('userModal').classList.remove('open');
-        }
-        // Cerrar si se hace clic fuera
-        window.onclick = function(event) {
-            const modal = document.getElementById('userModal');
-            if (event.target == modal) {
-                closeModal();
-            }
-        }
-    </script>
-</body>
-</html>
+    <section id="sec-config" class="dashboard-section">
+        {% include "usuarios/administrador/include/configuracion.html" %}
+    </section>
+{% endblock %}

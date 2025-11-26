@@ -25,6 +25,34 @@
             grid-template-columns: repeat(3, minmax(0, 1fr));
         }
     }
+    .contact-gallery {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 16px;
+    }
+    .contact-gallery .gallery-card {
+        position: relative;
+        min-height: 180px;
+        border-radius: 14px;
+        border: 1px solid var(--stroke);
+        background: linear-gradient(180deg, rgba(11, 19, 32, 0) 10%, rgba(11, 19, 32, 0.78) 75%, rgba(11, 19, 32, 0.95) 100%), var(--photo);
+        background-size: cover;
+        background-position: center;
+        overflow: hidden;
+        box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+        display: flex;
+        align-items: flex-end;
+        padding: 16px;
+    }
+    .contact-gallery .gallery-card h3 {
+        margin: 0;
+        font-size: 1rem;
+    }
+    .contact-gallery .gallery-card p {
+        margin: 4px 0 0;
+        color: var(--muted);
+        font-size: 0.9rem;
+    }
 </style>
 {% endblock %}
 
@@ -48,6 +76,36 @@
                 <div class="stat">
                     <strong>Hospitalizacion</strong>
                     <span>laura.tapia@pochita.vet - +56 9 4597 5626</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section>
+        <div class="section-head">
+            <div>
+                <small class="pill alt-pill">Nuestra clinica</small>
+                <h2>Un equipo real en un lugar real.</h2>
+                <p>Te recibimos en espacios pensados para tus mascotas: salas luminosas, laboratorio en casa y zonas de descanso para acompanarte.</p>
+            </div>
+        </div>
+        <div class="contact-gallery">
+            <div class="gallery-card" style="--photo: url('https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=1200&q=80');">
+                <div>
+                    <h3>Recepcion amable</h3>
+                    <p>Ingreso rapido y con cafe mientras esperas.</p>
+                </div>
+            </div>
+            <div class="gallery-card" style="--photo: url('https://images.unsplash.com/photo-1582719478250-c4561b2b2f87?auto=format&fit=crop&w=1200&q=80');">
+                <div>
+                    <h3>Box de consulta</h3>
+                    <p>Equipado con monitoreo y confort para tu mascota.</p>
+                </div>
+            </div>
+            <div class="gallery-card" style="--photo: url('https://images.unsplash.com/photo-1582719478248-54e9f2b35aff?auto=format&fit=crop&w=1200&q=80');">
+                <div>
+                    <h3>Laboratorio y rayos</h3>
+                    <p>Resultados en minutos para actuar sin demoras.</p>
                 </div>
             </div>
         </div>

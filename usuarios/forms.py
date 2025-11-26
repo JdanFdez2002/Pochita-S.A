@@ -1,5 +1,9 @@
 from django import forms
+from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.models import User
+from django.db import transaction
+from django.urls import reverse_lazy
+from django.utils.safestring import mark_safe
 
 from .models import Cliente, Perfil
 
@@ -33,22 +37,71 @@ class RegistroClienteForm(forms.Form):
 
     def save(self):
         data = self.cleaned_data
-        user = User(
-            username=data["email"],
-            first_name=data["first_name"],
-            last_name=data["last_name"],
-            email=data["email"],
-        )
-        user.set_password(data["password1"])
-        user.save()
+        with transaction.atomic():
+            user = User(
+                username=data["email"],
+                first_name=data["first_name"],
+                last_name=data["last_name"],
+                email=data["email"],
+            )
+            user.set_password(data["password1"])
+            user.save()
 
-        perfil = Perfil.objects.create(user=user, rol=Perfil.Roles.CLIENTE)
+            perfil, _ = Perfil.objects.get_or_create(
+                user=user, defaults={"rol": Perfil.Roles.CLIENTE}
+            )
+            if perfil.rol != Perfil.Roles.CLIENTE:
+                perfil.rol = Perfil.Roles.CLIENTE
+                perfil.save(update_fields=["rol"])
 
-        Cliente.objects.create(
-            perfil=perfil,
-            rut=data["rut"],
-            direccion=data["direccion"],
-            telefono=data["telefono"],
-            recibe_noticias=data.get("recibe_noticias", False),
-        )
+            Cliente.objects.create(
+                perfil=perfil,
+                rut=data["rut"],
+                direccion=data["direccion"],
+                telefono=data["telefono"],
+                recibe_noticias=data.get("recibe_noticias", False),
+            )
         return user
+
+
+class PersonalAuthenticationForm(AuthenticationForm):
+    """
+    Bloquea el acceso de cuentas que no tengan rol de personal y muestra
+    un mensaje con link al login de clientes.
+    """
+
+    def confirm_login_allowed(self, user):
+        super().confirm_login_allowed(user)
+        try:
+            perfil = user.perfil
+        except Perfil.DoesNotExist:
+            perfil = None
+
+        allowed = {
+            Perfil.Roles.VETERINARIO,
+            Perfil.Roles.RECEPCIONISTA,
+            Perfil.Roles.ADMINISTRADOR,
+        }
+        if not perfil or perfil.rol not in allowed:
+            link = reverse_lazy("usuarios:login_clientes")
+            msg = mark_safe(
+                f'Tu usuario no es parte del personal. '
+                f'<a href="{link}" style="color:#60a5fa;">Volver a login cliente</a>'
+            )
+            raise forms.ValidationError(msg, code="no_staff")
+
+
+class ClienteAuthenticationForm(AuthenticationForm):
+    """
+    Bloquea el acceso de cuentas que no sean clientes y muestra mensaje simple.
+    """
+
+    def confirm_login_allowed(self, user):
+        super().confirm_login_allowed(user)
+        try:
+            perfil = user.perfil
+        except Perfil.DoesNotExist:
+            perfil = None
+        if not perfil or perfil.rol != Perfil.Roles.CLIENTE:
+            msg = "Esta cuenta no está registrada como cliente."
+            raise forms.ValidationError(msg, code="no_cliente")

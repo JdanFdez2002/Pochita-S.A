@@ -1,0 +1,21 @@
+Cliente:
+- cliente@gmail.com
+- contraseñacliente1
+
+Administrador:
+- admin@gmail.com
+- contraseñaadministrador1
+
+Veterinario:
+- veterinario@gmail.com
+- contraseñaveterinario1
+
+Recepcionista:
+- recepcionista@gmail.com
+- contraseñaderecepcionista1
+
+Genéricos
+12.345.678-9
++56 9 1234 5678
+Numero, Calle, Sector, Comuna, Región
+
