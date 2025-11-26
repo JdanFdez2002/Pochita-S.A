@@ -95,6 +95,7 @@ class Recepcionista(PersonalBase):
 
 
 class Administrador(PersonalBase):
+    empresa_representante = models.CharField(max_length=255, blank=True, null=True)
     ROLE = Perfil.Roles.ADMINISTRADOR
 
     class Meta:

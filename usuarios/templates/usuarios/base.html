@@ -46,6 +46,66 @@
         const first = links.length ? links[0].dataset.target : null;
         if (first) showSection(first);
     })();
+
+    // Manejo de formularios de perfil: vista solo lectura, editar, confirmar o cancelar.
+    (function() {
+        const forms = document.querySelectorAll(".profile-form");
+        forms.forEach(form => {
+            const fields = form.querySelectorAll("[data-editable]");
+            const editableFields = form.querySelectorAll("[data-editable]:not([data-locked])");
+            const lockedFields = form.querySelectorAll("[data-locked]");
+            const editBtn = form.querySelector("[data-action='edit']");
+            const cancelBtn = form.querySelector("[data-action='cancel']");
+            const submitBtn = form.querySelector("[data-action='submit']");
+            const hasErrors = form.dataset.hasErrors === "1";
+            const originals = new Map();
+            fields.forEach(field => originals.set(field.name, field.value));
+
+            function setEditable(enabled) {
+                editableFields.forEach(field => {
+                    field.disabled = !enabled;
+                });
+                lockedFields.forEach(field => {
+                    field.disabled = true;
+                });
+                if (submitBtn) submitBtn.disabled = !enabled;
+                if (cancelBtn) cancelBtn.disabled = !enabled;
+                if (editBtn) editBtn.disabled = enabled;
+                form.classList.toggle("is-editing", enabled);
+            }
+
+            function resetValues() {
+                originals.forEach((value, name) => {
+                    const field = form.querySelector(`[name='${name}']`);
+                    if (field) field.value = value;
+                });
+            }
+
+            if (hasErrors) {
+                setEditable(true);
+            } else {
+                setEditable(false);
+            }
+
+            if (editBtn) {
+                editBtn.addEventListener("click", (event) => {
+                    event.preventDefault();
+                    setEditable(true);
+                });
+            }
+            if (cancelBtn) {
+                cancelBtn.addEventListener("click", (event) => {
+                    event.preventDefault();
+                    resetValues();
+                    setEditable(false);
+                });
+            }
+            form.addEventListener("submit", () => {
+                // aseguramos que los campos viajen habilitados al backend
+                editableFields.forEach(field => field.disabled = false);
+            });
+        });
+    })();
     </script>
 </body>
 </html>

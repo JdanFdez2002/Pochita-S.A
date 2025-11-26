@@ -1,26 +1,45 @@
-<div class="card" style="margin-bottom: 16px;">
-    <h2>Resumen</h2>
-    <p style="color: var(--text-muted);">Notificaciones y estado general.</p>
-    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px,1fr)); gap:12px; margin-top: 12px;">
-        <div class="card" style="padding:14px;">
-            <small style="color:var(--text-muted);">Próxima cita</small>
-            <div style="font-size:1.2rem;">12 Dic, 10:00</div>
-        </div>
-        <div class="card" style="padding:14px;">
-            <small style="color:var(--text-muted);">Mascotas registradas</small>
-            <div style="font-size:1.2rem;">2</div>
-        </div>
-        <div class="card" style="padding:14px;">
-            <small style="color:var(--text-muted);">Vacunas pendientes</small>
-            <div style="font-size:1.2rem; color:#f7c948;">1</div>
-        </div>
-    </div>
-</div>
-
 <div class="card">
-    <h2>Alertas</h2>
-    <ul style="margin:12px 0 0; padding-left:16px; color:var(--text-muted);">
-        <li>Cita confirmada para Luna el 12 Dic.</li>
-        <li>Recuerda actualizar el peso de Firulais.</li>
-    </ul>
+    <h2>Mis datos</h2>
+    <p style="color: var(--text-muted); margin-bottom: 12px;">Correo, rut, direccion y telefono guardados en tu perfil.</p>
+
+    {% if profile_saved %}
+        <div class="alert-success">Datos actualizados correctamente.</div>
+    {% endif %}
+    {% if form.non_field_errors %}
+        <div class="form-errors">{{ form.non_field_errors }}</div>
+    {% endif %}
+
+    <form method="post" class="profile-form" data-has-errors="{% if form_has_errors %}1{% else %}0{% endif %}">
+        {% csrf_token %}
+        <div class="form-grid">
+            <div class="form-field">
+                <label for="{{ form.email.id_for_label }}">Correo</label>
+                {{ form.email }}
+                {% if form.email.errors %}<div class="field-error">{{ form.email.errors|join:", " }}</div>{% endif %}
+            </div>
+            <div class="form-field">
+                <label for="{{ form.rut.id_for_label }}">RUT</label>
+                {{ form.rut }}
+                {% if form.rut.errors %}<div class="field-error">{{ form.rut.errors|join:", " }}</div>{% endif %}
+            </div>
+            <div class="form-field">
+                <label for="{{ form.direccion.id_for_label }}">Direccion</label>
+                {{ form.direccion }}
+                {% if form.direccion.errors %}<div class="field-error">{{ form.direccion.errors|join:", " }}</div>{% endif %}
+            </div>
+            <div class="form-field">
+                <label for="{{ form.telefono.id_for_label }}">Telefono</label>
+                {{ form.telefono }}
+                {% if form.telefono.errors %}<div class="field-error">{{ form.telefono.errors|join:", " }}</div>{% endif %}
+            </div>
+        </div>
+
+        <div class="form-actions profile-actions">
+            <button type="button" class="btn btn-outline" data-action="edit">Editar</button>
+            <div class="actions-right">
+                <button type="button" class="btn btn-outline" data-action="cancel" disabled>Cancelar</button>
+                <button type="submit" class="btn btn-primary" data-action="submit" disabled>Confirmar</button>
+            </div>
+        </div>
+    </form>
 </div>
