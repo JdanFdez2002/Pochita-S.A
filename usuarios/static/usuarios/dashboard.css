@@ -325,6 +325,14 @@ body, html {
     margin-bottom: 10px;
 }
 
+.notice-card {
+    border-left: 3px solid rgba(247, 201, 72, 0.8);
+}
+
+.alert-card {
+    border-left: 3px solid rgba(239, 68, 68, 0.8);
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .sidebar { display: none; }

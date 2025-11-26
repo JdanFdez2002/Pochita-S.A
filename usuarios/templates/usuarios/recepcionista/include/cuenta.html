@@ -1,15 +1,45 @@
-<div class="card" style="margin-bottom: 16px;">
-    <h2>Perfil</h2>
-    <div class="form-inline" style="margin-bottom: 10px;">
-        <input class="input-lite" placeholder="Nombre">
-        <input class="input-lite" placeholder="Correo">
-        <input class="input-lite" placeholder="Telefono">
-    </div>
-    <button class="btn-small btn-primary-lite" type="button">Guardar cambios</button>
-</div>
-
 <div class="card">
-    <h3 style="margin-top:0;">Cerrar sesión</h3>
-    <p style="color:var(--text-muted); margin-bottom: 10px;">Cierra tu sesión de recepcionista.</p>
-    <a href="/" class="btn-small btn-primary-lite">Cerrar turno</a>
+    <h2>Mis datos</h2>
+    <p style="color: var(--text-muted); margin-bottom: 12px;">Informacion del turno en recepcion: correo, rut, direccion y telefono.</p>
+
+    {% if profile_saved %}
+        <div class="alert-success">Datos actualizados correctamente.</div>
+    {% endif %}
+    {% if form.non_field_errors %}
+        <div class="form-errors">{{ form.non_field_errors }}</div>
+    {% endif %}
+
+    <form method="post" class="profile-form" data-has-errors="{% if form_has_errors %}1{% else %}0{% endif %}">
+        {% csrf_token %}
+        <div class="form-grid">
+            <div class="form-field">
+                <label for="{{ form.email.id_for_label }}">Correo</label>
+                {{ form.email }}
+                {% if form.email.errors %}<div class="field-error">{{ form.email.errors|join:", " }}</div>{% endif %}
+            </div>
+            <div class="form-field">
+                <label for="{{ form.rut.id_for_label }}">RUT</label>
+                {{ form.rut }}
+                {% if form.rut.errors %}<div class="field-error">{{ form.rut.errors|join:", " }}</div>{% endif %}
+            </div>
+            <div class="form-field">
+                <label for="{{ form.telefono.id_for_label }}">Telefono</label>
+                {{ form.telefono }}
+                {% if form.telefono.errors %}<div class="field-error">{{ form.telefono.errors|join:", " }}</div>{% endif %}
+            </div>
+            <div class="form-field">
+                <label for="{{ form.direccion.id_for_label }}">Direccion</label>
+                {{ form.direccion }}
+                {% if form.direccion.errors %}<div class="field-error">{{ form.direccion.errors|join:", " }}</div>{% endif %}
+            </div>
+        </div>
+
+        <div class="form-actions profile-actions">
+            <button type="button" class="btn btn-outline" data-action="edit">Editar</button>
+            <div class="actions-right">
+                <button type="button" class="btn btn-outline" data-action="cancel" disabled>Cancelar</button>
+                <button type="submit" class="btn btn-primary" data-action="submit" disabled>Confirmar</button>
+            </div>
+        </div>
+    </form>
 </div>
