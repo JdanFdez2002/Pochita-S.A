@@ -33,14 +33,41 @@ class BaseStaffAdmin(admin.ModelAdmin):
 
 @admin.register(Veterinario)
 class VeterinarioAdmin(BaseStaffAdmin):
-    pass
+    search_fields = ("perfil__user__username", "perfil__user__email", "rut", "especialidad", "turno")
+    fieldsets = (
+        ("Usuario", {"fields": ("perfil",)}),
+        ("Datos personales", {"fields": ("rut", "telefono", "direccion")}),
+        ("Rol y horario", {"fields": ("especialidad", "turno")}),
+    )
+    exclude = ("permisos_extra",)
 
 
 @admin.register(Recepcionista)
-class RecepcionistaAdmin(BaseStaffAdmin):
-    pass
+class RecepcionistaAdmin(admin.ModelAdmin):
+    list_display = ("perfil", "rut", "telefono")
+    search_fields = ("perfil__user__username", "perfil__user__email", "rut")
+    list_filter = ("perfil__rol",)
+    autocomplete_fields = ("perfil",)
+    fieldsets = (
+        ("Usuario", {"fields": ("perfil",)}),
+        ("Datos personales", {"fields": ("rut", "telefono", "direccion")}),
+    )
+    exclude = ("especialidad", "turno", "permisos_extra")
 
 
 @admin.register(Administrador)
-class AdministradorAdmin(BaseStaffAdmin):
-    pass
+class AdministradorAdmin(admin.ModelAdmin):
+    list_display = ("perfil", "rut", "telefono", "empresa_representante")
+    search_fields = (
+        "perfil__user__username",
+        "perfil__user__email",
+        "rut",
+        "empresa_representante",
+    )
+    list_filter = ("perfil__rol",)
+    autocomplete_fields = ("perfil",)
+    fieldsets = (
+        ("Usuario", {"fields": ("perfil",)}),
+        ("Datos personales", {"fields": ("rut", "telefono", "direccion", "empresa_representante")}),
+    )
+    exclude = ("especialidad", "turno", "permisos_extra")

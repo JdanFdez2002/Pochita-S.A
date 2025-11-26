@@ -1,98 +1,187 @@
-<div class="card" style="margin-bottom: 16px;">
-    <h2>Listar usuarios</h2>
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-bottom: 12px;">
-        <input class="input-lite" placeholder="Nombre">
-        <input class="input-lite" placeholder="Correo">
-        <input class="input-lite" placeholder="Mascota">
+<div class="card" style="margin-bottom:16px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
+        <div>
+            <h2 style="margin:0;">Gestion de usuarios</h2>
+            <p style="color:var(--text-muted); margin:4px 0 0;">Listado de clientes con busqueda y paginacion (placeholder).</p>
+        </div>
+        <button class="btn btn-outline">Crear cliente</button>
     </div>
+
+    <div class="search-bar" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap:10px; margin:14px 0;">
+        <input class="input-lite" placeholder="Buscar por nombre o correo">
+        <input class="input-lite" placeholder="Buscar por RUT">
+        <input class="input-lite" placeholder="Buscar por mascota">
+        <button class="btn btn-primary" type="button">Buscar</button>
+    </div>
+
     <div class="table-responsive">
         <table class="recep-table">
             <thead>
                 <tr>
-                    <th>Cliente</th>
+                    <th>Nombre</th>
+                    <th>RUT</th>
                     <th>Correo</th>
-                    <th>Mascota</th>
+                    <th>Telefono</th>
+                    <th>Mascotas</th>
                     <th>Accion</th>
                 </tr>
             </thead>
             <tbody>
+                {% for idx in "123456789ABCDE" %}
                 <tr>
-                    <td>Paula Diaz</td>
-                    <td>paula@correo.cl</td>
-                    <td>Loki (Caniche)</td>
-                    <td><button class="btn-small btn-ghost">Ver</button></td>
+                    <td>Cliente {{ idx }}</td>
+                    <td>12.345.67{{ forloop.counter }}-9</td>
+                    <td>cliente{{ forloop.counter }}@correo.cl</td>
+                    <td>+56 9 5555 0{{ forloop.counter|stringformat:"02d" }}</td>
+                    <td>
+                        <div class="tag-list">
+                            <span class="tag">Luna</span>
+                            <span class="tag">Milo</span>
+                        </div>
+                    </td>
+                    <td>
+                        <button class="btn-small btn-primary-lite js-open-cliente" type="button">Ver detalles</button>
+                    </td>
                 </tr>
-                <tr>
-                    <td>Carlos Silva</td>
-                    <td>carlos@correo.cl</td>
-                    <td>Kira (Labrador)</td>
-                    <td><button class="btn-small btn-ghost">Ver</button></td>
-                </tr>
+                {% endfor %}
             </tbody>
         </table>
     </div>
-</div>
 
-<div class="card">
-    <h2>Perfil de usuario</h2>
-    <div style="display:grid; grid-template-columns: 260px 1fr; gap:14px; align-items: start;">
-        <div style="border:1px solid var(--border); border-radius:12px; padding:12px;">
-            <h3 style="margin-top:0;">Datos del cliente</h3>
-            <p style="color:var(--text-muted); margin: 6px 0;">Nombre: <strong>Paula Diaz</strong></p>
-            <p style="color:var(--text-muted); margin: 6px 0;">Correo: paula@correo.cl</p>
-            <p style="color:var(--text-muted); margin: 6px 0;">Telefono: +56 9 5555 1111</p>
-        </div>
-        <div style="border:1px solid var(--border); border-radius:12px; padding:12px;">
-            <h3 style="margin-top:0;">Mascotas</h3>
-            <div class="table-responsive">
-                <table class="recep-table">
-                    <thead>
-                        <tr>
-                            <th>Mascota</th>
-                            <th>Raza</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>Loki</td>
-                            <td>Caniche</td>
-                            <td>
-                                <button class="btn-small btn-ghost">Registrar</button>
-                                <button class="btn-small btn-ghost">Editar</button>
-                                <button class="btn-small btn-ghost">Eliminar</button>
-                                <button class="btn-small btn-primary-lite">Ficha</button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>Kira</td>
-                            <td>Labrador</td>
-                            <td>
-                                <button class="btn-small btn-ghost">Registrar</button>
-                                <button class="btn-small btn-ghost">Editar</button>
-                                <button class="btn-small btn-ghost">Eliminar</button>
-                                <button class="btn-small btn-primary-lite">Ficha</button>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <div style="margin-top:16px; display:grid; grid-template-columns: repeat(auto-fit, minmax(240px,1fr)); gap:12px;">
-        <div class="card" style="padding:14px;">
-            <h4 style="margin:0 0 6px;">Acciones rápidas</h4>
-            <div style="display:flex; flex-direction:column; gap:8px;">
-                <button class="btn-small btn-primary-lite">Agendar Cita</button>
-                <button class="btn-small btn-ghost">Replanificar Cita</button>
-                <button class="btn-small btn-ghost">Cancelar Cita</button>
-                <button class="btn-small btn-ghost">Historial de Citas</button>
-            </div>
-        </div>
-        <div class="card" style="padding:14px;">
-            <h4 style="margin:0 0 6px;">Ficha clínica (solo lectura)</h4>
-            <p style="color:var(--text-muted); margin:0;">Vacunas al día, alergia a penicilina, última visita 2024-11-02.</p>
+    <div class="paginator">
+        <div>Mostrando 1 - 15 de 45 clientes</div>
+        <div class="pager-actions">
+            <button class="btn-small btn-ghost" type="button" disabled>&laquo; Anterior</button>
+            <button class="btn-small btn-ghost" type="button">Siguiente &raquo;</button>
         </div>
     </div>
 </div>
+
+<div class="modal-overlay" data-modal="cliente">
+    <div class="modal-card">
+        <div class="modal-header">
+            <div>
+                <div class="pill">Cliente</div>
+                <h3 style="margin:6px 0 0;">Paula Diaz</h3>
+                <p style="color:var(--text-muted); margin:4px 0 0;">Rut: 12.345.678-9 · paula@correo.cl · +56 9 5555 1111</p>
+            </div>
+            <button class="btn btn-outline js-close-modal" type="button">&times;</button>
+        </div>
+
+        <div class="modal-body">
+            <div class="card" style="padding:14px;">
+                <h4 style="margin:0 0 8px;">Datos personales</h4>
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr)); gap:8px; color:var(--text-muted);">
+                    <span>Correo: <strong>paula@correo.cl</strong></span>
+                    <span>Telefono: <strong>+56 9 5555 1111</strong></span>
+                    <span>Direccion: <strong>Av. Ejemplo 123</strong></span>
+                </div>
+            </div>
+
+            <div class="card" style="padding:14px;">
+                <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+                    <h4 style="margin:0;">Mascotas</h4>
+                    <button class="btn-small btn-primary" type="button">Agregar mascota</button>
+                </div>
+                <div class="table-responsive" style="margin-top:10px;">
+                    <table class="recep-table compact">
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Especie</th>
+                                <th>Notas</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Luna</td>
+                                <td>Canino</td>
+                                <td>Alergia penicilina</td>
+                                <td class="table-actions">
+                                    <button class="btn-small btn-ghost">Datos</button>
+                                    <button class="btn-small btn-ghost">Historial</button>
+                                    <button class="btn-small btn-ghost">Vacunas</button>
+                                    <button class="btn-small btn-primary-lite">Ficha</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Milo</td>
+                                <td>Felino</td>
+                                <td>Vacunas al dia</td>
+                                <td class="table-actions">
+                                    <button class="btn-small btn-ghost">Datos</button>
+                                    <button class="btn-small btn-ghost">Historial</button>
+                                    <button class="btn-small btn-ghost">Vacunas</button>
+                                    <button class="btn-small btn-primary-lite">Ficha</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card" style="padding:14px;">
+                <h4 style="margin:0 0 8px;">Acciones rapidas</h4>
+                <div class="quick-actions">
+                    <button class="btn-small btn-primary-lite">Agendar cita</button>
+                    <button class="btn-small btn-ghost">Reagendar</button>
+                    <button class="btn-small btn-ghost">Ver historial de citas</button>
+                    <button class="btn-small btn-ghost">Ver expediente</button>
+                </div>
+            </div>
+
+            <div class="card" style="padding:14px;">
+                <h4 style="margin:0 0 8px;">Gestion de citas</h4>
+                <div class="appointments-grid">
+                    <div class="card mini">
+                        <h5>Agendar cita</h5>
+                        <ul>
+                            <li>Seleccionar veterinario</li>
+                            <li>Ver horarios disponibles</li>
+                            <li>Elegir cliente y mascota</li>
+                            <li>Motivo de la consulta</li>
+                        </ul>
+                    </div>
+                    <div class="card mini">
+                        <h5>Reagendar</h5>
+                        <p style="color:var(--text-muted); margin:0;">Mover cita existente a otro bloque.</p>
+                    </div>
+                    <div class="card mini">
+                        <h5>Historial clinico</h5>
+                        <p style="color:var(--text-muted); margin:0;">Solo lectura de atenciones previas.</p>
+                    </div>
+                    <div class="card mini">
+                        <h5>Vacunas</h5>
+                        <p style="color:var(--text-muted); margin:0;">Registro basico de vacunas.</p>
+                    </div>
+                    <div class="card mini">
+                        <h5>Notas</h5>
+                        <p style="color:var(--text-muted); margin:0;">Notas internas sobre la mascota.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const modal = document.querySelector('.modal-overlay[data-modal=\"cliente\"]');
+    if (!modal) return;
+    const openButtons = document.querySelectorAll('.js-open-cliente');
+    const closeButtons = modal.querySelectorAll('.js-close-modal');
+
+    function openModal() {
+        modal.classList.add('is-open');
+    }
+    function closeModal() {
+        modal.classList.remove('is-open');
+    }
+    openButtons.forEach(btn => btn.addEventListener('click', openModal));
+    closeButtons.forEach(btn => btn.addEventListener('click', closeModal));
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+    });
+});
+</script>

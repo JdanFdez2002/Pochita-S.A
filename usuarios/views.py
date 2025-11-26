@@ -1,16 +1,21 @@
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.views import LoginView
+from django.http import Http404
 from django.shortcuts import redirect, render
 from django.urls import reverse, reverse_lazy
 from django.views.generic import TemplateView
 
 from .forms import (
     ClienteAuthenticationForm,
+    ClientePerfilForm,
+    AdministradorPerfilForm,
     PersonalAuthenticationForm,
     RegistroClienteForm,
+    RecepcionistaPerfilForm,
+    VeterinarioPerfilForm,
 )
-from .models import Perfil
+from .models import Administrador, Cliente, Perfil, Recepcionista, Veterinario
 
 
 
@@ -70,28 +75,112 @@ class RolRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
         return perfil.rol == self.required_role
 
 
-class DashboardClienteView(RolRequiredMixin, TemplateView):
+class PerfilDashboardMixin(RolRequiredMixin, TemplateView):
+    """
+    Mixin para dashboards que muestra y actualiza los datos del perfil logueado.
+    """
+
+    form_class = None
+    model = None
+
+    def get_instance(self):
+        try:
+            return (
+                self.model.objects.select_related("perfil__user")
+                .get(perfil__user=self.request.user)
+            )
+        except self.model.DoesNotExist:
+            raise Http404("Perfil no encontrado")
+
+    def get_initial(self, instance):
+        direccion = getattr(instance, "direccion", "") or ""
+        return {
+            "email": instance.perfil.user.email,
+            "rut": instance.rut,
+            "telefono": instance.telefono,
+            "direccion": direccion,
+        }
+
+    def get_form(self, data=None):
+        instance = self.get_instance()
+        initial = self.get_initial(instance)
+        form = self.form_class(
+            user=self.request.user, instance=instance, data=data, initial=initial
+        )
+        if data is None:
+            for field in form.fields.values():
+                field.widget.attrs["disabled"] = True
+        return form
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if "form" not in context:
+            context["form"] = self.get_form()
+        context["profile_saved"] = kwargs.get("profile_saved", False)
+        context["form_has_errors"] = kwargs.get(
+            "form_has_errors", bool(context["form"].errors)
+        )
+        return context
+
+    def post(self, request, *args, **kwargs):
+        form = self.get_form(request.POST)
+        if form.is_valid():
+            form.save()
+            # recargar valores actualizados y bloquear campos
+            fresh_form = self.get_form()
+            return self.render_to_response(
+                self.get_context_data(form=fresh_form, profile_saved=True)
+            )
+        return self.render_to_response(
+            self.get_context_data(form=form, form_has_errors=True)
+        )
+
+
+class DashboardClienteView(PerfilDashboardMixin):
     required_role = Perfil.Roles.CLIENTE
     login_url = reverse_lazy("usuarios:login_clientes")
     template_name = "usuarios/cliente/dashboard.html"
+    model = Cliente
+    form_class = ClientePerfilForm
 
 
-class DashboardRecepcionistaView(RolRequiredMixin, TemplateView):
+class DashboardRecepcionistaView(PerfilDashboardMixin):
     required_role = Perfil.Roles.RECEPCIONISTA
     login_url = reverse_lazy("usuarios:login_personal")
     template_name = "usuarios/recepcionista/dashboard.html"
+    model = Recepcionista
+    form_class = RecepcionistaPerfilForm
 
 
-class DashboardVeterinarioView(RolRequiredMixin, TemplateView):
+class DashboardVeterinarioView(PerfilDashboardMixin):
     required_role = Perfil.Roles.VETERINARIO
     login_url = reverse_lazy("usuarios:login_personal")
     template_name = "usuarios/veterinario/dashboard.html"
+    model = Veterinario
+    form_class = VeterinarioPerfilForm
+
+    def get_initial(self, instance):
+        base = super().get_initial(instance)
+        base.update(
+            {
+                "especialidad": instance.especialidad or "",
+                "turno": instance.turno or "",
+            }
+        )
+        return base
 
 
-class DashboardAdministradorView(RolRequiredMixin, TemplateView):
+class DashboardAdministradorView(PerfilDashboardMixin):
     required_role = Perfil.Roles.ADMINISTRADOR
     login_url = reverse_lazy("usuarios:login_personal")
     template_name = "usuarios/administrador/dashboard.html"
+    model = Administrador
+    form_class = AdministradorPerfilForm
+
+    def get_initial(self, instance):
+        base = super().get_initial(instance)
+        base["empresa_representante"] = instance.empresa_representante or ""
+        return base
 
 
 def registro_clientes_view(request):
