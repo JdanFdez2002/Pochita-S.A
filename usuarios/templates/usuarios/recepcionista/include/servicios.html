@@ -1,32 +1,348 @@
+<style>
+    .servicios-hero {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+    }
+    .servicios-hero h2 {
+        margin: 0;
+        color: var(--primary);
+    }
+    .servicios-hero p {
+        margin: 6px 0 0;
+        color: var(--text-muted);
+    }
+    .pill-soft {
+        padding: 10px 14px;
+        border-radius: 999px;
+        border: 1px solid rgba(65, 211, 190, 0.3);
+        background: rgba(65, 211, 190, 0.12);
+        color: var(--primary);
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 10px 24px rgba(65, 211, 190, 0.15);
+    }
+    .servicios-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 16px;
+        margin-top: 16px;
+    }
+    .service-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 18px;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
+    }
+    .service-card::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at 80% 10%, rgba(65, 211, 190, 0.08), transparent 45%);
+        opacity: 0.8;
+        pointer-events: none;
+    }
+    .service-card h3 {
+        margin: 0 0 6px;
+        color: var(--text-main);
+        font-size: 1.1rem;
+    }
+    .service-desc {
+        color: var(--text-muted);
+        margin: 0 0 10px;
+        min-height: 46px;
+    }
+    .service-price {
+        display: flex;
+        align-items: baseline;
+        gap: 6px;
+        margin: 10px 0;
+        color: var(--primary);
+    }
+    .service-price strong {
+        font-size: 1.4rem;
+    }
+    .service-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 12px;
+    }
+    .meta-chip {
+        padding: 6px 10px;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--text-muted);
+        border: 1px solid var(--border);
+        font-size: 0.85rem;
+    }
+    .service-cta {
+        margin-top: 6px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 14px;
+        border-radius: 10px;
+        border: 1px solid rgba(65, 211, 190, 0.35);
+        background: rgba(65, 211, 190, 0.14);
+        color: var(--text-main);
+        font-weight: 700;
+        text-decoration: none;
+        transition: transform 0.1s ease, box-shadow 0.2s ease;
+    }
+    .service-cta:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 8px 20px rgba(65, 211, 190, 0.2);
+    }
+    .service-cta:active {
+        transform: translateY(0);
+    }
+    .servicios-section {
+        margin-top: 16px;
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.02);
+        overflow: hidden;
+    }
+    .section-toggle {
+        width: 100%;
+        border: none;
+        background: transparent;
+        color: var(--text-main);
+        padding: 14px 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        font-weight: 700;
+        text-align: left;
+    }
+    .section-toggle small {
+        color: var(--text-muted);
+        font-weight: 600;
+    }
+    .section-arrow {
+        transition: transform 0.2s ease;
+    }
+    .section-toggle[aria-expanded="true"] .section-arrow {
+        transform: rotate(90deg);
+    }
+    .section-body {
+        padding: 0 16px 16px;
+        display: none;
+    }
+    .section-body.is-open {
+        display: block;
+    }
+</style>
+
 <div class="card">
-    <h2>Servicios (solo lectura)</h2>
-    <p style="color:var(--text-muted); margin-bottom: 12px;">Catálogo visible para informar a clientes.</p>
-    <div class="table-responsive">
-        <table class="recep-table">
-            <thead>
-                <tr>
-                    <th>Servicio</th>
-                    <th>Descripcion</th>
-                    <th>Precio ref.</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>Consulta general</td>
-                    <td>Chequeo y evaluación inicial.</td>
-                    <td>$20.000</td>
-                </tr>
-                <tr>
-                    <td>Vacunacion</td>
-                    <td>Esquema completo según especie.</td>
-                    <td>$18.000</td>
-                </tr>
-                <tr>
-                    <td>Hospitalizacion</td>
-                    <td>Cuidados y monitoreo 24/7.</td>
-                    <td>$45.000/día</td>
-                </tr>
-            </tbody>
-        </table>
+    <div class="servicios-hero">
+        <div>
+            <h2>Servicios para clientes</h2>
+            <p>Catálogo visible desde recepción (solo lectura). Precios referenciales.</p>
+        </div>
+        <div class="pill-soft">
+            <span>Catálogo actualizado</span>
+        </div>
+    </div>
+
+    <div class="servicios-section">
+        <button class="section-toggle" type="button" aria-expanded="true" data-target="serv-consultas">
+            <span>Consultas y Preventivos <small>(recepción informa y agenda)</small></span>
+            <span class="section-arrow">&#9656;</span>
+        </button>
+        <div class="section-body is-open" id="serv-consultas">
+        <div class="servicios-grid">
+            <div class="service-card">
+                <h3>Consulta general</h3>
+                <p class="service-desc">Evaluación integral, anamnesis y plan inicial.</p>
+                <div class="service-price"><strong>$20.000</strong><span>por visita</span></div>
+                <div class="service-meta">
+                    <span class="meta-chip">15-20 min</span>
+                    <span class="meta-chip">Incluye receta</span>
+                </div>
+                <a class="service-cta" href="#" aria-disabled="true">Ver detalle</a>
+            </div>
+
+            <div class="service-card">
+                <h3>Consulta de urgencia</h3>
+                <p class="service-desc">Atención prioritaria, triage y estabilización inicial.</p>
+                <div class="service-price"><strong>$32.000</strong><span>por visita</span></div>
+                <div class="service-meta">
+                    <span class="meta-chip">Prioridad</span>
+                    <span class="meta-chip">24/7</span>
+                </div>
+                <a class="service-cta" href="#" aria-disabled="true">Ver detalle</a>
+            </div>
+
+            <div class="service-card">
+                <h3>Vacunación</h3>
+                <p class="service-desc">Esquemas completos según especie y edad.</p>
+                <div class="service-price"><strong>$18.000</strong><span>por dosis</span></div>
+                <div class="service-meta">
+                    <span class="meta-chip">Incluye certificado</span>
+                    <span class="meta-chip">Revisión breve</span>
+                </div>
+                <a class="service-cta" href="#" aria-disabled="true">Ver detalle</a>
+            </div>
+
+            <div class="service-card">
+                <h3>Desparasitación</h3>
+                <p class="service-desc">Interna y externa según peso y especie.</p>
+                <div class="service-price"><strong>$12.000</strong><span>por aplicación</span></div>
+                <div class="service-meta">
+                    <span class="meta-chip">Dosis ajustada</span>
+                    <span class="meta-chip">Incluye control</span>
+                </div>
+                <a class="service-cta" href="#" aria-disabled="true">Ver detalle</a>
+            </div>
+        </div>
+        </div>
+    </div>
+
+    <div class="servicios-section">
+        <button class="section-toggle" type="button" aria-expanded="true" data-target="serv-imagen">
+            <span>Imagenología y Laboratorio <small>(reportes rápidos)</small></span>
+            <span class="section-arrow">&#9656;</span>
+        </button>
+        <div class="section-body is-open" id="serv-imagen">
+        <div class="servicios-grid">
+            <div class="service-card">
+                <h3>Imagenología</h3>
+                <p class="service-desc">Rayos X y ecografía con informe médico.</p>
+                <div class="service-price"><strong>$28.000</strong><span>desde</span></div>
+                <div class="service-meta">
+                    <span class="meta-chip">Entrega digital</span>
+                    <span class="meta-chip">Informe 24h</span>
+                </div>
+                <a class="service-cta" href="#" aria-disabled="true">Ver detalle</a>
+            </div>
+            <div class="service-card">
+                <h3>Laboratorio básico</h3>
+                <p class="service-desc">Hemograma, bioquímica y orina.</p>
+                <div class="service-price"><strong>$22.000</strong><span>paquete</span></div>
+                <div class="service-meta">
+                    <span class="meta-chip">Resultados 24h</span>
+                    <span class="meta-chip">Muestras in situ</span>
+                </div>
+                <a class="service-cta" href="#" aria-disabled="true">Ver detalle</a>
+            </div>
+            <div class="service-card">
+                <h3>Perfil geriátrico</h3>
+                <p class="service-desc">Panel completo + evaluación funcional.</p>
+                <div class="service-price"><strong>$38.000</strong><span>paquete</span></div>
+                <div class="service-meta">
+                    <span class="meta-chip">+8 años</span>
+                    <span class="meta-chip">Incluye consulta</span>
+                </div>
+                <a class="service-cta" href="#" aria-disabled="true">Ver detalle</a>
+            </div>
+        </div>
+        </div>
+    </div>
+
+    <div class="servicios-section">
+        <button class="section-toggle" type="button" aria-expanded="true" data-target="serv-hosp">
+            <span>Hospitalización y Cirugías <small>(referencial)</small></span>
+            <span class="section-arrow">&#9656;</span>
+        </button>
+        <div class="section-body is-open" id="serv-hosp">
+        <div class="servicios-grid">
+            <div class="service-card">
+                <h3>Hospitalización</h3>
+                <p class="service-desc">Cuidados y monitoreo 24/7 en box individual.</p>
+                <div class="service-price"><strong>$45.000</strong><span>por día</span></div>
+                <div class="service-meta">
+                    <span class="meta-chip">Monitoreo</span>
+                    <span class="meta-chip">Reportes diarios</span>
+                </div>
+                <a class="service-cta" href="#" aria-disabled="true">Ver detalle</a>
+            </div>
+            <div class="service-card">
+                <h3>Cirugía electiva</h3>
+                <p class="service-desc">Esterilización y procedimientos programados.</p>
+                <div class="service-price"><strong>$120.000</strong><span>desde</span></div>
+                <div class="service-meta">
+                    <span class="meta-chip">Preoperatorio</span>
+                    <span class="meta-chip">Control post</span>
+                </div>
+                <a class="service-cta" href="#" aria-disabled="true">Ver detalle</a>
+            </div>
+            <div class="service-card">
+                <h3>Cirugía de trauma</h3>
+                <p class="service-desc">Resolución de fracturas y tejidos blandos.</p>
+                <div class="service-price"><strong>$180.000</strong><span>desde</span></div>
+                <div class="service-meta">
+                    <span class="meta-chip">Rayos X pre/post</span>
+                    <span class="meta-chip">Hospitalización incluida</span>
+                </div>
+                <a class="service-cta" href="#" aria-disabled="true">Ver detalle</a>
+            </div>
+        </div>
+        </div>
+    </div>
+
+    <div class="servicios-section">
+        <button class="section-toggle" type="button" aria-expanded="true" data-target="serv-groom">
+            <span>Grooming y bienestar <small>(agenda con recepción)</small></span>
+            <span class="section-arrow">&#9656;</span>
+        </button>
+        <div class="section-body is-open" id="serv-groom">
+        <div class="servicios-grid">
+            <div class="service-card">
+                <h3>Corte de pelo</h3>
+                <p class="service-desc">Corte higiénico o de raza, incluye cepillado.</p>
+                <div class="service-price"><strong>$22.000</strong><span>por sesión</span></div>
+                <div class="service-meta">
+                    <span class="meta-chip">Segun tamaño</span>
+                    <span class="meta-chip">Incluye orejas/pezuñas</span>
+                </div>
+                <a class="service-cta" href="#" aria-disabled="true">Ver detalle</a>
+            </div>
+            <div class="service-card">
+                <h3>Baño medicado</h3>
+                <p class="service-desc">Champú dermatológico y secado controlado.</p>
+                <div class="service-price"><strong>$18.000</strong><span>por sesión</span></div>
+                <div class="service-meta">
+                    <span class="meta-chip">Piel sensible</span>
+                    <span class="meta-chip">Incluye chequeo rápido</span>
+                </div>
+                <a class="service-cta" href="#" aria-disabled="true">Ver detalle</a>
+            </div>
+            <div class="service-card">
+                <h3>Profilaxis dental</h3>
+                <p class="service-desc">Limpieza dental ultrasónica bajo sedación.</p>
+                <div class="service-price"><strong>$65.000</strong><span>paquete</span></div>
+                <div class="service-meta">
+                    <span class="meta-chip">Incluye evaluación</span>
+                    <span class="meta-chip">Control post</span>
+                </div>
+                <a class="service-cta" href="#" aria-disabled="true">Ver detalle</a>
+            </div>
+        </div>
+        </div>
     </div>
 </div>
+
+<script>
+    (function() {
+        const toggles = document.querySelectorAll(".section-toggle");
+        toggles.forEach((btn) => {
+            const targetId = btn.dataset.target;
+            const body = document.getElementById(targetId);
+            btn.addEventListener("click", () => {
+                const expanded = btn.getAttribute("aria-expanded") === "true";
+                btn.setAttribute("aria-expanded", expanded ? "false" : "true");
+                body.classList.toggle("is-open", !expanded);
+            });
+        });
+    })();
+</script>

@@ -1,53 +1,594 @@
-<div class="card" style="margin-bottom: 16px;">
-    <h2>Hospitalizacion</h2>
-    <p style="color:var(--text-muted);">Estado actual y operaciones.</p>
-</div>
+<style>
+    .estado-badge {
+        border-radius: 999px;
+        padding: 6px 10px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        letter-spacing: 0.2px;
+    }
+    .estado-estable { background: #e8f6ef; color: #198754; }
+    .estado-critico { background: #fdeaea; color: #dc3545; }
+    .estado-postop { background: #e8f0ff; color: #0d6efd; }
+    .estado-alta { background: #fff3cd; color: #9a7b04; }
+    .estado-fallecido { background: #f0f1f2; color: #6c757d; }
+    .recep-modal {
+        position: fixed;
+        inset: 0;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        background: rgba(17, 24, 39, 0.55);
+        z-index: 1050;
+    }
+    .recep-modal.is-visible {
+        display: flex;
+    }
+    .recep-modal__dialog {
+        background: var(--bg-card);
+        color: var(--text-main);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        box-shadow: 0 16px 50px rgba(0, 0, 0, 0.45);
+        width: min(760px, 100%);
+        max-height: 90vh;
+        overflow-y: auto;
+        padding: 26px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+    .recep-modal__dialog .text-muted {
+        color: var(--text-muted) !important;
+    }
+    .recep-modal__dialog .btn-close {
+        filter: invert(1) grayscale(1);
+        opacity: 0.7;
+    }
+    .recep-modal__dialog .btn-close:hover {
+        opacity: 1;
+    }
+    .recep-modal {
+        background: rgba(6, 12, 20, 0.65);
+        backdrop-filter: blur(2px);
+    }
+    .modal-grid {
+        row-gap: 18px;
+    }
+    .modal-field {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 12px 14px;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
+    }
+    .modal-value {
+        color: var(--text-main);
+        line-height: 1.5;
+    }
+    .modal-open-recep {
+        overflow: hidden;
+    }
+    .modal-header-stack {
+        display: grid;
+        gap: 6px;
+    }
+    .modal-header-stack h4 {
+        margin-bottom: 0 !important;
+    }
+    .modal-header-stack .estado-badge {
+        margin-top: 4px;
+        display: inline-block;
+    }
+    .recep-input {
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 12px 14px;
+        font-size: 0.95rem;
+        color: var(--text-main);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
+        transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+        appearance: none;
+        -webkit-appearance: none;
+    }
+    .recep-input[type="search"]::-webkit-search-decoration,
+    .recep-input[type="search"]::-webkit-search-cancel-button,
+    .recep-input[type="search"]::-webkit-search-results-button,
+    .recep-input[type="search"]::-webkit-search-results-decoration {
+        display: none;
+    }
+    .recep-input:focus {
+        background: rgba(255, 255, 255, 0.06);
+        border-color: rgba(65, 211, 190, 0.6);
+        box-shadow: 0 0 0 3px rgba(65, 211, 190, 0.16);
+    }
+    .recep-input::placeholder {
+        color: var(--text-muted);
+    }
+    .btn-ficha {
+        border: 1px solid #0d6efd;
+        background: linear-gradient(135deg, #0d6efd, #2563eb);
+        color: #ffffff;
+        font-weight: 600;
+        padding: 6px 14px;
+        border-radius: 10px;
+        box-shadow: 0 4px 14px rgba(13, 110, 253, 0.25);
+        transition: transform 0.1s ease, box-shadow 0.1s ease, filter 0.15s ease;
+    }
+    .btn-ficha:hover {
+        filter: brightness(1.03);
+        box-shadow: 0 6px 18px rgba(13, 110, 253, 0.3);
+    }
+    .btn-ficha:active {
+        transform: translateY(1px);
+        box-shadow: 0 3px 10px rgba(13, 110, 253, 0.22);
+    }
+    .btn-ficha:focus-visible {
+        outline: 3px solid rgba(13, 110, 253, 0.3);
+        outline-offset: 2px;
+    }
+    .tabla-head {
+        background: rgba(255, 255, 255, 0.04);
+        border-bottom: 1px solid var(--border);
+    }
+    .tabla-hosp th,
+    .tabla-hosp td {
+        padding: 14px 12px !important;
+        vertical-align: middle;
+        color: var(--text-main);
+    }
+    .tabla-hosp th {
+        color: var(--text-muted);
+        font-weight: 600;
+        letter-spacing: 0.2px;
+    }
+    .tabla-hosp tbody tr {
+        border-bottom: 1px solid var(--border);
+    }
+    .tabla-hosp tbody tr:last-child {
+        border-bottom: none;
+    }
+    .tabla-hosp tbody tr:hover {
+        background: rgba(255, 255, 255, 0.04);
+    }
+    .tabla-footer {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        padding-top: 10px;
+    }
+</style>
 
-<div class="card" style="margin-bottom: 16px;">
-    <h3 style="margin-top:0;">Lista de pacientes hospitalizados</h3>
-    <div class="table-responsive">
-        <table class="recep-table">
-            <thead>
-                <tr>
-                    <th>Paciente</th>
-                    <th>Dueno</th>
-                    <th>Estado</th>
-                    <th>Accion</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>Rocky</td>
-                    <td>Carlos S.</td>
-                    <td><span class="status-badge status-ok">Estable</span></td>
-                    <td><button class="btn-small btn-ghost">Ver</button></td>
-                </tr>
-                <tr>
-                    <td>Luna</td>
-                    <td>Maria G.</td>
-                    <td><span class="status-badge status-wait">Observacion</span></td>
-                    <td><button class="btn-small btn-ghost">Ver</button></td>
-                </tr>
-            </tbody>
-        </table>
+<div class="card shadow-sm mb-4">
+    <div class="card-header border-0 pb-1 d-flex align-items-center justify-content-between">
+        <div>
+            <p class="text-muted small mb-1">Hospitalizacion</p>
+            <h5 class="mb-0">Pacientes hospitalizados</h5>
+        </div>
+        <span class="badge bg-light text-secondary small">Placeholders listos para integrar</span>
+    </div>
+    <div class="card-body">
+        <div class="row g-3 mb-3">
+            <div class="col-md-6">
+                <label class="form-label small text-muted" for="buscar-mascota">Buscar por mascota</label>
+                <input type="search" class="form-control recep-input" id="buscar-mascota" placeholder="Ej: Luna" autocomplete="off">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label small text-muted" for="buscar-titular">Buscar por titular</label>
+                <input type="search" class="form-control recep-input" id="buscar-titular" placeholder="Ej: Camila Perez" autocomplete="off">
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table align-middle tabla-hosp" id="tabla-hospital">
+                <thead class="tabla-head">
+                    <tr class="small text-muted">
+                        <th style="min-width: 170px;">Mascota</th>
+                        <th style="min-width: 140px;">Titular</th>
+                        <th style="min-width: 140px;">Estado clinico</th>
+                        <th style="min-width: 130px;">Fecha de ingreso</th>
+                        <th style="min-width: 150px;">Ultima actualizacion</th>
+                        <th class="text-end" style="min-width: 110px;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr data-mascota="Luna" data-titular="Camila Perez">
+                        <td class="fw-semibold text-dark">
+                            Luna
+                            <small class="text-muted d-block">Canino</small>
+                        </td>
+                        <td>Camila Perez</td>
+                        <td>
+                            <span class="badge estado-badge estado-estable">Estable</span>
+                        </td>
+                        <td>25/11/2025</td>
+                        <td>26/11/2025 09:15</td>
+                        <td class="text-end">
+                            <button type="button"
+                                    class="btn btn-sm btn-ficha ver-ficha"
+                                    data-id="pac-01"
+                                    data-mascota="Luna"
+                                    data-especie="Canino"
+                                    data-titular="Camila Perez"
+                                    data-estado="Estable"
+                                    data-diagnostico="Gastroenteritis leve"
+                                    data-evolucion="Hidratada, come por si sola, sin vomitos."
+                                    data-medicacion="Fluidoterapia EV, antiemetico, dieta blanda"
+                                    data-ingreso="25/11/2025 08:30"
+                                    data-alta="27/11/2025"
+                                    aria-label="Ver ficha de Luna">
+                                Ver ficha
+                            </button>
+                        </td>
+                    </tr>
+                    <tr data-mascota="Milo" data-titular="Juan Correa">
+                        <td class="fw-semibold text-dark">
+                            Milo
+                            <small class="text-muted d-block">Felino</small>
+                        </td>
+                        <td>Juan Correa</td>
+                        <td>
+                            <span class="badge estado-badge estado-critico">Critico</span>
+                        </td>
+                        <td>24/11/2025</td>
+                        <td>26/11/2025 08:55</td>
+                        <td class="text-end">
+                            <button type="button"
+                                    class="btn btn-sm btn-ficha ver-ficha"
+                                    data-id="pac-02"
+                                    data-mascota="Milo"
+                                    data-especie="Felino"
+                                    data-titular="Juan Correa"
+                                    data-estado="Critico"
+                                    data-diagnostico="Trauma toracico por caida"
+                                    data-evolucion="Se mantiene con oxigeno y analgesia, saturando mejor."
+                                    data-medicacion="Oxigenoterapia, analgesia IV, antibioticoterapia"
+                                    data-ingreso="24/11/2025 22:10"
+                                    data-alta="Pendiente de estabilidad"
+                                    aria-label="Ver ficha de Milo">
+                                Ver ficha
+                            </button>
+                        </td>
+                    </tr>
+                    <tr data-mascota="Kira" data-titular="Pablo Garcia">
+                        <td class="fw-semibold text-dark">
+                            Kira
+                            <small class="text-muted d-block">Felino</small>
+                        </td>
+                        <td>Pablo Garcia</td>
+                        <td>
+                            <span class="badge estado-badge estado-postop">Post-op</span>
+                        </td>
+                        <td>26/11/2025</td>
+                        <td>26/11/2025 10:10</td>
+                        <td class="text-end">
+                            <button type="button"
+                                    class="btn btn-sm btn-ficha ver-ficha"
+                                    data-id="pac-03"
+                                    data-mascota="Kira"
+                                    data-especie="Felino"
+                                    data-titular="Pablo Garcia"
+                                    data-estado="Post-op"
+                                    data-diagnostico="Ovariohisterectomia programada"
+                                    data-evolucion="Recuperacion tranquila, sin dolor aparente."
+                                    data-medicacion="Analgesia multimodal, antibiotico profilactico"
+                                    data-ingreso="26/11/2025 07:45"
+                                    data-alta="27/11/2025"
+                                    aria-label="Ver ficha de Kira">
+                                Ver ficha
+                            </button>
+                        </td>
+                    </tr>
+                    <tr data-mascota="Rocky" data-titular="Barbara Silva">
+                        <td class="fw-semibold text-dark">
+                            Rocky
+                            <small class="text-muted d-block">Canino</small>
+                        </td>
+                        <td>Barbara Silva</td>
+                        <td>
+                            <span class="badge estado-badge estado-alta">Alta en curso</span>
+                        </td>
+                        <td>23/11/2025</td>
+                        <td>26/11/2025 09:40</td>
+                        <td class="text-end">
+                            <button type="button"
+                                    class="btn btn-sm btn-ficha ver-ficha"
+                                    data-id="pac-04"
+                                    data-mascota="Rocky"
+                                    data-especie="Canino"
+                                    data-titular="Barbara Silva"
+                                    data-estado="Alta en curso"
+                                    data-diagnostico="Parvovirus en recuperacion"
+                                    data-evolucion="Ingiriendo alimento, hidratacion adecuada, sin vomitos."
+                                    data-medicacion="Antiemetico PRN, dieta digestiva, probioticos"
+                                    data-ingreso="23/11/2025 12:00"
+                                    data-alta="26/11/2025"
+                                    aria-label="Ver ficha de Rocky">
+                                Ver ficha
+                            </button>
+                        </td>
+                    </tr>
+                    <tr data-mascota="Nala" data-titular="Jorge Tapia">
+                        <td class="fw-semibold text-dark">
+                            Nala
+                            <small class="text-muted d-block">Felino</small>
+                        </td>
+                        <td>Jorge Tapia</td>
+                        <td>
+                            <span class="badge estado-badge estado-estable">Estable</span>
+                        </td>
+                        <td>25/11/2025</td>
+                        <td>26/11/2025 09:00</td>
+                        <td class="text-end">
+                            <button type="button"
+                                    class="btn btn-sm btn-ficha ver-ficha"
+                                    data-id="pac-05"
+                                    data-mascota="Nala"
+                                    data-especie="Felino"
+                                    data-titular="Jorge Tapia"
+                                    data-estado="Estable"
+                                    data-diagnostico="Ajuste insulinico por DM"
+                                    data-evolucion="Glucosas dentro de rango, apetito normal."
+                                    data-medicacion="Insulina SC, dieta diabeticos"
+                                    data-ingreso="25/11/2025 11:20"
+                                    data-alta="27/11/2025"
+                                    aria-label="Ver ficha de Nala">
+                                Ver ficha
+                            </button>
+                        </td>
+                    </tr>
+                    <tr data-mascota="Draco" data-titular="Luis Torres">
+                        <td class="fw-semibold text-dark">
+                            Draco
+                            <small class="text-muted d-block">Reptil</small>
+                        </td>
+                        <td>Luis Torres</td>
+                        <td>
+                            <span class="badge estado-badge estado-fallecido">Fallecido</span>
+                        </td>
+                        <td>21/11/2025</td>
+                        <td>22/11/2025 18:30</td>
+                        <td class="text-end">
+                            <button type="button"
+                                    class="btn btn-sm btn-ficha ver-ficha"
+                                    data-id="pac-06"
+                                    data-mascota="Draco"
+                                    data-especie="Reptil"
+                                    data-titular="Luis Torres"
+                                    data-estado="Fallecido"
+                                    data-diagnostico="Insuficiencia respiratoria"
+                                    data-evolucion="Se documenta deceso y apoyo a familia."
+                                    data-medicacion="Soporte previo segun plan"
+                                    data-ingreso="21/11/2025 15:20"
+                                    data-alta="Registro historico"
+                                    aria-label="Ver ficha de Draco">
+                                Ver ficha
+                            </button>
+                        </td>
+                    </tr>
+                    <tr id="tabla-hospital-empty" class="d-none">
+                        <td colspan="6" class="text-muted text-center py-4">
+                            No se encontraron pacientes con ese filtro.
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="tabla-footer">
+            <small class="text-muted" id="hospital-count">Mostrando 0</small>
+            <nav aria-label="Paginacion hospitalizados">
+                <ul class="pagination pagination-sm mb-0" id="hospital-pagination"></ul>
+            </nav>
+        </div>
     </div>
 </div>
 
-<div class="card" style="margin-bottom: 16px;">
-    <h3 style="margin-top:0;">Ingresar paciente</h3>
-    <div class="form-inline" style="margin-bottom: 10px;">
-        <input class="input-lite" placeholder="Paciente">
-        <input class="input-lite" placeholder="Dueno">
-        <input class="input-lite" placeholder="Motivo/Notas">
+<div id="ficha-modal" class="recep-modal" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="recep-modal__dialog">
+        <div class="d-flex justify-content-between align-items-start mb-3">
+            <div class="modal-header-stack">
+                <p class="text-muted small mb-1" id="modal-especie">-</p>
+                <h4 class="mb-1" id="modal-nombre">-</h4>
+                <span class="badge estado-badge estado-estable" id="modal-estado">-</span>
+            </div>
+            <button type="button" class="btn-close" id="close-modal" aria-label="Cerrar ficha"></button>
+        </div>
+        <div class="row g-4 modal-grid">
+            <div class="col-md-6">
+                <div class="modal-field">
+                    <div class="text-muted small mb-1">Diagnostico</div>
+                    <div class="fw-semibold modal-value" id="modal-diagnostico">-</div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="modal-field">
+                    <div class="text-muted small mb-1">Evolucion</div>
+                    <div class="fw-semibold modal-value" id="modal-evolucion">-</div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="modal-field">
+                    <div class="text-muted small mb-1">Medicacion</div>
+                    <div class="fw-semibold modal-value" id="modal-medicacion">-</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="modal-field">
+                    <div class="text-muted small mb-1">Fecha ingreso</div>
+                    <div class="fw-semibold modal-value" id="modal-ingreso">-</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="modal-field">
+                    <div class="text-muted small mb-1">Alta estimada</div>
+                    <div class="fw-semibold modal-value" id="modal-alta">-</div>
+                </div>
+            </div>
+        </div>
     </div>
-    <button class="btn-small btn-primary-lite" type="button">Ingresar</button>
 </div>
 
-<div class="card">
-    <h3 style="margin-top:0;">Dar de alta</h3>
-    <div class="form-inline" style="margin-bottom: 10px;">
-        <input class="input-lite" placeholder="Paciente">
-        <input class="input-lite" placeholder="Veterinario responsable">
-    </div>
-    <button class="btn-small btn-primary-lite" type="button">Confirmar alta</button>
-</div>
+<script>
+    (function() {
+        const searchMascota = document.getElementById("buscar-mascota");
+        const searchTitular = document.getElementById("buscar-titular");
+        const tableRows = Array.from(document.querySelectorAll("#tabla-hospital tbody tr[data-mascota]"));
+        const emptyRow = document.getElementById("tabla-hospital-empty");
+        const paginationEl = document.getElementById("hospital-pagination");
+        const countEl = document.getElementById("hospital-count");
+
+        const modal = document.getElementById("ficha-modal");
+        const closeModalBtn = document.getElementById("close-modal");
+        const nombreEl = document.getElementById("modal-nombre");
+        const especieEl = document.getElementById("modal-especie");
+        const estadoEl = document.getElementById("modal-estado");
+        const diagEl = document.getElementById("modal-diagnostico");
+        const evoEl = document.getElementById("modal-evolucion");
+        const medEl = document.getElementById("modal-medicacion");
+        const ingresoEl = document.getElementById("modal-ingreso");
+        const altaEl = document.getElementById("modal-alta");
+
+        let lastFocus = null;
+        let filteredRows = [...tableRows];
+        const rowsPerPage = 15;
+        let currentPage = 1;
+
+        function setEstadoClass(target, estado) {
+            const base = "badge estado-badge";
+            const normalized = (estado || "").toLowerCase();
+            let colorClass = "estado-estable";
+            if (normalized.includes("critico")) colorClass = "estado-critico";
+            if (normalized.includes("post")) colorClass = "estado-postop";
+            if (normalized.includes("alta")) colorClass = "estado-alta";
+            if (normalized.includes("falle")) colorClass = "estado-fallecido";
+            target.className = base + " " + colorClass;
+            target.textContent = estado || "-";
+        }
+
+        function renderPagination(totalPages) {
+            paginationEl.innerHTML = "";
+            const createItem = (label, page, disabled = false, active = false) => {
+                const li = document.createElement("li");
+                li.className = "page-item" + (disabled ? " disabled" : "") + (active ? " active" : "");
+                const a = document.createElement("a");
+                a.className = "page-link";
+                a.href = "#";
+                a.dataset.page = page;
+                a.textContent = label;
+                li.appendChild(a);
+                return li;
+            };
+
+            const total = Math.max(totalPages, 1);
+            paginationEl.appendChild(createItem("‹", currentPage - 1, currentPage === 1));
+
+            const maxButtons = 5;
+            let start = Math.max(1, currentPage - 2);
+            let end = Math.min(total, start + maxButtons - 1);
+            start = Math.max(1, end - maxButtons + 1);
+
+            for (let page = start; page <= end; page += 1) {
+                paginationEl.appendChild(createItem(page, page, false, page === currentPage));
+            }
+
+            paginationEl.appendChild(createItem("›", currentPage + 1, currentPage === total));
+        }
+
+        function renderPage(page = 1) {
+            const totalPages = Math.max(1, Math.ceil(filteredRows.length / rowsPerPage));
+            currentPage = Math.min(Math.max(page, 1), totalPages);
+            const start = (currentPage - 1) * rowsPerPage;
+            const end = start + rowsPerPage;
+
+            tableRows.forEach((row) => row.classList.add("d-none"));
+            filteredRows.slice(start, end).forEach((row) => row.classList.remove("d-none"));
+
+            if (filteredRows.length === 0) {
+                emptyRow.classList.remove("d-none");
+                countEl.textContent = "Sin resultados";
+            } else {
+                emptyRow.classList.add("d-none");
+                const startCount = start + 1;
+                const endCount = Math.min(filteredRows.length, end);
+                countEl.textContent = `Mostrando ${startCount}-${endCount} de ${filteredRows.length}`;
+            }
+
+            renderPagination(totalPages);
+        }
+
+        function applyFilters() {
+            const mascotaQuery = (searchMascota.value || "").trim().toLowerCase();
+            const titularQuery = (searchTitular.value || "").trim().toLowerCase();
+
+            filteredRows = tableRows.filter((row) => {
+                const mascota = (row.dataset.mascota || "").toLowerCase();
+                const titular = (row.dataset.titular || "").toLowerCase();
+                return mascota.includes(mascotaQuery) && titular.includes(titularQuery);
+            });
+
+            renderPage(1);
+        }
+
+        function openModal(button) {
+            lastFocus = document.activeElement;
+            nombreEl.textContent = button.dataset.mascota || "-";
+            especieEl.textContent = button.dataset.especie || "Especie no indicada";
+            setEstadoClass(estadoEl, button.dataset.estado || "-");
+            diagEl.textContent = button.dataset.diagnostico || "Dato pendiente";
+            evoEl.textContent = button.dataset.evolucion || "Dato pendiente";
+            medEl.textContent = button.dataset.medicacion || "Dato pendiente";
+            ingresoEl.textContent = button.dataset.ingreso || "-";
+            altaEl.textContent = button.dataset.alta || "-";
+
+            modal.classList.add("is-visible");
+            modal.setAttribute("aria-hidden", "false");
+            document.body.classList.add("modal-open-recep");
+            closeModalBtn.focus();
+        }
+
+        function closeModal() {
+            modal.classList.remove("is-visible");
+            modal.setAttribute("aria-hidden", "true");
+            document.body.classList.remove("modal-open-recep");
+            if (lastFocus && typeof lastFocus.focus === "function") {
+                lastFocus.focus();
+            }
+        }
+
+        document.querySelectorAll(".ver-ficha").forEach((button) => {
+            button.addEventListener("click", () => openModal(button));
+        });
+
+        searchMascota.addEventListener("input", applyFilters);
+        searchTitular.addEventListener("input", applyFilters);
+
+        closeModalBtn.addEventListener("click", closeModal);
+        modal.addEventListener("click", (event) => {
+            if (event.target === modal) {
+                closeModal();
+            }
+        });
+
+        paginationEl.addEventListener("click", (event) => {
+            const target = event.target;
+            if (target && target.dataset && target.dataset.page) {
+                event.preventDefault();
+                const nextPage = parseInt(target.dataset.page, 10);
+                if (!Number.isNaN(nextPage)) {
+                    renderPage(nextPage);
+                }
+            }
+        });
+
+        document.addEventListener("keydown", (event) => {
+            if (event.key === "Escape" && modal.classList.contains("is-visible")) {
+                closeModal();
+            }
+        });
+
+        applyFilters();
+    })();
+</script>

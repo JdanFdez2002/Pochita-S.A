@@ -52,11 +52,11 @@ body::after {
     inset: 0;
     pointer-events: none;
     background-image:
-        linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
-    background-size: 120px 120px, 120px 120px;
+        linear-gradient(rgba(255, 255, 255, 0.045) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.045) 1px, transparent 1px);
+    background-size: 220px 220px, 220px 220px;
     mix-blend-mode: screen;
-    opacity: 0.4;
+    opacity: 0.38;
     z-index: 0;
 }
 body.layout {
