@@ -103,6 +103,45 @@ class Administrador(PersonalBase):
         verbose_name_plural = "Administradores"
 
 
+class Mascota(models.Model):
+    class Tipo(models.TextChoices):
+        PERRO = "perro", "Perro"
+        GATO = "gato", "Gato"
+        PEZ = "pez", "Pez"
+        PAJARO = "pajaro", "Pajaro"
+        REPTIL = "reptil", "Reptil"
+        ANFIBIO = "anfibio", "Anfibio"
+        CONEJO = "conejo", "Conejo"
+        LIEBRE = "liebre", "Liebre"
+        HAMSTER = "hamster", "Hamster"
+        HURON = "huron", "Huron"
+        ERIZO = "erizo", "Erizo"
+        OTRO = "otro", "Otro"
+
+    class Sexo(models.TextChoices):
+        MACHO = "macho", "Macho"
+        HEMBRA = "hembra", "Hembra"
+        DESCONOCIDO = "desconocido", "Desconocido"
+
+    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE, related_name="mascotas")
+    nombre = models.CharField(max_length=120)
+    tipo = models.CharField(max_length=20, choices=Tipo.choices)
+    sexo = models.CharField(max_length=20, choices=Sexo.choices, default=Sexo.DESCONOCIDO)
+    edad_aproximada = models.PositiveIntegerField(blank=True, null=True)
+    senas_particulares = models.TextField(blank=True)
+    raza = models.CharField(max_length=120, blank=True)
+    foto = models.ImageField(upload_to="mascotas/", blank=True, null=True)
+    tiene_ficha_clinica = models.BooleanField(default=False)
+    creado_en = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.nombre} ({self.tipo})"
+
+    class Meta:
+        verbose_name = "Mascota"
+        verbose_name_plural = "Mascotas"
+
+
 @receiver(post_save, sender=User)
 def crear_perfil_automatico(sender, instance, created, **kwargs):
     """

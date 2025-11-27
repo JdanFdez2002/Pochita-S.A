@@ -11,12 +11,13 @@ from .forms import (
     ClienteAuthenticationForm,
     ClientePerfilForm,
     AdministradorPerfilForm,
+    MascotaForm,
     PersonalAuthenticationForm,
     RegistroClienteForm,
     RecepcionistaPerfilForm,
     VeterinarioPerfilForm,
 )
-from .models import Administrador, Cliente, Perfil, Recepcionista, Veterinario
+from .models import Administrador, Cliente, Mascota, Perfil, Recepcionista, Veterinario
 
 
 
@@ -143,6 +144,43 @@ class DashboardClienteView(PerfilDashboardMixin):
     template_name = "usuarios/cliente/dashboard.html"
     model = Cliente
     form_class = ClientePerfilForm
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        cliente = self.get_instance()
+        context.setdefault(
+            "mascotas",
+            Mascota.objects.filter(cliente=cliente).order_by("nombre"),
+        )
+        context.setdefault("mascota_form", MascotaForm())
+        return context
+
+    def post(self, request, *args, **kwargs):
+        if request.POST.get("form_type") == "mascota":
+            cliente = self.get_instance()
+            form = MascotaForm(request.POST, request.FILES)
+            if form.is_valid():
+                mascota = form.save(commit=False)
+                mascota.cliente = cliente
+                mascota.save()
+                return redirect(reverse("usuarios:dashboard_cliente") + "#sec-mascotas")
+            context = self.get_context_data()
+            context["mascota_form"] = form
+            return self.render_to_response(context)
+        if request.POST.get("form_type") == "delete_mascota":
+            cliente = self.get_instance()
+            mascota_id = request.POST.get("mascota_id")
+            confirm_name = (request.POST.get("confirm_name") or "").strip().lower()
+            mascota = Mascota.objects.filter(id=mascota_id, cliente=cliente).first()
+            if mascota and confirm_name == (mascota.nombre or "").strip().lower():
+                mascota.delete()
+                return redirect(reverse("usuarios:dashboard_cliente") + "#sec-mascotas")
+            context = self.get_context_data()
+            if mascota:
+                context["delete_error_id"] = mascota.id
+            context["delete_error"] = "El nombre no coincide."
+            return self.render_to_response(context)
+        return super().post(request, *args, **kwargs)
 
 
 class DashboardRecepcionistaView(PerfilDashboardMixin):
