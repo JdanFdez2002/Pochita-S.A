@@ -1,3 +1,4 @@
+from django.contrib.auth import logout
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.views import LoginView
@@ -90,7 +91,7 @@ class PerfilDashboardMixin(RolRequiredMixin, TemplateView):
                 .get(perfil__user=self.request.user)
             )
         except self.model.DoesNotExist:
-            raise Http404("Perfil no encontrado")
+            raise Http404("Perfil no encontrado para el usuario logueado.")
 
     def get_initial(self, instance):
         direccion = getattr(instance, "direccion", "") or ""
@@ -193,6 +194,18 @@ def registro_clientes_view(request):
         form = RegistroClienteForm()
     context = {"form": form}
     return render(request, "usuarios/registro_clientes.html", context)
+
+
+def logout_view(request):
+    """
+    Cierra la sesión del usuario y lo envía al selector de inicio de sesión.
+    Se usa para todos los roles desde los enlaces de "Cerrar sesión/turno".
+    """
+    logout(request)
+    next_url = request.GET.get("next")
+    if next_url:
+        return redirect(next_url)
+    return redirect("usuarios:login_selector")
 
 
 def csrf_failure(request, reason="", template_name=None):

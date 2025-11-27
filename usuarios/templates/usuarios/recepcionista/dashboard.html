@@ -10,7 +10,7 @@
     <a href="#" class="menu-link" data-target="sec-hosp">Hospitalizacion</a>
     <a href="#" class="menu-link" data-target="sec-servicios">Servicios</a>
     <a href="#" class="menu-link" data-target="sec-datos">Mis datos</a>
-    <a href="/" class="menu-link logout">Cerrar turno</a>
+    <a href="{% url 'usuarios:logout' %}" class="menu-link logout">Cerrar turno</a>
 {% endblock %}
 
 {% block dashboard_content %}

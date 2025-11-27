@@ -4,15 +4,16 @@
 {% block title %}Veterinario | Pochita S.A{% endblock %}
 
 {% block sidebar_menu %}
-    <a href="#" class="menu-link is-active" data-target="sec-inicio">Inicio</a>
+    <a href="#" class="menu-link" data-target="sec-inicio">Inicio</a>
     <a href="#" class="menu-link" data-target="sec-consulta">Consulta actual</a>
     <a href="#" class="menu-link" data-target="sec-agenda">Agenda</a>
     <a href="#" class="menu-link" data-target="sec-historial">Historial</a>
-    <a href="/" class="menu-link logout">Cerrar turno</a>
+    <a href="#" class="menu-link is-active" data-target="sec-datos">Mis datos</a>
+    <a href="{% url 'usuarios:logout' %}" class="menu-link logout">Cerrar turno</a>
 {% endblock %}
 
 {% block dashboard_content %}
-    <section id="sec-inicio" class="dashboard-section is-active">
+    <section id="sec-inicio" class="dashboard-section">
         {% include "usuarios/veterinario/include/inicio.html" %}
     </section>
 
@@ -26,5 +27,9 @@
 
     <section id="sec-historial" class="dashboard-section">
         {% include "usuarios/veterinario/include/historial.html" %}
+    </section>
+
+    <section id="sec-datos" class="dashboard-section is-active">
+        {% include "usuarios/veterinario/include/mis_datos.html" %}
     </section>
 {% endblock %}
