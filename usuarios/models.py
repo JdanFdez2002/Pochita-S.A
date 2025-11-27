@@ -137,6 +137,12 @@ class Mascota(models.Model):
     def __str__(self):
         return f"{self.nombre} ({self.tipo})"
 
+    def delete(self, *args, **kwargs):
+        # Elimina la foto asociada del almacenamiento al borrar la mascota
+        if self.foto and self.foto.name:
+            self.foto.delete(save=False)
+        super().delete(*args, **kwargs)
+
     class Meta:
         verbose_name = "Mascota"
         verbose_name_plural = "Mascotas"

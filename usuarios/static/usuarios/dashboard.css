@@ -734,6 +734,50 @@ body, html {
     background: rgba(65, 211, 190, 0.25);
 }
 
+.search-bar {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px,1fr));
+    gap: 10px;
+    padding: 10px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+}
+.search-bar .input-lite {
+    width: 100%;
+    background: #0f172a;
+    border: 1px solid rgba(65, 211, 190, 0.25);
+    color: var(--text-main);
+    border-radius: 10px;
+    padding: 10px 12px;
+}
+.search-bar .btn {
+    height: 100%;
+    align-self: stretch;
+}
+.search-bar .btn-outline,
+.search-bar .btn-ghost {
+    border-radius: 10px;
+}
+
+.pet-preview {
+    margin-top: 8px;
+    width: 160px;
+    height: 160px;
+    border: 1px solid rgba(65, 211, 190, 0.25);
+    border-radius: 12px;
+    overflow: hidden;
+    background: rgba(255,255,255,0.02);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.pet-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
 /* Section spacing for mascotas */
 #sec-mascotas .card {
     border: 1px solid rgba(65, 211, 190, 0.15);

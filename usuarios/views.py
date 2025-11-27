@@ -2,6 +2,8 @@ from django.contrib.auth import logout
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.views import LoginView
+from django.core.paginator import Paginator
+from django.db.models import Q
 from django.http import Http404
 from django.shortcuts import redirect, render
 from django.urls import reverse, reverse_lazy
@@ -189,6 +191,31 @@ class DashboardRecepcionistaView(PerfilDashboardMixin):
     template_name = "usuarios/recepcionista/dashboard.html"
     model = Recepcionista
     form_class = RecepcionistaPerfilForm
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        query = (self.request.GET.get("q") or "").strip()
+        clientes_qs = (
+            Cliente.objects.select_related("perfil__user")
+            .prefetch_related("mascotas")
+            .order_by("perfil__user__last_name", "perfil__user__first_name", "perfil__user__username")
+        )
+        if query:
+            clientes_qs = clientes_qs.filter(
+                Q(perfil__user__first_name__icontains=query)
+                | Q(perfil__user__last_name__icontains=query)
+                | Q(perfil__user__username__icontains=query)
+                | Q(perfil__user__email__icontains=query)
+                | Q(rut__icontains=query)
+                | Q(telefono__icontains=query)
+                | Q(mascotas__nombre__icontains=query)
+            ).distinct()
+        paginator = Paginator(clientes_qs, 10)
+        page_number = self.request.GET.get("page")
+        page_obj = paginator.get_page(page_number)
+        context["clientes_page"] = page_obj
+        context["query"] = query
+        return context
 
 
 class DashboardVeterinarioView(PerfilDashboardMixin):

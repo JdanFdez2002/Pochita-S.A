@@ -18,13 +18,13 @@
                             <span class="pet-badge alt">{{ mascota.get_sexo_display }}</span>
                         </div>
                         <div class="pet-meta">
-                            <span><strong>Edad:</strong> {% if mascota.edad_aproximada %}{{ mascota.edad_aproximada }} años{% else %}No indicada{% endif %}</span>
+                            <span><strong>Edad:</strong> {% if mascota.edad_aproximada %}{{ mascota.edad_aproximada }} año{{ mascota.edad_aproximada|pluralize:"s" }}{% else %}No indicada{% endif %}</span>
                             {% if mascota.tipo == "perro" or mascota.tipo == "gato" %}
                                 <span><strong>Raza:</strong> {{ mascota.raza|default:"Desconocido" }}</span>
                             {% endif %}
                         </div>
                         <div class="pet-notes">
-                            <strong>Señas particulares:</strong>
+                            <strong>Razgos particulares:</strong>
                             <span>{% if mascota.senas_particulares %}{{ mascota.senas_particulares }}{% else %}Sin registrar{% endif %}</span>
                         </div>
                     </div>
@@ -115,7 +115,7 @@
                 {% if mascota_form.raza.errors %}<div class="field-error">{{ mascota_form.raza.errors|join:", " }}</div>{% endif %}
             </div>
             <div class="form-field">
-                <label for="{{ mascota_form.senas_particulares.id_for_label }}">Señas particulares</label>
+                <label for="{{ mascota_form.senas_particulares.id_for_label }}">Razgos particulares</label>
                 {{ mascota_form.senas_particulares }}
                 {% if mascota_form.senas_particulares.errors %}<div class="field-error">{{ mascota_form.senas_particulares.errors|join:", " }}</div>{% endif %}
             </div>
@@ -123,6 +123,9 @@
                 <label for="{{ mascota_form.foto.id_for_label }}">Foto</label>
                 {{ mascota_form.foto }}
                 {% if mascota_form.foto.errors %}<div class="field-error">{{ mascota_form.foto.errors|join:", " }}</div>{% endif %}
+                <div class="pet-preview" id="foto-preview" style="display:none;">
+                    <img src="" alt="Preview mascota">
+                </div>
             </div>
         </div>
         <div class="form-actions" style="justify-content:flex-end;">
@@ -151,6 +154,31 @@
     if (tipoSelect) {
         tipoSelect.addEventListener("change", toggleRaza);
         toggleRaza();
+    }
+    const fotoInput = form.querySelector("input[name='foto']");
+    const preview = document.getElementById("foto-preview");
+    const previewImg = preview ? preview.querySelector("img") : null;
+    let objectUrl = null;
+    function updatePreview(file) {
+        if (!preview || !previewImg) return;
+        if (objectUrl) {
+            URL.revokeObjectURL(objectUrl);
+            objectUrl = null;
+        }
+        if (file) {
+            objectUrl = URL.createObjectURL(file);
+            previewImg.src = objectUrl;
+            preview.style.display = "";
+        } else {
+            previewImg.src = "";
+            preview.style.display = "none";
+        }
+    }
+    if (fotoInput) {
+        fotoInput.addEventListener("change", (e) => {
+            const file = e.target.files && e.target.files[0] ? e.target.files[0] : null;
+            updatePreview(file);
+        });
     }
     document.querySelectorAll(".ficha-pendiente").forEach(btn => {
         btn.addEventListener("click", () => {

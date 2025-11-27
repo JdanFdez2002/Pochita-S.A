@@ -28,13 +28,20 @@
     (function() {
         const links = document.querySelectorAll(".menu a[data-target]");
         const sections = document.querySelectorAll(".dashboard-section");
-        function showSection(id) {
+        function showSection(id, { updateHash = true } = {}) {
             sections.forEach(sec => {
                 sec.classList.toggle("is-active", sec.id === id);
             });
             links.forEach(link => {
                 link.classList.toggle("is-active", link.dataset.target === id);
             });
+            if (updateHash) {
+                try {
+                    window.location.hash = id;
+                } catch (e) {
+                    /* ignore */
+                }
+            }
         }
         links.forEach(link => {
             link.addEventListener("click", (e) => {
@@ -43,8 +50,11 @@
                 if (target) showSection(target);
             });
         });
+        const hash = (window.location.hash || "").replace("#", "");
+        const hasHashSection = hash && document.getElementById(hash);
         const first = links.length ? links[0].dataset.target : null;
-        if (first) showSection(first);
+        const initial = hasHashSection ? hash : first;
+        if (initial) showSection(initial, { updateHash: false });
     })();
 
     // Manejo de formularios de perfil: vista solo lectura, editar, confirmar o cancelar.
