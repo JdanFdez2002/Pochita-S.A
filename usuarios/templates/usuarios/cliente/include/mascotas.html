@@ -29,11 +29,13 @@
                         </div>
                     </div>
                     <div class="pet-actions">
-                        {% if mascota.tiene_ficha_clinica %}
-                            <button type="button" class="btn-small btn-primary-lite">Ver ficha</button>
-                        {% else %}
-                            <button type="button" class="btn-small btn-ghost ficha-pendiente">Ver ficha</button>
-                        {% endif %}
+                        <div style="display:flex; gap:6px; flex-wrap:wrap; justify-content:flex-end;">
+                            {% if mascota.tiene_ficha_clinica %}
+                                <button type="button" class="btn-small btn-primary-lite">Ver ficha</button>
+                            {% else %}
+                                <button type="button" class="btn-small btn-ghost ficha-pendiente">Ver ficha</button>
+                            {% endif %}
+                        </div>
                         <button type="button"
                                 class="btn-small btn-delete"
                                 data-open-delete="delete-{{ mascota.id }}"

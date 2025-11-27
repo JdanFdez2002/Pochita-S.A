@@ -89,65 +89,75 @@
                 <div>
                     <div class="pill">Cliente</div>
                     <h3 style="margin:6px 0 0;">{{ user.get_full_name|default:user.username }}</h3>
-                    <p style="color:var(--text-muted); margin:4px 0 0;">Rut: {{ cliente.rut }} · {{ user.email }} · {{ cliente.telefono|default:"-" }}</p>
+                    <p style="color:var(--text-muted); margin:4px 0 0;">
+                        Rut: {{ cliente.rut }} · {{ user.email }} · {{ cliente.telefono|default:"-" }} · {{ cliente.direccion|default:"-" }}
+                    </p>
                 </div>
                 <button class="btn btn-outline js-close-modal" type="button">&times;</button>
             </div>
 
             <div class="modal-body">
                 <div class="card" style="padding:14px;">
-                    <h4 style="margin:0 0 8px;">Datos personales</h4>
-                    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr)); gap:8px; color:var(--text-muted);">
-                        <span>Correo: <strong>{{ user.email }}</strong></span>
-                        <span>Teléfono: <strong>{{ cliente.telefono|default:"-" }}</strong></span>
-                        <span>Dirección: <strong>{{ cliente.direccion|default:"-" }}</strong></span>
-                    </div>
-                </div>
-
-                <div class="card" style="padding:14px;">
                     <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
                         <h4 style="margin:0;">Mascotas</h4>
                     </div>
-                    <div class="table-responsive" style="margin-top:10px;">
-                        <table class="recep-table compact">
-                            <thead>
-                                <tr>
-                                    <th>Nombre</th>
-                                    <th>Especie</th>
-                                    <th>Sexo</th>
-                                    <th>Señas</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for mascota in cliente.mascotas.all %}
-                                <tr>
-                                    <td>{{ mascota.nombre }}</td>
-                                    <td>{{ mascota.get_tipo_display }}</td>
-                                    <td>{{ mascota.get_sexo_display }}</td>
-                                    <td>{{ mascota.senas_particulares|default:"-" }}</td>
-                                </tr>
-                                {% empty %}
-                                <tr>
-                                    <td colspan="4" style="color:var(--text-muted); text-align:center;">Sin mascotas registradas.</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div class="card" style="padding:14px;">
-                    <h4 style="margin:0 0 8px;">Acciones rápidas</h4>
-                    <div class="quick-actions">
-                        <button class="btn-small btn-primary-lite" type="button">Agendar cita</button>
-                        <button class="btn-small btn-ghost" type="button">Reagendar</button>
-                        <button class="btn-small btn-ghost" type="button">Ver historial de citas</button>
-                        <button class="btn-small btn-ghost" type="button">Ver expediente</button>
+                    <div class="table-responsive" style="margin-top:10px; min-height:240px;">
+                        {% if cliente.mascotas.all %}
+                            <table class="recep-table compact">
+                                <thead>
+                                    <tr>
+                                        <th>Nombre</th>
+                                        <th>Especie</th>
+                                        <th>Sexo</th>
+                                        <th>Señas</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for mascota in cliente.mascotas.all %}
+                                    <tr>
+                                        <td>{{ mascota.nombre }}</td>
+                                        <td>{{ mascota.get_tipo_display }}</td>
+                                        <td>{{ mascota.get_sexo_display }}</td>
+                                        <td>{{ mascota.senas_particulares|default:"-" }}</td>
+                                        <td>
+                                            <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                                                <button type="button" class="btn-small btn-ghost js-open-photo" data-photo-target="foto-{{ mascota.id }}">Ver</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        {% else %}
+                            <div style="color:var(--text-muted); padding:10px; text-align:center;">No hay mascotas registradas.</div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
+    {% for mascota in cliente.mascotas.all %}
+        <div class="modal-overlay" id="foto-{{ mascota.id }}">
+            <div class="modal-card small">
+                <div class="modal-header">
+                    <div>
+                        <div class="pill">Mascota</div>
+                        <h3 style="margin:6px 0 0;">{{ mascota.nombre }}</h3>
+                    </div>
+                    <button class="btn btn-outline js-close-modal" type="button">&times;</button>
+                </div>
+                <div class="modal-body" style="align-items:center;">
+                    {% if mascota.foto %}
+                        <img src="{{ mascota.foto.url }}" alt="Foto de {{ mascota.nombre }}" style="max-width:100%; max-height:70vh; border-radius:12px; border:1px solid var(--border);">
+                    {% else %}
+                        <div style="color:var(--text-muted); padding:12px; text-align:center;">No hay foto cargada para esta mascota.</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    {% endfor %}
     {% endwith %}
 {% endfor %}
 
@@ -156,6 +166,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const openButtons = document.querySelectorAll('.js-open-cliente');
     const modals = document.querySelectorAll('.modal-overlay');
     const searchForm = document.querySelector('form[data-stay-section]');
+    const photoButtons = document.querySelectorAll('.js-open-photo');
 
     function openModal(targetId) {
         const modal = document.getElementById(targetId);
@@ -172,12 +183,25 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
+    photoButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const target = btn.dataset.photoTarget;
+            if (target) openModal(target);
+        });
+    });
+
     modals.forEach(modal => {
         const closeButtons = modal.querySelectorAll('.js-close-modal');
         closeButtons.forEach(btn => btn.addEventListener('click', () => closeModal(modal)));
         modal.addEventListener('click', (e) => {
             if (e.target === modal) closeModal(modal);
         });
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            modals.forEach(modal => closeModal(modal));
+        }
     });
 
     if (searchForm) {
