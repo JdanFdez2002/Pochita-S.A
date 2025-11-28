@@ -1,0 +1,163 @@
+<div class="card">
+    <h2>Replanificar horas</h2>
+    <p class="muted" style="margin-bottom:8px;">Citas canceladas con motivo; selecciona una para replanificar.</p>
+    <div class="availability-list" id="rep-alertas" style="max-height:200px; overflow-y:auto;">
+        <div class="muted">Cargando...</div>
+    </div>
+</div>
+
+<div class="card">
+    <h3 style="margin-top:0;">Replanificar cita seleccionada</h3>
+    <div class="form-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+        <div class="form-field">
+            <label>Veterinario</label>
+            <select id="rep-vet"></select>
+        </div>
+        <div class="form-field">
+            <label>Nueva fecha</label>
+            <input type="date" id="rep-fecha">
+        </div>
+    </div>
+    <div class="availability-list" id="rep-bloques" style="margin-top:10px;">
+        <div class="muted">Selecciona fecha y veterinario.</div>
+    </div>
+    <div class="form-field" style="margin-top:10px;">
+        <label>Motivo de cancelación</label>
+        <textarea id="rep-motivo" rows="2" placeholder="Ej: Bloque cancelado por veterinario"></textarea>
+    </div>
+    <div class="form-actions" style="justify-content:flex-end; margin-top:8px;">
+        <button class="btn-small btn-primary" type="button" id="rep-guardar">Replanificar</button>
+    </div>
+    <div class="alert-success" id="rep-ok" style="display:none; margin-top:8px;">Cita replanificada.</div>
+    <div class="field-error" id="rep-error" style="display:none; margin-top:8px;"></div>
+</div>
+
+<script>
+(function(){
+    const api = {
+        alertas: "{% url 'usuarios:recep_replanificar_alertas_api' %}",
+        vets: "{% url 'usuarios:recep_veterinarios_api' %}",
+        disp: "{% url 'usuarios:recep_replanificar_disponibilidad_api' %}",
+        action: "{% url 'usuarios:recep_replanificar_cita_api' %}",
+    };
+    const alertasBox = document.getElementById("rep-alertas");
+    const vetSel = document.getElementById("rep-vet");
+    const fechaInput = document.getElementById("rep-fecha");
+    const bloquesBox = document.getElementById("rep-bloques");
+    const motivoInput = document.getElementById("rep-motivo");
+    const btn = document.getElementById("rep-guardar");
+    const okEl = document.getElementById("rep-ok");
+    const errEl = document.getElementById("rep-error");
+    let selectedCita = null;
+    let selectedBlock = null;
+
+    function setError(msg="") {
+        if (!msg) { errEl.style.display="none"; errEl.textContent=""; return; }
+        errEl.textContent = msg; errEl.style.display="block"; okEl.style.display="none";
+    }
+    function setOk(msg="Cita replanificada.") {
+        okEl.textContent = msg; okEl.style.display="block"; errEl.style.display="none";
+    }
+
+    function loadAlertas() {
+        alertasBox.innerHTML = "<div class='muted'>Cargando...</div>";
+        fetch(api.alertas).then(r=>r.json()).then(data=>{
+            const items = data.alertas || [];
+            if (!items.length) {
+                alertasBox.innerHTML = "<div class='muted'>Sin alertas recientes.</div>";
+                return;
+            }
+            alertasBox.innerHTML="";
+            items.forEach(c=>{
+                const el = document.createElement("div");
+                el.className="availability-item";
+                el.innerHTML = `
+                    <div>
+                        <div><strong>${c.fecha} ${c.hora}</strong> - ${c.mascota} (${c.servicio})</div>
+                        <div class="muted small">${c.motivo_cancelacion||""}</div>
+                    </div>
+                `;
+                el.addEventListener("click", ()=>{
+                    selectedCita = c;
+                    alertasBox.querySelectorAll(".availability-item").forEach(i=>i.classList.remove("row-selected"));
+                    el.classList.add("row-selected");
+                });
+                alertasBox.appendChild(el);
+            });
+        });
+    }
+
+    function loadVets() {
+        fetch(api.vets).then(r=>r.json()).then(data=>{
+            vetSel.innerHTML="";
+            (data.results||[]).forEach(v=>{
+                const opt=document.createElement("option");
+                opt.value=v.id; opt.textContent=v.nombre;
+                vetSel.appendChild(opt);
+            });
+        });
+    }
+
+    function loadBloques() {
+        selectedBlock = null;
+        const vet = vetSel.value;
+        const fecha = fechaInput.value;
+        if (!vet || !fecha) {
+            bloquesBox.innerHTML = "<div class='muted'>Selecciona veterinario y fecha.</div>";
+            return;
+        }
+        const params = new URLSearchParams({ veterinario_id: vet, fecha });
+        fetch(`${api.disp}?${params.toString()}`).then(r=>r.json()).then(data=>{
+            const bloques = data.bloques || [];
+            if (!bloques.length) {
+                bloquesBox.innerHTML = "<div class='muted'>Sin bloques disponibles.</div>";
+                return;
+            }
+            bloquesBox.innerHTML = "";
+            bloques.forEach(b=>{
+                const row = document.createElement("div");
+                row.className="availability-item";
+                row.innerHTML = `<div><strong>${b.inicio} - ${b.fin}</strong></div>`;
+                row.addEventListener("click", ()=>{
+                    selectedBlock = b;
+                    bloquesBox.querySelectorAll(".availability-item").forEach(i=>i.classList.remove("row-selected"));
+                    row.classList.add("row-selected");
+                });
+                bloquesBox.appendChild(row);
+            });
+        });
+    }
+
+    vetSel.addEventListener("change", loadBloques);
+    fechaInput.addEventListener("change", loadBloques);
+
+    btn.addEventListener("click", () => {
+        if (!selectedCita) { setError("Selecciona una cita cancelada."); return; }
+        if (!selectedBlock || !fechaInput.value || !vetSel.value) { setError("Selecciona bloque y fecha."); return; }
+        const payload = {
+            cita_id: selectedCita.id,
+            nueva_fecha: fechaInput.value,
+            nueva_hora: selectedBlock.inicio,
+            veterinario_id: vetSel.value,
+            motivo: motivoInput.value || "Replanificada por disponibilidad",
+        };
+        fetch(api.action, {
+            method: "POST",
+            headers: {
+                "Content-Type":"application/json",
+                "X-CSRFToken": (document.cookie.match(/csrftoken=([^;]+)/)||[])[1] || "",
+                "X-Requested-With": "XMLHttpRequest",
+            },
+            body: JSON.stringify(payload),
+        }).then(async r=>{
+            const body = await r.text();
+            if (!r.ok) { setError(body||"No se pudo replanificar."); return; }
+            setOk("Cita replanificada.");
+            loadAlertas();
+        }).catch(()=>setError("Error de red."));
+    });
+
+    loadAlertas();
+    loadVets();
+})();
+</script>

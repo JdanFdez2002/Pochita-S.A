@@ -1,0 +1,271 @@
+<div class="card">
+    <h2>Agendar hora</h2>
+    <div class="form-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px,1fr));">
+        <div class="form-field">
+            <label>Cliente</label>
+            <input id="agendar-cliente-q" class="input-lite" placeholder="Nombre, RUT, correo o teléfono">
+            <select id="agendar-cliente" style="margin-top:6px;"></select>
+        </div>
+        <div class="form-field">
+            <label>Mascota</label>
+            <select id="agendar-mascota"></select>
+        </div>
+        <div class="form-field">
+            <label>Servicio</label>
+            <select id="agendar-servicio"></select>
+        </div>
+        <div class="form-field">
+            <label>Veterinario</label>
+            <select id="agendar-vet"></select>
+        </div>
+    </div>
+    <div class="card" style="margin-top:12px; padding:16px;">
+        <div class="calendar-header" style="margin-bottom:8px;">
+            <div>
+                <small class="muted">Calendario disponible</small>
+                <h3 id="agendar-month-label" style="margin:2px 0 0;">-</h3>
+            </div>
+            <div class="calendar-nav">
+                <button class="btn-small btn-ghost" type="button" data-ag-nav="-1">&#9664;</button>
+                <button class="btn-small btn-ghost" type="button" data-ag-nav="0">Hoy</button>
+                <button class="btn-small btn-ghost" type="button" data-ag-nav="1">&#9654;</button>
+            </div>
+        </div>
+        <div class="calendar-grid" id="agendar-calendar"></div>
+    </div>
+    <div class="availability-list" id="agendar-bloques" style="margin-top:10px;">
+        <div class="muted">Selecciona un día disponible.</div>
+    </div>
+    <div class="form-actions" style="justify-content:flex-end; margin-top:10px;">
+        <button class="btn-small btn-primary" type="button" id="agendar-confirmar">Confirmar cita</button>
+    </div>
+    <div class="alert-success" id="agendar-ok" style="display:none; margin-top:8px;">Cita creada.</div>
+    <div class="field-error" id="agendar-error" style="display:none; margin-top:8px;"></div>
+</div>
+
+<script>
+(function(){
+    const api = {
+        clientes: "{% url 'usuarios:recep_clientes_api' %}",
+        mascotas: (id) => "{% url 'usuarios:recep_mascotas_api' 0 %}".replace("0", id),
+        servicios: "{% url 'usuarios:recep_servicios_api' %}",
+        vets: "{% url 'usuarios:recep_veterinarios_api' %}",
+        disponibilidad: "{% url 'usuarios:recep_disponibilidad_api' %}",
+        create: "{% url 'usuarios:recep_cita_create_api' %}",
+    };
+    const qInput = document.getElementById("agendar-cliente-q");
+    const clienteSel = document.getElementById("agendar-cliente");
+    const mascotaSel = document.getElementById("agendar-mascota");
+    const servSel = document.getElementById("agendar-servicio");
+    const vetSel = document.getElementById("agendar-vet");
+    const calendar = document.getElementById("agendar-calendar");
+    const monthLabel = document.getElementById("agendar-month-label");
+    const bloquesList = document.getElementById("agendar-bloques");
+    const btnConfirm = document.getElementById("agendar-confirmar");
+    const okEl = document.getElementById("agendar-ok");
+    const errEl = document.getElementById("agendar-error");
+    let selectedBlock = null;
+    let selectedDate = null;
+    let currentMonth = new Date();
+    let calendarData = { bloques: [], bloqueados: [] };
+
+    function setError(msg="") {
+        if (!msg) { errEl.style.display="none"; errEl.textContent=""; return; }
+        errEl.textContent = msg; errEl.style.display="block"; okEl.style.display="none";
+    }
+    function setOk(msg="Cita creada.") {
+        okEl.textContent = msg; okEl.style.display="block"; errEl.style.display="none";
+    }
+
+    function fetchServicios() {
+        fetch(api.servicios).then(r=>r.json()).then(data=>{
+            servSel.innerHTML="";
+            (data.servicios||[]).forEach(s=>{
+                const opt=document.createElement("option");
+                opt.value=s.id; opt.textContent=s.nombre;
+                servSel.appendChild(opt);
+            });
+        });
+    }
+    function fetchVets() {
+        fetch(api.vets).then(r=>r.json()).then(data=>{
+            vetSel.innerHTML="";
+            const results = data.results || [];
+            results.forEach((v, idx)=>{
+                const opt=document.createElement("option");
+                opt.value=v.id; opt.textContent=v.nombre;
+                if (idx === 0) opt.selected = true;
+                vetSel.appendChild(opt);
+            });
+            loadCalendar();
+        });
+    }
+    function searchClientes() {
+        const q = (qInput.value||"").trim();
+        if (q.length < 2) { clienteSel.innerHTML=""; return; }
+        fetch(api.clientes + `?q=${encodeURIComponent(q)}`).then(r=>r.json()).then(data=>{
+            clienteSel.innerHTML="";
+            (data.results||[]).forEach(c=>{
+                const opt=document.createElement("option");
+                opt.value=c.id; opt.textContent=`${c.nombre} (${c.email})`;
+                clienteSel.appendChild(opt);
+            });
+            loadMascotas();
+        });
+    }
+    function loadMascotas() {
+        const cid = clienteSel.value;
+        if (!cid) { mascotaSel.innerHTML=""; return; }
+        fetch(api.mascotas(cid)).then(r=>r.json()).then(data=>{
+            mascotaSel.innerHTML="";
+            (data.mascotas||[]).forEach(m=>{
+                const opt=document.createElement("option");
+                opt.value=m.id; opt.textContent=m.nombre;
+                mascotaSel.appendChild(opt);
+            });
+        });
+    }
+    function renderCalendar() {
+        calendar.innerHTML = "";
+        const months = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+        const y = currentMonth.getFullYear();
+        const m = currentMonth.getMonth();
+        monthLabel.textContent = `${months[m]} ${y}`;
+        const start = new Date(y, m, 1);
+        const startDay = start.getDay() === 0 ? 6 : start.getDay() - 1;
+        const daysInMonth = new Date(y, m+1, 0).getDate();
+        const headers = ["L","M","X","J","V","S","D"];
+        headers.forEach(h=>{
+            const el=document.createElement("div");
+            el.className="calendar-head";
+            el.textContent=h;
+            calendar.appendChild(el);
+        });
+        for (let i=0;i<startDay;i++){
+            const empty=document.createElement("div");
+            empty.className="calendar-cell empty";
+            calendar.appendChild(empty);
+        }
+        const availableByDay = new Map();
+        (calendarData.bloques||[]).forEach(b=>{
+            if (b.estado !== "disponible") return;
+            availableByDay.set(b.fecha, [...(availableByDay.get(b.fecha)||[]), b]);
+        });
+        const blockedDates = new Set((calendarData.dias_bloqueados||[]).map(d=>d.fecha));
+        for (let d=1; d<=daysInMonth; d++){
+            const dateStr = `${y}-${String(m+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+            const cell=document.createElement("div");
+            cell.className="calendar-cell";
+            const has = availableByDay.has(dateStr);
+            if (blockedDates.has(dateStr)) cell.classList.add("is-blocked");
+            if (!has) cell.classList.add("no-availability");
+            cell.innerHTML = `
+                <div class="cell-top"><span class="day-number">${d}</span></div>
+                <div class="cell-body">
+                    <div class="cell-status">${has ? "Disponible" : "Sin disponibilidad"}</div>
+                </div>
+            `;
+            if (has) {
+                cell.classList.add("has-blocks");
+                cell.addEventListener("click", ()=>{
+                    selectedDate = dateStr;
+                    renderBloques(availableByDay.get(dateStr));
+                    calendar.querySelectorAll(".calendar-cell").forEach(c=>c.classList.remove("is-selected"));
+                    cell.classList.add("is-selected");
+                });
+            }
+            calendar.appendChild(cell);
+        }
+    }
+
+    function loadCalendar() {
+        selectedBlock = null;
+        selectedDate = null;
+        const vet = vetSel.value;
+        if (!vet) {
+            calendar.innerHTML = `<div class="muted" style="grid-column: span 7;">Selecciona veterinario.</div>`;
+            return;
+        }
+        const params = new URLSearchParams({
+            veterinario_id: vet,
+            year: currentMonth.getFullYear(),
+            month: currentMonth.getMonth()+1,
+        });
+        fetch(`${api.disponibilidad}?${params.toString()}`).then(r=>r.json()).then(data=>{
+            calendarData = data || { bloques: [], dias_bloqueados: [] };
+            renderCalendar();
+            bloquesList.innerHTML = `<div class="muted">Elige un día en el calendario.</div>`;
+        });
+    }
+
+    function renderBloques(list) {
+        selectedBlock = null;
+        if (!list || !list.length) {
+            bloquesList.innerHTML = `<div class="muted">Sin bloques disponibles para este día.</div>`;
+            return;
+        }
+        bloquesList.innerHTML = "";
+        list.forEach(b=>{
+            const row=document.createElement("div");
+            row.className="availability-item";
+            row.innerHTML = `<div><strong>${b.inicio} - ${b.fin}</strong></div>`;
+            row.addEventListener("click", ()=>{
+                selectedBlock = b;
+                bloquesList.querySelectorAll(".availability-item").forEach(el=>el.classList.remove("row-selected"));
+                row.classList.add("row-selected");
+            });
+            bloquesList.appendChild(row);
+        });
+    }
+
+    qInput.addEventListener("input", () => { setError(""); searchClientes(); });
+    clienteSel.addEventListener("change", loadMascotas);
+    vetSel.addEventListener("change", loadCalendar);
+    document.querySelectorAll("[data-ag-nav]").forEach(btn=>{
+        btn.addEventListener("click", ()=>{
+            const step = parseInt(btn.dataset.agNav, 10);
+            if (step === 0) currentMonth = new Date();
+            else currentMonth.setMonth(currentMonth.getMonth() + step);
+            loadCalendar();
+        });
+    });
+
+    btnConfirm.addEventListener("click", () => {
+        const payload = {
+            cliente_id: clienteSel.value,
+            mascota_id: mascotaSel.value,
+            servicio_id: servSel.value,
+            veterinario_id: vetSel.value,
+            fecha: selectedDate,
+            hora: selectedBlock ? selectedBlock.inicio : "",
+            notas: "",
+        };
+        if (!payload.cliente_id || !payload.mascota_id || !payload.servicio_id || !payload.veterinario_id || !payload.fecha || !payload.hora) {
+            setError("Completa cliente, mascota, servicio, veterinario y bloque desde el calendario.");
+            return;
+        }
+        fetch(api.create, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": (document.cookie.match(/csrftoken=([^;]+)/)||[])[1] || "",
+                "X-Requested-With": "XMLHttpRequest",
+            },
+            body: JSON.stringify(payload)
+        }).then(async r=>{
+            const body = await r.text();
+            if (!r.ok) {
+                setError(body||"No se pudo agendar.");
+                return;
+            }
+            setOk("Cita creada.");
+            selectedBlock = null;
+            selectedDate = null;
+            loadCalendar();
+        }).catch(()=>setError("Error de red."));
+    });
+
+    fetchServicios();
+    fetchVets();
+})();
+</script>

@@ -45,7 +45,10 @@
                             {% endif %}
                         </td>
                         <td>
-                            <button class="btn-small btn-primary-lite js-open-cliente" type="button" data-target="modal-cliente-{{ cliente.id }}">Gestionar</button>
+                            <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                                <button class="btn-small btn-primary-lite js-open-cliente" type="button" data-target="modal-cliente-{{ cliente.id }}">Gestionar</button>
+                                <button class="btn-small btn-primary" type="button" data-agendar-email="{{ user.email }}" data-target="sec-agendar">Agendar</button>
+                            </div>
                         </td>
                     </tr>
                     {% endwith %}
@@ -204,6 +207,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const searchForm = document.querySelector('form[data-stay-section]');
     const photoButtons = document.querySelectorAll('.js-open-photo');
     const editForms = document.querySelectorAll('.cliente-edit-form');
+    const agendarButtons = document.querySelectorAll('[data-agendar-email]');
+    const menuLinkAgendar = document.querySelector('.menu-link[data-target="sec-agendar"]');
 
     function openModal(targetId) {
         const modal = document.getElementById(targetId);
@@ -291,6 +296,24 @@ document.addEventListener("DOMContentLoaded", () => {
             if (!form.action.includes('#')) {
                 form.action = (form.action || '') + hash;
             }
+        });
+    });
+
+    agendarButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const email = btn.dataset.agendarEmail || '';
+            // navega a la seccion agendar y autocompleta el buscador
+            if (menuLinkAgendar) menuLinkAgendar.click();
+            else window.location.hash = btn.dataset.target || 'sec-agendar';
+            const modal = btn.closest('.modal-overlay');
+            if (modal) modal.classList.remove('is-open');
+            setTimeout(() => {
+                const input = document.getElementById('agendar-cliente-q');
+                if (input) {
+                    input.value = email;
+                    input.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+            }, 150);
         });
     });
 });

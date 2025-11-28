@@ -1,0 +1,270 @@
+<div class="card">
+    <h2>Disponibilidad de veterinarios</h2>
+    <div class="form-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px,1fr));">
+        <div class="form-field">
+            <label>Veterinario</label>
+            <select id="disp-vet"></select>
+        </div>
+        <div class="form-field">
+            <label>Mes</label>
+            <div style="display:flex; gap:6px; align-items:center;">
+                <button class="btn-small btn-ghost" type="button" data-disp-nav="-1">&#9664;</button>
+                <span id="disp-month-label" style="color:var(--text-muted);"></span>
+                <button class="btn-small btn-ghost" type="button" data-disp-nav="1">&#9654;</button>
+                <button class="btn-small btn-primary-lite" type="button" data-disp-nav="0">Hoy</button>
+            </div>
+        </div>
+    </div>
+    <div class="calendar-legend" style="margin-top:10px;">
+        <span><span class="legend-dot ok"></span> Disponible</span>
+        <span><span class="legend-dot warn"></span> Ocupado</span>
+        <span><span class="legend-dot blocked"></span> Bloqueado</span>
+    </div>
+    <div class="calendar-grid" id="disp-calendar"></div>
+</div>
+
+<div class="modal-overlay" id="disp-modal">
+    <div class="modal-card small">
+        <div class="modal-header">
+            <div>
+                <div class="pill pill-soft">Bloques del día</div>
+                <h3 id="disp-modal-title" style="margin:6px 0 0;">--</h3>
+                <small class="muted" id="disp-modal-vet"></small>
+            </div>
+            <button class="btn btn-outline" type="button" id="disp-modal-close">&times;</button>
+        </div>
+        <div class="modal-body" id="disp-modal-body">
+            <div class="muted">Selecciona un día con bloques.</div>
+        </div>
+    </div>
+    <script>
+    // cierre al fondo click
+    document.addEventListener("click", (e)=>{
+        const modal = document.getElementById("disp-modal");
+        if (e.target === modal) modal.classList.remove("is-open");
+    });
+    </script>
+</div>
+
+<script>
+(function() {
+    const vetSelect = document.getElementById("disp-vet");
+    const monthLabel = document.getElementById("disp-month-label");
+    const calendar = document.getElementById("disp-calendar");
+    const today = new Date();
+    let current = new Date();
+    let vetId = "";
+    let bloques = [];
+    let bloqueados = [];
+    let citasMes = [];
+
+    function toISO(d) {
+        const year = d.getFullYear();
+        const month = `${d.getMonth() + 1}`.padStart(2, "0");
+        const day = `${d.getDate()}`.padStart(2, "0");
+        return `${year}-${month}-${day}`;
+    }
+
+    function fetchVets() {
+        fetch("{% url 'usuarios:recep_veterinarios_api' %}")
+            .then(r => r.json())
+            .then(data => {
+                vetSelect.innerHTML = `<option value=\"\">Todos</option>`;
+                (data.results || []).forEach(v => {
+                    const opt = document.createElement("option");
+                    opt.value = v.id;
+                    opt.textContent = v.nombre;
+                    vetSelect.appendChild(opt);
+                });
+                loadData();
+            });
+    }
+
+    function loadData() {
+        const params = new URLSearchParams({
+            year: current.getFullYear(),
+            month: current.getMonth() + 1,
+        });
+        if (vetSelect.value) params.append("veterinario_id", vetSelect.value);
+        fetch(`{% url 'usuarios:recep_disponibilidad_api' %}?${params.toString()}`)
+            .then(r => r.json())
+            .then(data => {
+                bloques = data.bloques || [];
+                bloqueados = data.dias_bloqueados || [];
+                citasMes = data.citas || [];
+                renderCalendar();
+            });
+    }
+
+    function dateStatus(dateStr) {
+        const dayBlocks = bloques.filter(b => b.fecha === dateStr);
+        const blocked = bloqueados.some(d => d.fecha === dateStr);
+        if (blocked) return "bloqueado";
+        if (!dayBlocks.length) return "vacio";
+        const hasDisponible = dayBlocks.some(b => b.estado === "disponible");
+        return hasDisponible ? "disponible" : "ocupado";
+    }
+
+    function renderCalendar() {
+        calendar.innerHTML = "";
+        const months = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+        const year = current.getFullYear();
+        const month = current.getMonth();
+        monthLabel.textContent = `${months[month]} ${year}`;
+        const start = new Date(year, month, 1);
+        const startDay = start.getDay() === 0 ? 6 : start.getDay() - 1;
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const headers = ["L","M","X","J","V","S","D"];
+        headers.forEach(h => {
+            const el = document.createElement("div");
+            el.className = "calendar-head";
+            el.textContent = h;
+            calendar.appendChild(el);
+        });
+        for (let i=0;i<startDay;i++) {
+            const empty = document.createElement("div");
+            empty.className = "calendar-cell empty";
+            calendar.appendChild(empty);
+        }
+        for (let d=1; d<=daysInMonth; d++) {
+            const dateStr = toISO(new Date(year, month, d));
+            const cell = document.createElement("div");
+            cell.className = "calendar-cell";
+            const status = dateStatus(dateStr);
+            if (status === "disponible") cell.classList.add("has-blocks");
+            if (status === "ocupado") cell.classList.add("no-availability");
+            if (status === "bloqueado") cell.classList.add("is-blocked");
+            cell.innerHTML = `
+                <div class="cell-top"><span class="day-number">${d}</span></div>
+                <div class="cell-body">
+                    <div class="cell-status">${status}</div>
+                </div>
+            `;
+            const dayBlocks = bloques.filter(b => b.fecha === dateStr);
+            if (dayBlocks.length) {
+                cell.style.cursor = "pointer";
+                cell.addEventListener("click", () => openModal(dateStr, dayBlocks));
+            }
+            calendar.appendChild(cell);
+        }
+    }
+
+    function openModal(dateStr, dayBlocks) {
+        const modal = document.getElementById("disp-modal");
+        const title = document.getElementById("disp-modal-title");
+        const vetLabel = document.getElementById("disp-modal-vet");
+        const body = document.getElementById("disp-modal-body");
+        const selectedVetName = vetSelect.options[vetSelect.selectedIndex]?.text || "Todos";
+        title.textContent = dateStr;
+        vetLabel.textContent = `Veterinario: ${selectedVetName}`;
+        const citasDia = (citasMes || []).filter(c => c.fecha === dateStr);
+        const visibleBlocks = dayBlocks.filter(b => b.estado !== "no_disponible");
+        if (!visibleBlocks.length) {
+            body.innerHTML = "<div class='muted'>No hay bloques para este día.</div>";
+        } else {
+            const blocWrap = document.createElement("div");
+            blocWrap.className = "collapse";
+            blocWrap.innerHTML = `
+                <div class="collapse-header" data-collapse>
+                    <strong>Bloques disponibles (${visibleBlocks.length})</strong>
+                    <span class="muted small">&#9656;</span>
+                </div>
+                <div class="collapse-body">
+                    ${visibleBlocks.map(b=>`
+                        <div class="availability-item">
+                            <div>
+                                <div class="time">${b.inicio} - ${b.fin}</div>
+                                <div class="muted small">Estado: ${b.estado.replace("_"," ")}</div>
+                            </div>
+                        </div>
+                    `).join("")}
+                </div>
+            `;
+            body.appendChild(blocWrap);
+        }
+        if (citasDia.length) {
+            const pending = citasDia.filter(c => c.estado !== "cancelada");
+            const canceled = citasDia.filter(c => c.estado === "cancelada");
+
+            if (pending.length) {
+                const wrap = document.createElement("div");
+                wrap.className = "collapse";
+                wrap.innerHTML = `
+                    <div class="collapse-header" data-collapse>
+                        <strong>Citas pendientes/confirmadas/atendidas (${pending.length})</strong>
+                        <span class="muted small">&#9656;</span>
+                    </div>
+                    <div class="collapse-body">
+                        ${pending.map(c=>`
+                            <div class="availability-item">
+                                <div>
+                                    <div class="time">${c.hora}</div>
+                                    <div class="muted small">${c.cliente} · ${c.mascota}</div>
+                                    <div class="muted small">Servicio: ${c.servicio}</div>
+                                    <div class="muted small">Vet: ${c.veterinario || ''}</div>
+                                </div>
+                                <div class="muted small">${c.estado}</div>
+                            </div>
+                        `).join("")}
+                    </div>
+                `;
+                body.appendChild(wrap);
+            }
+            if (canceled.length) {
+                const wrap = document.createElement("div");
+                wrap.className = "collapse";
+                wrap.innerHTML = `
+                    <div class="collapse-header" data-collapse>
+                        <strong>Citas canceladas (${canceled.length})</strong>
+                        <span class="muted small">&#9656;</span>
+                    </div>
+                    <div class="collapse-body">
+                        ${canceled.map(c=>`
+                            <div class="availability-item">
+                                <div>
+                                    <div class="time">${c.hora}</div>
+                                    <div class="muted small">${c.cliente} · ${c.mascota}</div>
+                                    <div class="muted small">Servicio: ${c.servicio}</div>
+                                    <div class="muted small">Vet: ${c.veterinario || ''}</div>
+                                    ${c.motivo_cancelacion ? `<div class="muted small">Motivo: ${c.motivo_cancelacion}</div>` : ""}
+                                </div>
+                                <div class="muted small">${c.estado}</div>
+                            </div>
+                        `).join("")}
+                    </div>
+                `;
+                body.appendChild(wrap);
+            }
+        }
+        modal.classList.add("is-open");
+        // inicializar colapsables
+        body.querySelectorAll("[data-collapse]").forEach(header => {
+            const wrap = header.parentElement;
+            const bodyEl = wrap.querySelector(".collapse-body");
+            bodyEl.style.display = "none";
+            header.addEventListener("click", ()=>{
+                const open = bodyEl.style.display === "none";
+                bodyEl.style.display = open ? "" : "none";
+                const arrow = header.querySelector("span");
+                if (arrow) arrow.style.transform = open ? "rotate(90deg)" : "rotate(0deg)";
+            });
+        });
+    }
+
+    vetSelect.addEventListener("change", loadData);
+    document.querySelectorAll("[data-disp-nav]").forEach(btn => {
+        btn.addEventListener("click", () => {
+            const step = parseInt(btn.dataset.dispNav, 10);
+            if (step === 0) current = new Date();
+            else current.setMonth(current.getMonth() + step);
+            loadData();
+        });
+    });
+    const modalClose = document.getElementById("disp-modal-close");
+    if (modalClose) modalClose.addEventListener("click", () => {
+        document.getElementById("disp-modal").classList.remove("is-open");
+    });
+
+    fetchVets();
+})();
+</script>

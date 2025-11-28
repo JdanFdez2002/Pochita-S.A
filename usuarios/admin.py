@@ -1,6 +1,7 @@
 from django.contrib import admin
 
 from .models import Administrador, Cliente, Perfil, Recepcionista, Veterinario
+from .models import Mascota, Servicio, ServicioSeccion
 
 
 @admin.register(Perfil)
@@ -71,3 +72,33 @@ class AdministradorAdmin(admin.ModelAdmin):
         ("Datos personales", {"fields": ("rut", "telefono", "direccion", "empresa_representante")}),
     )
     exclude = ("especialidad", "turno", "permisos_extra")
+
+
+@admin.register(Mascota)
+class MascotaAdmin(admin.ModelAdmin):
+    list_display = ("nombre", "tipo", "cliente", "edad_aproximada", "sexo", "estado_reproductivo")
+    list_filter = ("tipo", "sexo", "estado_reproductivo")
+    search_fields = (
+        "nombre",
+        "cliente__perfil__user__first_name",
+        "cliente__perfil__user__last_name",
+        "cliente__perfil__user__email",
+    )
+    autocomplete_fields = ("cliente",)
+    ordering = ("nombre",)
+
+
+@admin.register(ServicioSeccion)
+class ServicioSeccionAdmin(admin.ModelAdmin):
+    list_display = ("nombre", "orden", "activo")
+    list_filter = ("activo",)
+    search_fields = ("nombre",)
+    ordering = ("orden", "nombre")
+
+
+@admin.register(Servicio)
+class ServicioAdmin(admin.ModelAdmin):
+    list_display = ("nombre", "seccion", "precio_referencial", "activo")
+    list_filter = ("activo", "seccion")
+    search_fields = ("nombre", "descripcion", "etiquetas")
+    autocomplete_fields = ("seccion",)

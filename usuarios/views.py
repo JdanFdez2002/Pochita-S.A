@@ -1,4 +1,5 @@
 import json
+from datetime import datetime, timedelta, date
 
 from django.contrib.auth import logout
 from django.contrib.auth.forms import AuthenticationForm
@@ -57,6 +58,21 @@ def _require_veterinario(request):
         return Veterinario.objects.get(perfil=perfil)
     except Veterinario.DoesNotExist:
         return HttpResponseForbidden("Veterinario no encontrado.")
+
+
+def _require_recepcionista(request):
+    if not request.user.is_authenticated:
+        return HttpResponseForbidden("No autenticado.")
+    try:
+        perfil = request.user.perfil
+    except Perfil.DoesNotExist:
+        return HttpResponseForbidden("Usuario sin perfil.")
+    if perfil.rol != Perfil.Roles.RECEPCIONISTA:
+        return HttpResponseForbidden("Solo disponible para recepcionistas.")
+    try:
+        return Recepcionista.objects.get(perfil=perfil)
+    except Recepcionista.DoesNotExist:
+        return HttpResponseForbidden("Recepcionista no encontrado.")
 
 
 class ClienteLoginView(LoginView):
@@ -187,6 +203,20 @@ class DashboardClienteView(PerfilDashboardMixin):
             Mascota.objects.filter(cliente=cliente).order_by("nombre"),
         )
         context.setdefault("mascota_form", MascotaForm())
+        today = timezone.now().date()
+        context["proxima_cita"] = (
+            Cita.objects.filter(cliente=cliente, fecha__gte=today)
+            .select_related("mascota", "servicio", "veterinario__perfil__user")
+            .order_by("fecha", "hora")
+            .first()
+        )
+        context["ultima_cita"] = (
+            Cita.objects.filter(cliente=cliente, fecha__lte=today)
+            .select_related("mascota", "servicio", "veterinario__perfil__user")
+            .order_by("-fecha", "-hora")
+            .first()
+        )
+        context["citas_total"] = Cita.objects.filter(cliente=cliente).count()
         context["servicio_secciones"] = (
             ServicioSeccion.objects.filter(activo=True)
             .prefetch_related("servicios")
@@ -285,6 +315,21 @@ class DashboardRecepcionistaView(PerfilDashboardMixin):
         page_obj = paginator.get_page(page_number)
         context["clientes_page"] = page_obj
         context["query"] = query
+        # resumen del dia
+        today = timezone.now().date()
+        citas_hoy = (
+            Cita.objects.filter(fecha=today)
+            .select_related("cliente__perfil__user", "mascota", "servicio", "veterinario__perfil__user")
+            .order_by("hora")
+        )
+        context["citas_hoy"] = citas_hoy
+        context["citas_stats"] = {
+            "total": citas_hoy.count(),
+            "pendientes": citas_hoy.filter(estado=Cita.Estado.PENDIENTE).count(),
+            "canceladas": citas_hoy.filter(estado=Cita.Estado.CANCELADA).count(),
+        }
+        recientes = Cita.objects.filter(motivo_cancelacion__isnull=False).order_by("-actualizado_en")[:5]
+        context["alertas_canceladas"] = recientes
         context["servicio_secciones"] = (
             ServicioSeccion.objects.filter(activo=True)
             .prefetch_related("servicios")
@@ -528,10 +573,16 @@ def _serialize_bloque(b):
 
 
 def _serialize_cita(c):
+    vet_name = ""
+    if getattr(c, "veterinario", None):
+        user = c.veterinario.perfil.user
+        vet_name = f"{user.first_name} {user.last_name}".strip() or user.username
+    fecha_val = c.fecha.isoformat() if hasattr(c.fecha, "isoformat") else str(c.fecha)
+    hora_val = c.hora.strftime("%H:%M") if hasattr(c.hora, "strftime") else str(c.hora)
     return {
         "id": c.id,
-        "fecha": c.fecha.isoformat(),
-        "hora": c.hora.strftime("%H:%M"),
+        "fecha": fecha_val,
+        "hora": hora_val,
         "cliente": c.cliente.perfil.user.get_full_name()
         or c.cliente.perfil.user.username,
         "contacto": c.cliente.telefono,
@@ -541,6 +592,7 @@ def _serialize_cita(c):
         "servicio": c.servicio.nombre if c.servicio else "",
         "estado": c.estado,
         "notas": c.notas or "",
+        "veterinario": vet_name,
     }
 
 
@@ -663,3 +715,405 @@ def vet_cita_estado_api(request, pk):
     cita.estado = estado
     cita.save(update_fields=["estado", "actualizado_en"])
     return JsonResponse({"cita": _serialize_cita(cita)})
+
+
+# === API Recepcionista ===
+
+def _serialize_cliente(cliente):
+    user = cliente.perfil.user
+    return {
+        "id": cliente.id,
+        "nombre": f"{user.first_name} {user.last_name}".strip() or user.username,
+        "email": user.email,
+        "telefono": cliente.telefono,
+        "rut": cliente.rut,
+        "direccion": cliente.direccion,
+    }
+
+
+def _serialize_mascota(m):
+    return {
+        "id": m.id,
+        "nombre": m.nombre,
+        "tipo": m.tipo,
+        "sexo": m.sexo,
+        "edad_aproximada": m.edad_aproximada,
+        "raza": m.raza,
+    }
+
+
+@require_http_methods(["GET"])
+def recep_clientes_api(request):
+    recep = _require_recepcionista(request)
+    if isinstance(recep, HttpResponseForbidden):
+        return recep
+    q = (request.GET.get("q") or "").strip()
+    if len(q) < 2:
+        return JsonResponse({"results": [], "count": 0, "page": 1, "pages": 0})
+    page_number = int(request.GET.get("page") or 1)
+    qs = (
+        Cliente.objects.select_related("perfil__user")
+        .prefetch_related("mascotas")
+        .order_by("perfil__user__last_name", "perfil__user__first_name")
+    )
+    qs = qs.filter(
+        Q(perfil__user__first_name__icontains=q)
+        | Q(perfil__user__last_name__icontains=q)
+        | Q(perfil__user__username__icontains=q)
+        | Q(perfil__user__email__icontains=q)
+        | Q(rut__icontains=q)
+        | Q(telefono__icontains=q)
+        | Q(mascotas__nombre__icontains=q)
+    ).distinct()
+    paginator = Paginator(qs, 10)
+    page_obj = paginator.get_page(page_number)
+    data = []
+    for cliente in page_obj:
+        data.append(
+            {
+                **_serialize_cliente(cliente),
+                "mascotas": [_serialize_mascota(m) for m in cliente.mascotas.all()],
+            }
+        )
+    return JsonResponse(
+        {"results": data, "count": paginator.count, "page": page_obj.number, "pages": paginator.num_pages}
+    )
+
+
+@require_http_methods(["GET"])
+def recep_cliente_detalle_api(request, cliente_id):
+    recep = _require_recepcionista(request)
+    if isinstance(recep, HttpResponseForbidden):
+        return recep
+    try:
+        cliente = (
+            Cliente.objects.select_related("perfil__user")
+            .prefetch_related("mascotas")
+            .get(id=cliente_id)
+        )
+    except Cliente.DoesNotExist:
+        return HttpResponseBadRequest("Cliente no encontrado.")
+    citas = (
+        Cita.objects.filter(cliente=cliente)
+        .select_related("mascota", "servicio", "veterinario__perfil__user")
+        .order_by("-fecha", "-hora")
+    )
+    return JsonResponse(
+        {
+            "cliente": _serialize_cliente(cliente),
+            "mascotas": [_serialize_mascota(m) for m in cliente.mascotas.all()],
+            "citas": [_serialize_cita(c) for c in citas],
+        }
+    )
+
+
+@require_http_methods(["GET"])
+def recep_mascotas_api(request, cliente_id):
+    recep = _require_recepcionista(request)
+    if isinstance(recep, HttpResponseForbidden):
+        return recep
+    mascotas = Mascota.objects.filter(cliente_id=cliente_id).order_by("nombre")
+    return JsonResponse({"mascotas": [_serialize_mascota(m) for m in mascotas]})
+
+
+@require_http_methods(["GET"])
+def recep_servicios_api(request):
+    recep = _require_recepcionista(request)
+    if isinstance(recep, HttpResponseForbidden):
+        return recep
+    servicios = Servicio.objects.filter(activo=True, seccion__activo=True).order_by("nombre")
+    return JsonResponse(
+        {
+            "servicios": [
+                {"id": s.id, "nombre": s.nombre, "duracion_minutos": s.duracion_minutos, "seccion": s.seccion.nombre if s.seccion else ""}
+                for s in servicios
+            ]
+        }
+    )
+
+
+@require_http_methods(["GET"])
+def recep_veterinarios_api(request):
+    recep = _require_recepcionista(request)
+    if isinstance(recep, HttpResponseForbidden):
+        return recep
+    q = (request.GET.get("q") or "").strip()
+    if q and len(q) < 2:
+        return JsonResponse({"results": [], "count": 0, "page": 1, "pages": 0})
+    page_number = int(request.GET.get("page") or 1)
+    qs = Veterinario.objects.select_related("perfil__user").order_by(
+        "perfil__user__last_name", "perfil__user__first_name"
+    )
+    if q:
+        qs = qs.filter(
+            Q(perfil__user__first_name__icontains=q)
+            | Q(perfil__user__last_name__icontains=q)
+            | Q(perfil__user__email__icontains=q)
+            | Q(perfil__user__username__icontains=q)
+        )
+    paginator = Paginator(qs, 10)
+    page_obj = paginator.get_page(page_number)
+    data = []
+    for vet in page_obj:
+        user = vet.perfil.user
+        data.append(
+            {
+                "id": vet.id,
+                "nombre": f"{user.first_name} {user.last_name}".strip() or user.username,
+                "email": user.email,
+                "especialidad": vet.especialidad or "",
+            }
+        )
+    return JsonResponse(
+        {"results": data, "count": paginator.count, "page": page_obj.number, "pages": paginator.num_pages}
+    )
+
+
+@require_http_methods(["GET"])
+def recep_disponibilidad_api(request):
+    recep = _require_recepcionista(request)
+    if isinstance(recep, HttpResponseForbidden):
+        return recep
+    # Marcar como "no atendida" (cancelada con motivo) citas vencidas sin atender
+    hoy = timezone.now().date()
+    vencidas = Cita.objects.filter(
+        fecha__lt=hoy, estado__in=[Cita.Estado.PENDIENTE, Cita.Estado.CONFIRMADA]
+    )
+    vencidas.update(
+        estado=Cita.Estado.CANCELADA,
+        motivo_cancelacion="No atendida (expiró)",
+        actualizado_en=timezone.now(),
+    )
+    vet_id = request.GET.get("veterinario_id")
+    year = int(request.GET.get("year") or timezone.now().year)
+    month = int(request.GET.get("month") or timezone.now().month)
+    qs = DisponibilidadVeterinario.objects.filter(fecha__year=year, fecha__month=month)
+    bloqueados_qs = DiaBloqueadoVeterinario.objects.filter(fecha__year=year, fecha__month=month)
+    citas_qs = Cita.objects.filter(fecha__year=year, fecha__month=month).select_related(
+        "cliente__perfil__user", "mascota", "servicio", "veterinario__perfil__user"
+    )
+    if vet_id:
+        qs = qs.filter(veterinario_id=vet_id)
+        bloqueados_qs = bloqueados_qs.filter(veterinario_id=vet_id)
+        citas_qs = citas_qs.filter(veterinario_id=vet_id)
+    bloques = [
+        {
+            "id": b.id,
+            "veterinario_id": b.veterinario_id,
+            "fecha": b.fecha.isoformat(),
+            "inicio": b.hora_inicio.strftime("%H:%M"),
+            "fin": b.hora_fin.strftime("%H:%M"),
+            "estado": b.estado,
+        }
+        for b in qs.order_by("fecha", "hora_inicio")
+    ]
+    bloqueados = [
+        {
+            "id": d.id,
+            "veterinario_id": d.veterinario_id,
+            "fecha": d.fecha.isoformat(),
+        }
+        for d in bloqueados_qs.order_by("fecha")
+    ]
+    return JsonResponse({"bloques": bloques, "dias_bloqueados": bloqueados, "citas": [_serialize_cita(c) for c in citas_qs]})
+
+
+@require_http_methods(["POST"])
+def recep_cita_create_api(request):
+    recep = _require_recepcionista(request)
+    if isinstance(recep, HttpResponseForbidden):
+        return recep
+    data = _parse_json(request)
+    required = ["cliente_id", "mascota_id", "servicio_id", "veterinario_id", "fecha", "hora"]
+    if not all(data.get(f) for f in required):
+        return HttpResponseBadRequest("Faltan datos obligatorios.")
+    try:
+        cliente = Cliente.objects.get(id=data["cliente_id"])
+        mascota = Mascota.objects.get(id=data["mascota_id"], cliente=cliente)
+        servicio = Servicio.objects.filter(id=data["servicio_id"]).first()
+        vet = Veterinario.objects.get(id=data["veterinario_id"])
+    except (Cliente.DoesNotExist, Mascota.DoesNotExist, Veterinario.DoesNotExist):
+        return HttpResponseBadRequest("Datos de relacion invalidos.")
+    try:
+        hora_obj = datetime.strptime(data["hora"], "%H:%M").time()
+    except Exception:
+        return HttpResponseBadRequest("Formato de hora invalido.")
+    try:
+        fecha_obj = datetime.strptime(data["fecha"], "%Y-%m-%d").date()
+    except Exception:
+        return HttpResponseBadRequest("Formato de fecha invalido.")
+    existe = Cita.objects.filter(
+        veterinario=vet, fecha=fecha_obj, hora=hora_obj
+    ).exclude(estado=Cita.Estado.CANCELADA).exists()
+    if existe:
+        return HttpResponseBadRequest("Horario ya reservado.")
+    bloque = (
+        DisponibilidadVeterinario.objects.filter(
+            veterinario=vet,
+            fecha=fecha_obj,
+            hora_inicio__lte=hora_obj,
+            hora_fin__gt=hora_obj,
+            estado=DisponibilidadVeterinario.Estado.DISPONIBLE,
+        ).first()
+    )
+    if not bloque:
+        return HttpResponseBadRequest("No hay disponibilidad para ese horario.")
+    cita = Cita(
+        cliente=cliente,
+        mascota=mascota,
+        servicio=servicio,
+        veterinario=vet,
+        fecha=fecha_obj,
+        hora=hora_obj,
+        notas=data.get("notas") or "",
+        estado=Cita.Estado.PENDIENTE,
+    )
+    cita.save()
+    bloque.estado = DisponibilidadVeterinario.Estado.NO_DISPONIBLE
+    bloque.save(update_fields=["estado", "actualizado_en"])
+    return JsonResponse({"cita": _serialize_cita(cita)}, status=201)
+
+
+@require_http_methods(["GET"])
+def recep_citas_hoy_api(request):
+    recep = _require_recepcionista(request)
+    if isinstance(recep, HttpResponseForbidden):
+        return recep
+    today = timezone.now().date()
+    qs = (
+        Cita.objects.filter(fecha=today)
+        .select_related("cliente__perfil__user", "mascota", "servicio", "veterinario__perfil__user")
+        .order_by("hora")
+    )
+    vet_id = request.GET.get("veterinario_id")
+    servicio_id = request.GET.get("servicio_id")
+    if vet_id:
+        qs = qs.filter(veterinario_id=vet_id)
+    if servicio_id:
+        qs = qs.filter(servicio_id=servicio_id)
+    return JsonResponse({"citas": [_serialize_cita(c) for c in qs]})
+
+
+@require_http_methods(["POST"])
+def recep_cita_estado_api(request, pk):
+    recep = _require_recepcionista(request)
+    if isinstance(recep, HttpResponseForbidden):
+        return recep
+    try:
+        cita = Cita.objects.get(pk=pk)
+    except Cita.DoesNotExist:
+        return HttpResponseBadRequest("Cita no encontrada.")
+    data = _parse_json(request)
+    estado = data.get("estado")
+    motivo = data.get("motivo_cancelacion") or ""
+    if estado not in dict(Cita.Estado.choices):
+        return HttpResponseBadRequest("Estado invalido.")
+    cita.estado = estado
+    if estado == Cita.Estado.CANCELADA:
+        cita.motivo_cancelacion = motivo or "Cancelada por recepcion."
+        # liberar bloque correspondiente si existe
+        bloque = (
+            DisponibilidadVeterinario.objects.filter(
+                veterinario=cita.veterinario,
+                fecha=cita.fecha,
+                hora_inicio__lte=cita.hora,
+                hora_fin__gt=cita.hora,
+            )
+            .exclude(estado=DisponibilidadVeterinario.Estado.BLOQUEADO)
+            .first()
+        )
+        if bloque:
+            bloque.estado = DisponibilidadVeterinario.Estado.DISPONIBLE
+            bloque.save(update_fields=["estado", "actualizado_en"])
+    cita.save(update_fields=["estado", "motivo_cancelacion", "actualizado_en"])
+    return JsonResponse({"cita": _serialize_cita(cita)})
+
+
+@require_http_methods(["GET"])
+def recep_replanificar_alertas_api(request):
+    recep = _require_recepcionista(request)
+    if isinstance(recep, HttpResponseForbidden):
+        return recep
+    reciente = timezone.now().date() - timedelta(days=30)
+    canceladas = (
+        Cita.objects.filter(estado=Cita.Estado.CANCELADA, motivo_cancelacion__isnull=False, fecha__gte=reciente)
+        .select_related("cliente__perfil__user", "mascota", "servicio", "veterinario__perfil__user")
+        .order_by("-fecha", "-hora")
+    )
+    alertas = []
+    for c in canceladas:
+        base = _serialize_cita(c)
+        base["motivo_cancelacion"] = c.motivo_cancelacion
+        alertas.append(base)
+    return JsonResponse({"alertas": alertas})
+
+
+@require_http_methods(["GET"])
+def recep_replanificar_disponibilidad_api(request):
+    recep = _require_recepcionista(request)
+    if isinstance(recep, HttpResponseForbidden):
+        return recep
+    vet_id = request.GET.get("veterinario_id")
+    fecha = request.GET.get("fecha")
+    if not vet_id or not fecha:
+        return HttpResponseBadRequest("Se requiere veterinario y fecha.")
+    bloques = DisponibilidadVeterinario.objects.filter(
+        veterinario_id=vet_id, fecha=fecha, estado=DisponibilidadVeterinario.Estado.DISPONIBLE
+    ).order_by("hora_inicio")
+    return JsonResponse(
+        {"bloques": [{"id": b.id, "inicio": b.hora_inicio.strftime("%H:%M"), "fin": b.hora_fin.strftime("%H:%M")} for b in bloques]}
+    )
+
+
+@require_http_methods(["POST"])
+def recep_replanificar_cita_api(request):
+    recep = _require_recepcionista(request)
+    if isinstance(recep, HttpResponseForbidden):
+        return recep
+    data = _parse_json(request)
+    required = ["cita_id", "nueva_fecha", "nueva_hora", "veterinario_id", "motivo"]
+    if not all(data.get(f) for f in required):
+        return HttpResponseBadRequest("Faltan datos.")
+    try:
+        cita = Cita.objects.select_related("cliente", "mascota", "servicio").get(pk=data["cita_id"])
+        vet = Veterinario.objects.get(id=data["veterinario_id"])
+    except (Cita.DoesNotExist, Veterinario.DoesNotExist):
+        return HttpResponseBadRequest("Datos invalidos.")
+    # cancelar cita original
+    cita.estado = Cita.Estado.CANCELADA
+    cita.motivo_cancelacion = data.get("motivo") or "Replanificada"
+    cita.save(update_fields=["estado", "motivo_cancelacion", "actualizado_en"])
+    # crear nueva
+    nueva = Cita.objects.create(
+        cliente=cita.cliente,
+        mascota=cita.mascota,
+        servicio=cita.servicio,
+        veterinario=vet,
+        fecha=data["nueva_fecha"],
+        hora=data["nueva_hora"],
+        notas=cita.notas,
+        estado=Cita.Estado.PENDIENTE,
+    )
+    return JsonResponse({"cita_original": _serialize_cita(cita), "cita_nueva": _serialize_cita(nueva)})
+
+
+@require_http_methods(["GET"])
+def recep_historial_citas_cliente_api(request, cliente_id):
+    recep = _require_recepcionista(request)
+    if isinstance(recep, HttpResponseForbidden):
+        return recep
+    try:
+        cliente = Cliente.objects.get(id=cliente_id)
+    except Cliente.DoesNotExist:
+        return HttpResponseBadRequest("Cliente no encontrado.")
+    citas = (
+        Cita.objects.filter(cliente=cliente)
+        .select_related("mascota", "servicio", "veterinario__perfil__user")
+        .order_by("-fecha", "-hora")
+    )
+    data = []
+    for c in citas:
+        base = _serialize_cita(c)
+        base["motivo_cancelacion"] = c.motivo_cancelacion or ""
+        data.append(base)
+    return JsonResponse({"citas": data})
