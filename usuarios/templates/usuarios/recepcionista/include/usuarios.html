@@ -1,187 +1,297 @@
 <div class="card" style="margin-bottom:16px;">
-    <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
-        <div>
-            <h2 style="margin:0;">Gestion de usuarios</h2>
-            <p style="color:var(--text-muted); margin:4px 0 0;">Listado de clientes con busqueda y paginacion (placeholder).</p>
+    <div style="margin-bottom:12px;">
+        <h2 style="margin:0;">Gestión de usuarios</h2>
+        <p style="color:var(--text-muted); margin:4px 0 0;">Listado de clientes registrados.</p>
+    </div>
+    <form method="get" class="search-bar" data-stay-section="sec-usuarios" style="width:100%; margin-bottom:12px;">
+        <input class="input-lite" name="q" value="{{ query }}" placeholder="Buscar por nombre, correo, RUT o mascota">
+        <div style="display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap;">
+            <button class="btn btn-ghost" type="submit">Buscar</button>
+            <a class="btn btn-outline" href="?#sec-usuarios">Limpiar</a>
         </div>
-        <button class="btn btn-outline">Crear cliente</button>
-    </div>
+    </form>
 
-    <div class="search-bar" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap:10px; margin:14px 0;">
-        <input class="input-lite" placeholder="Buscar por nombre o correo">
-        <input class="input-lite" placeholder="Buscar por RUT">
-        <input class="input-lite" placeholder="Buscar por mascota">
-        <button class="btn btn-primary" type="button">Buscar</button>
-    </div>
-
-    <div class="table-responsive">
+    <div class="table-responsive" style="margin-top:14px;">
         <table class="recep-table">
             <thead>
                 <tr>
                     <th>Nombre</th>
                     <th>RUT</th>
                     <th>Correo</th>
-                    <th>Telefono</th>
+                    <th>Teléfono</th>
                     <th>Mascotas</th>
-                    <th>Accion</th>
+                    <th>Acción</th>
                 </tr>
             </thead>
             <tbody>
-                {% for idx in "123456789ABCDE" %}
-                <tr>
-                    <td>Cliente {{ idx }}</td>
-                    <td>12.345.67{{ forloop.counter }}-9</td>
-                    <td>cliente{{ forloop.counter }}@correo.cl</td>
-                    <td>+56 9 5555 0{{ forloop.counter|stringformat:"02d" }}</td>
-                    <td>
-                        <div class="tag-list">
-                            <span class="tag">Luna</span>
-                            <span class="tag">Milo</span>
-                        </div>
-                    </td>
-                    <td>
-                        <button class="btn-small btn-primary-lite js-open-cliente" type="button">Ver detalles</button>
-                    </td>
-                </tr>
+                {% for cliente in clientes_page %}
+                    {% with user=cliente.perfil.user %}
+                    <tr>
+                        <td>{{ user.get_full_name|default:user.username }}</td>
+                        <td>{{ cliente.rut }}</td>
+                        <td>{{ user.email }}</td>
+                        <td>{{ cliente.telefono|default:"-" }}</td>
+                        <td>
+                            {% if cliente.mascotas.all %}
+                                <div class="tag-list">
+                                    {% for mascota in cliente.mascotas.all %}
+                                        <span class="tag">{{ mascota.nombre }}</span>
+                                    {% empty %}
+                                        <span class="tag">Sin mascotas</span>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <span class="tag">Sin mascotas</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <button class="btn-small btn-primary-lite js-open-cliente" type="button" data-target="modal-cliente-{{ cliente.id }}">Gestionar</button>
+                        </td>
+                    </tr>
+                    {% endwith %}
+                {% empty %}
+                    <tr>
+                        <td colspan="6" style="color:var(--text-muted); text-align:center; padding:14px 0;">No hay clientes registrados.</td>
+                    </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
 
     <div class="paginator">
-        <div>Mostrando 1 - 15 de 45 clientes</div>
+        <div>
+            {% if clientes_page.has_other_pages %}
+                Página {{ clientes_page.number }} de {{ clientes_page.paginator.num_pages }} ({{ clientes_page.paginator.count }} clientes)
+            {% else %}
+                {{ clientes_page.paginator.count }} clientes
+            {% endif %}
+        </div>
         <div class="pager-actions">
-            <button class="btn-small btn-ghost" type="button" disabled>&laquo; Anterior</button>
-            <button class="btn-small btn-ghost" type="button">Siguiente &raquo;</button>
+            {% if clientes_page.has_previous %}
+                <a class="btn-small btn-ghost" href="?page={{ clientes_page.previous_page_number }}{% if query %}&q={{ query }}{% endif %}#sec-usuarios">&laquo; Anterior</a>
+            {% else %}
+                <button class="btn-small btn-ghost" type="button" disabled>&laquo; Anterior</button>
+            {% endif %}
+            {% if clientes_page.has_next %}
+                <a class="btn-small btn-ghost" href="?page={{ clientes_page.next_page_number }}{% if query %}&q={{ query }}{% endif %}#sec-usuarios">Siguiente &raquo;</a>
+            {% else %}
+                <button class="btn-small btn-ghost" type="button" disabled>Siguiente &raquo;</button>
+            {% endif %}
         </div>
     </div>
 </div>
 
-<div class="modal-overlay" data-modal="cliente">
-    <div class="modal-card">
-        <div class="modal-header">
-            <div>
-                <div class="pill">Cliente</div>
-                <h3 style="margin:6px 0 0;">Paula Diaz</h3>
-                <p style="color:var(--text-muted); margin:4px 0 0;">Rut: 12.345.678-9 · paula@correo.cl · +56 9 5555 1111</p>
-            </div>
-            <button class="btn btn-outline js-close-modal" type="button">&times;</button>
-        </div>
-
-        <div class="modal-body">
-            <div class="card" style="padding:14px;">
-                <h4 style="margin:0 0 8px;">Datos personales</h4>
-                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr)); gap:8px; color:var(--text-muted);">
-                    <span>Correo: <strong>paula@correo.cl</strong></span>
-                    <span>Telefono: <strong>+56 9 5555 1111</strong></span>
-                    <span>Direccion: <strong>Av. Ejemplo 123</strong></span>
+{% for cliente in clientes_page %}
+    {% with user=cliente.perfil.user %}
+    <div class="modal-overlay" id="modal-cliente-{{ cliente.id }}" data-modal="cliente-{{ cliente.id }}">
+        <div class="modal-card">
+            <div class="modal-header">
+                <div>
+                    <div class="pill">Cliente</div>
+                    <h3 style="margin:6px 0 0;">{{ user.get_full_name|default:user.username }}</h3>
                 </div>
+                <button class="btn btn-outline js-close-modal" type="button">&times;</button>
             </div>
 
-            <div class="card" style="padding:14px;">
-                <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
-                    <h4 style="margin:0;">Mascotas</h4>
-                    <button class="btn-small btn-primary" type="button">Agregar mascota</button>
+            <div class="modal-body">
+                <div class="card" style="padding:14px;">
+                    <form method="post" class="cliente-edit-form" data-stay-section="sec-usuarios">
+                        {% csrf_token %}
+                        <input type="hidden" name="form_type" value="editar_cliente">
+                        <input type="hidden" name="cliente_id" value="{{ cliente.id }}">
+                        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap:12px;">
+                            <div class="form-field">
+                                <label>Nombre</label>
+                                <input type="text" name="first_name" value="{{ user.first_name }}" data-original="{{ user.first_name }}">
+                            </div>
+                            <div class="form-field">
+                                <label>Apellido</label>
+                                <input type="text" name="last_name" value="{{ user.last_name }}" data-original="{{ user.last_name }}">
+                            </div>
+                            <div class="form-field">
+                                <label>Correo</label>
+                                <input type="email" name="email" value="{{ user.email }}" data-original="{{ user.email }}">
+                            </div>
+                            <div class="form-field">
+                                <label>Rut</label>
+                                <input type="text" name="rut" value="{{ cliente.rut }}" data-original="{{ cliente.rut }}" disabled>
+                            </div>
+                            <div class="form-field">
+                                <label>Teléfono</label>
+                                <input type="text" name="telefono" value="{{ cliente.telefono }}" data-original="{{ cliente.telefono }}">
+                            </div>
+                            <div class="form-field">
+                                <label>Dirección</label>
+                                <input type="text" name="direccion" value="{{ cliente.direccion }}" data-original="{{ cliente.direccion }}">
+                            </div>
+                        </div>
+                        <div class="form-actions" style="justify-content:flex-end; gap:8px; margin-top:10px;">
+                            <button type="button" class="btn-small btn-ghost" data-action="edit">Editar</button>
+                            <button type="button" class="btn-small btn-ghost" data-action="cancel" disabled style="opacity:0.8;">Cancelar</button>
+                            <button type="submit" class="btn-small btn-primary" data-action="submit" disabled>Aceptar</button>
+                        </div>
+                    </form>
                 </div>
-                <div class="table-responsive" style="margin-top:10px;">
-                    <table class="recep-table compact">
-                        <thead>
-                            <tr>
-                                <th>Nombre</th>
-                                <th>Especie</th>
-                                <th>Notas</th>
-                                <th>Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>Luna</td>
-                                <td>Canino</td>
-                                <td>Alergia penicilina</td>
-                                <td class="table-actions">
-                                    <button class="btn-small btn-ghost">Datos</button>
-                                    <button class="btn-small btn-ghost">Historial</button>
-                                    <button class="btn-small btn-ghost">Vacunas</button>
-                                    <button class="btn-small btn-primary-lite">Ficha</button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>Milo</td>
-                                <td>Felino</td>
-                                <td>Vacunas al dia</td>
-                                <td class="table-actions">
-                                    <button class="btn-small btn-ghost">Datos</button>
-                                    <button class="btn-small btn-ghost">Historial</button>
-                                    <button class="btn-small btn-ghost">Vacunas</button>
-                                    <button class="btn-small btn-primary-lite">Ficha</button>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
 
-            <div class="card" style="padding:14px;">
-                <h4 style="margin:0 0 8px;">Acciones rapidas</h4>
-                <div class="quick-actions">
-                    <button class="btn-small btn-primary-lite">Agendar cita</button>
-                    <button class="btn-small btn-ghost">Reagendar</button>
-                    <button class="btn-small btn-ghost">Ver historial de citas</button>
-                    <button class="btn-small btn-ghost">Ver expediente</button>
-                </div>
-            </div>
-
-            <div class="card" style="padding:14px;">
-                <h4 style="margin:0 0 8px;">Gestion de citas</h4>
-                <div class="appointments-grid">
-                    <div class="card mini">
-                        <h5>Agendar cita</h5>
-                        <ul>
-                            <li>Seleccionar veterinario</li>
-                            <li>Ver horarios disponibles</li>
-                            <li>Elegir cliente y mascota</li>
-                            <li>Motivo de la consulta</li>
-                        </ul>
+                <div class="card" style="padding:14px;">
+                    <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+                        <h4 style="margin:0;">Mascotas</h4>
                     </div>
-                    <div class="card mini">
-                        <h5>Reagendar</h5>
-                        <p style="color:var(--text-muted); margin:0;">Mover cita existente a otro bloque.</p>
-                    </div>
-                    <div class="card mini">
-                        <h5>Historial clinico</h5>
-                        <p style="color:var(--text-muted); margin:0;">Solo lectura de atenciones previas.</p>
-                    </div>
-                    <div class="card mini">
-                        <h5>Vacunas</h5>
-                        <p style="color:var(--text-muted); margin:0;">Registro basico de vacunas.</p>
-                    </div>
-                    <div class="card mini">
-                        <h5>Notas</h5>
-                        <p style="color:var(--text-muted); margin:0;">Notas internas sobre la mascota.</p>
+                    <div class="table-responsive" style="margin-top:10px; min-height:240px;">
+                        {% if cliente.mascotas.all %}
+                            <table class="recep-table compact">
+                                <thead>
+                                    <tr>
+                                        <th>Nombre</th>
+                                        <th>Especie</th>
+                                        <th>Sexo</th>
+                                        <th>Señas</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for mascota in cliente.mascotas.all %}
+                                    <tr>
+                                        <td>{{ mascota.nombre }}</td>
+                                        <td>{{ mascota.get_tipo_display }}</td>
+                                        <td>{{ mascota.get_sexo_display }}</td>
+                                        <td>{{ mascota.senas_particulares|default:"-" }}</td>
+                                        <td>
+                                            <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                                                <button type="button" class="btn-small btn-ghost js-open-photo" data-photo-target="foto-{{ mascota.id }}">Ver</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        {% else %}
+                            <div style="color:var(--text-muted); padding:10px; text-align:center;">No hay mascotas registradas.</div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
+
+    {% for mascota in cliente.mascotas.all %}
+        <div class="modal-overlay" id="foto-{{ mascota.id }}">
+            <div class="modal-card small">
+                <div class="modal-header">
+                    <div>
+                        <div class="pill">Mascota</div>
+                        <h3 style="margin:6px 0 0;">{{ mascota.nombre }}</h3>
+                    </div>
+                    <button class="btn btn-outline js-close-modal" type="button">&times;</button>
+                </div>
+                <div class="modal-body" style="align-items:center;">
+                    {% if mascota.foto %}
+                        <img src="{{ mascota.foto.url }}" alt="Foto de {{ mascota.nombre }}" style="max-width:100%; max-height:70vh; border-radius:12px; border:1px solid var(--border);">
+                    {% else %}
+                        <div style="color:var(--text-muted); padding:12px; text-align:center;">No hay foto cargada para esta mascota.</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+    {% endwith %}
+{% endfor %}
 
 <script>
 document.addEventListener("DOMContentLoaded", () => {
-    const modal = document.querySelector('.modal-overlay[data-modal=\"cliente\"]');
-    if (!modal) return;
     const openButtons = document.querySelectorAll('.js-open-cliente');
-    const closeButtons = modal.querySelectorAll('.js-close-modal');
+    const modals = document.querySelectorAll('.modal-overlay');
+    const searchForm = document.querySelector('form[data-stay-section]');
+    const photoButtons = document.querySelectorAll('.js-open-photo');
+    const editForms = document.querySelectorAll('.cliente-edit-form');
 
-    function openModal() {
-        modal.classList.add('is-open');
+    function openModal(targetId) {
+        const modal = document.getElementById(targetId);
+        if (modal) modal.classList.add('is-open');
     }
-    function closeModal() {
+    function closeModal(modal) {
         modal.classList.remove('is-open');
     }
-    openButtons.forEach(btn => btn.addEventListener('click', openModal));
-    closeButtons.forEach(btn => btn.addEventListener('click', closeModal));
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) closeModal();
+
+    openButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const target = btn.dataset.target;
+            if (target) openModal(target);
+        });
+    });
+
+    photoButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const target = btn.dataset.photoTarget;
+            if (target) openModal(target);
+        });
+    });
+
+    modals.forEach(modal => {
+        const closeButtons = modal.querySelectorAll('.js-close-modal');
+        closeButtons.forEach(btn => btn.addEventListener('click', () => closeModal(modal)));
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeModal(modal);
+        });
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            modals.forEach(modal => closeModal(modal));
+        }
+    });
+
+    if (searchForm) {
+        searchForm.addEventListener('submit', () => {
+            const hash = '#'+(searchForm.dataset.staySection || 'sec-usuarios');
+            if (!searchForm.action.includes('#')) {
+                searchForm.action = (searchForm.action || '') + hash;
+            }
+        });
+    }
+
+    editForms.forEach(form => {
+        const fields = form.querySelectorAll('input');
+        const editBtn = form.querySelector('[data-action="edit"]');
+        const cancelBtn = form.querySelector('[data-action="cancel"]');
+        const submitBtn = form.querySelector('[data-action="submit"]');
+
+        function setEditable(enabled) {
+            fields.forEach(f => {
+                if (f.name !== 'rut' && f.type !== 'hidden') {
+                    f.disabled = !enabled;
+                }
+            });
+            if (cancelBtn) cancelBtn.disabled = !enabled;
+            if (submitBtn) submitBtn.disabled = !enabled;
+            if (editBtn) editBtn.disabled = enabled;
+        }
+
+        function resetValues() {
+            fields.forEach(f => {
+                if (f.dataset.original !== undefined) {
+                    f.value = f.dataset.original;
+                }
+            });
+        }
+
+        setEditable(false);
+
+        if (editBtn) {
+            editBtn.addEventListener('click', () => setEditable(true));
+        }
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', () => {
+                resetValues();
+                setEditable(false);
+            });
+        }
+        form.addEventListener('submit', () => {
+            const hash = '#sec-usuarios';
+            if (!form.action.includes('#')) {
+                form.action = (form.action || '') + hash;
+            }
+        });
     });
 });
 </script>

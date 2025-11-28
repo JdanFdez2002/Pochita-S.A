@@ -4,15 +4,17 @@
 {% block title %}Administrador | Pochita S.A{% endblock %}
 
 {% block sidebar_menu %}
-    <a href="#" class="menu-link is-active" data-target="sec-inicio">Inicio</a>
+    <a href="#" class="menu-link" data-target="sec-inicio">Inicio</a>
     <a href="#" class="menu-link" data-target="sec-usuarios">Usuarios</a>
     <a href="#" class="menu-link" data-target="sec-finanzas">Finanzas</a>
     <a href="#" class="menu-link" data-target="sec-config">Configuracion</a>
-    <a href="/" class="menu-link logout">Cerrar sesion</a>
+    <a href="#" class="menu-link" data-target="sec-servicios">Gestionar Servicios</a>
+    <a href="#" class="menu-link is-active" data-target="sec-datos">Mis datos</a>
+    <a href="{% url 'usuarios:logout' %}" class="menu-link logout">Cerrar sesion</a>
 {% endblock %}
 
 {% block dashboard_content %}
-    <section id="sec-inicio" class="dashboard-section is-active">
+    <section id="sec-inicio" class="dashboard-section">
         {% include "usuarios/administrador/include/inicio.html" %}
     </section>
 
@@ -26,5 +28,13 @@
 
     <section id="sec-config" class="dashboard-section">
         {% include "usuarios/administrador/include/configuracion.html" %}
+    </section>
+
+    <section id="sec-servicios" class="dashboard-section">
+        {% include "usuarios/administrador/include/servicios.html" %}
+    </section>
+
+    <section id="sec-datos" class="dashboard-section is-active">
+        {% include "usuarios/administrador/include/mis_datos.html" %}
     </section>
 {% endblock %}

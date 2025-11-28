@@ -5,7 +5,16 @@ from django.db import transaction
 from django.urls import reverse_lazy
 from django.utils.safestring import mark_safe
 
-from .models import Administrador, Cliente, Perfil, Recepcionista, Veterinario
+from .models import (
+    Administrador,
+    Cliente,
+    Mascota,
+    Perfil,
+    Recepcionista,
+    Servicio,
+    ServicioSeccion,
+    Veterinario,
+)
 
 
 class RegistroClienteForm(forms.Form):
@@ -220,3 +229,60 @@ class AdministradorPerfilForm(BasePerfilForm):
             update_fields=["rut", "telefono", "direccion", "empresa_representante"]
         )
         return administrador
+
+
+class MascotaForm(forms.ModelForm):
+    class Meta:
+        model = Mascota
+        fields = [
+            "nombre",
+            "tipo",
+            "sexo",
+            "edad_aproximada",
+            "fecha_nacimiento",
+            "senas_particulares",
+            "raza",
+            "estado_reproductivo",
+            "microchip",
+            "foto",
+        ]
+        widgets = {
+            "senas_particulares": forms.Textarea(
+                attrs={"rows": 3, "placeholder": "Describe colores, marcas, etc."}
+            ),
+            "fecha_nacimiento": forms.DateInput(
+                attrs={"type": "date", "placeholder": "Opcional"}
+            ),
+            "foto": forms.FileInput(
+                attrs={"accept": "image/*", "capture": "environment"}
+            ),
+        }
+
+    def clean_raza(self):
+        tipo = self.cleaned_data.get("tipo")
+        raza = (self.cleaned_data.get("raza") or "").strip()
+        if tipo in {Mascota.Tipo.PERRO, Mascota.Tipo.GATO}:
+            return raza or "Desconocido"
+        return ""
+
+
+class ServicioSeccionForm(forms.ModelForm):
+    class Meta:
+        model = ServicioSeccion
+        fields = ["nombre", "descripcion", "orden", "activo"]
+
+
+class ServicioForm(forms.ModelForm):
+    class Meta:
+        model = Servicio
+        fields = [
+            "nombre",
+            "descripcion",
+            "seccion",
+            "precio_referencial",
+            "unidad_precio",
+            "duracion_minutos",
+            "destacado",
+            "etiquetas",
+            "activo",
+        ]

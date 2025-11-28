@@ -1,0 +1,669 @@
+<div class="card availability-hero">
+    <div class="availability-hero__text">
+        <div class="pill pill-soft">Mi disponibilidad</div>
+        <h2 style="margin:6px 0 4px;">Agenda de bloques</h2>
+        <p class="muted">Gestiona los bloques disponibles que veran recepcion y clientes. El bloque se asocia al veterinario logueado.</p>
+        <div class="hero-stats">
+            <div class="hero-stat">
+                <small>Bloques activos del mes</small>
+                <strong id="stat-bloques-mes">--</strong>
+            </div>
+            <div class="hero-stat">
+                <small>Siguiente disponible</small>
+                <strong id="stat-proximo">--</strong>
+            </div>
+            <div class="hero-stat">
+                <small>Dias bloqueados</small>
+                <strong id="stat-bloqueados">--</strong>
+            </div>
+        </div>
+    </div>
+    <div class="availability-hero__actions">
+        <button class="btn btn-primary" type="button" data-avail-action="new">Agregar bloque</button>
+        <button class="btn btn-outline" type="button" data-avail-action="block-today">Bloquear hoy</button>
+    </div>
+</div>
+
+<div class="availability-layout">
+    <div class="card availability-calendar">
+        <div class="calendar-header">
+            <div>
+                <small class="muted">Calendario mensual</small>
+                <h3 id="calendar-month-label" style="margin:2px 0 0;">Disponibilidad</h3>
+            </div>
+            <div class="calendar-nav">
+                <button class="btn-small btn-ghost" type="button" data-cal-nav="prev">&#9664;</button>
+                <button class="btn-small btn-ghost" type="button" data-cal-nav="today">Hoy</button>
+                <button class="btn-small btn-ghost" type="button" data-cal-nav="next">&#9654;</button>
+            </div>
+        </div>
+        <div class="calendar-legend">
+            <span><span class="legend-dot ok"></span> Con bloques</span>
+            <span><span class="legend-dot warn"></span> Sin disponibilidad</span>
+            <span><span class="legend-dot blocked"></span> Bloqueado</span>
+            <span><span class="legend-dot today"></span> Hoy</span>
+        </div>
+        <div class="calendar-grid" id="availability-calendar"></div>
+    </div>
+
+    <div class="card availability-side">
+        <div class="side-header">
+            <div>
+                <small class="muted">Dia seleccionado</small>
+                <h3 id="selected-day-label" style="margin:2px 0 8px;">--</h3>
+                <div class="pill-set">
+                    <span class="pill" id="day-status-pill">Sin bloques</span>
+                    <span class="pill pill-soft" id="day-count-pill">0 bloques</span>
+                </div>
+            </div>
+            <div class="side-actions">
+                <button class="btn-small btn-primary-lite" type="button" data-avail-action="new">Agregar bloque</button>
+                <button class="btn-small btn-ghost" type="button" data-avail-action="toggle-block">Bloquear dia</button>
+            </div>
+        </div>
+
+        <div id="availability-list" class="availability-list">
+            <div class="muted">Selecciona un dia para ver los bloques.</div>
+        </div>
+
+        <div class="alert-card" id="past-warning" style="display:none; margin:8px 0 0;">
+            No puedes modificar dias pasados.
+        </div>
+
+        <form id="availability-form" class="availability-form">
+            <div class="form-inline">
+                <div class="form-field">
+                    <label for="avail-date">Fecha</label>
+                    <input type="date" id="avail-date" required>
+                </div>
+                <div class="form-field">
+                    <label for="avail-start">Hora inicio</label>
+                    <input type="time" id="avail-start" required>
+                </div>
+                <div class="form-field">
+                    <label for="avail-end">Hora fin</label>
+                    <input type="time" id="avail-end" required>
+                </div>
+                <div class="form-field">
+                    <label for="avail-status">Estado</label>
+                    <select id="avail-status">
+                        <option value="disponible" selected>Disponible</option>
+                        <option value="no_disponible">No disponible</option>
+                        <option value="bloqueado">Bloqueado</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-actions" style="margin-top:10px;">
+                <button class="btn btn-outline" type="button" data-avail-action="cancel-edit" disabled>Cancelar</button>
+                <button class="btn btn-primary" type="submit">Crear</button>
+            </div>
+            <div class="muted" style="margin-top:6px; font-size:0.92rem;">
+                Reglas: sin traslapes en la misma fecha, hora fin mayor que inicio, el bloque se vincula al veterinario actual.
+            </div>
+            <div class="field-error" id="avail-error" style="display:none; margin-top:8px;"></div>
+            <div class="alert-success" id="avail-success" style="display:none; margin-top:8px;">Bloque guardado.</div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const api = window.vetApi || {};
+    const initial = window.vetData || {};
+    let bloques = Array.from(initial.disponibilidad || []);
+    let diasBloqueados = {};
+    (initial.dias_bloqueados || []).forEach(d => diasBloqueados[d] = "bloqueado");
+    let selectedDate = toISO(new Date());
+    let editId = null;
+
+    const calendarEl = document.getElementById("availability-calendar");
+    const monthLabel = document.getElementById("calendar-month-label");
+    const listEl = document.getElementById("availability-list");
+    const dateInput = document.getElementById("avail-date");
+    const startInput = document.getElementById("avail-start");
+    const endInput = document.getElementById("avail-end");
+    const statusInput = document.getElementById("avail-status");
+    const errorEl = document.getElementById("avail-error");
+    const successEl = document.getElementById("avail-success");
+    const cancelBtn = document.querySelector("[data-avail-action='cancel-edit']");
+    const blockTodayBtn = document.querySelector("[data-avail-action='block-today']");
+    const toggleBlockBtn = document.querySelector("[data-avail-action='toggle-block']");
+    const submitBtn = document.querySelector("#availability-form button[type='submit']");
+    const newButtons = document.querySelectorAll("[data-avail-action='new']");
+    const pastWarning = document.getElementById("past-warning");
+    const statMes = document.getElementById("stat-bloques-mes");
+    const statProx = document.getElementById("stat-proximo");
+    const statBloq = document.getElementById("stat-bloqueados");
+    const selectedLabel = document.getElementById("selected-day-label");
+    const dayStatusPill = document.getElementById("day-status-pill");
+    const dayCountPill = document.getElementById("day-count-pill");
+    let currentMonth = new Date();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (dateInput) {
+        dateInput.setAttribute("min", toISO(today));
+    }
+
+    function toISO(d) {
+        const dt = typeof d === "string" ? new Date(d) : d;
+        const year = dt.getFullYear();
+        const month = `${dt.getMonth() + 1}`.padStart(2, "0");
+        const day = `${dt.getDate()}`.padStart(2, "0");
+        return `${year}-${month}-${day}`;
+    }
+
+    function getCsrf() {
+        const name = "csrftoken=";
+        const cookies = document.cookie ? document.cookie.split(";") : [];
+        for (const cookie of cookies) {
+            const c = cookie.trim();
+            if (c.startsWith(name)) return decodeURIComponent(c.slice(name.length));
+        }
+        return "";
+    }
+
+    function buildHeaders(withJson = false) {
+        const headers = { "X-Requested-With": "XMLHttpRequest" };
+        const csrf = getCsrf();
+        if (csrf) headers["X-CSRFToken"] = csrf;
+        if (withJson) headers["Content-Type"] = "application/json";
+        return headers;
+    }
+
+    function isPast(dateStr) {
+        const dt = new Date(dateStr);
+        dt.setHours(0, 0, 0, 0);
+        return dt < today;
+    }
+
+    function fmtDateLabel(dateStr) {
+        const days = ["Dom", "Lun", "Mar", "Mie", "Jue", "Vie", "Sab"];
+        const months = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+        const [y, m, d] = dateStr.split("-").map(Number);
+        const dt = new Date(y, m - 1, d);
+        return `${days[dt.getDay()]} ${d} ${months[m - 1]}`;
+    }
+
+    function timeToMinutes(t) {
+        if (!t) return 0;
+        const [h, m] = t.split(":").map(Number);
+        return h * 60 + m;
+    }
+
+    function resetForm({ keepDate = true } = {}) {
+        editId = null;
+        if (!keepDate) {
+            dateInput.value = selectedDate;
+        } else if (!dateInput.value) {
+            dateInput.value = selectedDate;
+        }
+        startInput.value = "";
+        endInput.value = "";
+        statusInput.value = "disponible";
+        cancelBtn.disabled = true;
+        successEl.style.display = "none";
+        setError();
+        document.querySelector("#availability-form button[type='submit']").textContent = "Crear disponibilidad";
+        updatePastLock();
+    }
+
+    function setError(msg = "") {
+        if (!msg) {
+            errorEl.style.display = "none";
+            errorEl.textContent = "";
+            return;
+        }
+        errorEl.textContent = msg;
+        errorEl.style.display = "block";
+        successEl.style.display = "none";
+    }
+
+    function setSuccess(msg = "Bloque guardado.") {
+        successEl.textContent = msg;
+        successEl.style.display = "block";
+        errorEl.style.display = "none";
+    }
+
+    function blocksForDate(dateStr) {
+        return bloques.filter(b => b.fecha === dateStr).sort((a, b) => timeToMinutes(a.inicio) - timeToMinutes(b.inicio));
+    }
+
+    function dateStatus(dateStr) {
+        if (diasBloqueados[dateStr]) return "bloqueado";
+        const dayBlocks = blocksForDate(dateStr);
+        if (dayBlocks.length === 0) return "vacio";
+        const hasDisponible = dayBlocks.some(b => b.estado === "disponible");
+        const hasBlocked = dayBlocks.every(b => b.estado === "bloqueado");
+        if (hasBlocked) return "bloqueado";
+        return hasDisponible ? "disponible" : "no_disponible";
+    }
+
+    function renderCalendar() {
+        calendarEl.innerHTML = "";
+        const year = currentMonth.getFullYear();
+        const month = currentMonth.getMonth();
+        const start = new Date(year, month, 1);
+        const startDay = start.getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const months = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+        monthLabel.textContent = `${months[month]} ${year}`;
+
+        const headers = ["L", "M", "X", "J", "V", "S", "D"];
+        headers.forEach(h => {
+            const el = document.createElement("div");
+            el.className = "calendar-head";
+            el.textContent = h;
+            calendarEl.appendChild(el);
+        });
+
+        const offset = startDay === 0 ? 6 : startDay - 1;
+        for (let i = 0; i < offset; i++) {
+            const empty = document.createElement("div");
+            empty.className = "calendar-cell empty";
+            calendarEl.appendChild(empty);
+        }
+
+        for (let day = 1; day <= daysInMonth; day++) {
+            const dateStr = toISO(new Date(year, month, day));
+            const cell = document.createElement("div");
+            cell.className = "calendar-cell";
+            const status = dateStatus(dateStr);
+            if (isPast(dateStr)) cell.classList.add("is-past");
+            if (status === "disponible") cell.classList.add("has-blocks");
+            if (status === "no_disponible") cell.classList.add("no-availability");
+            if (status === "bloqueado") cell.classList.add("is-blocked");
+            if (dateStr === selectedDate) cell.classList.add("is-selected");
+            if (dateStr === toISO(new Date())) cell.classList.add("is-today");
+
+            const count = blocksForDate(dateStr).length;
+            cell.innerHTML = `
+                <div class="cell-top">
+                    <span class="day-number">${day}</span>
+                    ${diasBloqueados[dateStr] ? '<span class="pill pill-danger">Bloqueado</span>' : ""}
+                </div>
+                <div class="cell-body">
+                    <div class="cell-count">${count} bloque${count === 1 ? "" : "s"}</div>
+                    <div class="cell-status">${statusLabel(status)}</div>
+                    <button type="button" class="btn-mini" data-select="${dateStr}">Abrir</button>
+                </div>
+            `;
+            cell.addEventListener("click", (e) => {
+                if (e.target && e.target.closest("button")) {
+                    e.stopPropagation();
+                }
+                selectDate(dateStr);
+            });
+            const btn = cell.querySelector("button");
+            if (btn) btn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                selectDate(dateStr);
+            });
+            calendarEl.appendChild(cell);
+        }
+        updateStats();
+    }
+
+    function statusLabel(status) {
+        if (status === "disponible") return "Con disponibilidad";
+        if (status === "no_disponible") return "Sin disponibilidad";
+        if (status === "bloqueado") return "Dia bloqueado";
+        return "Sin bloques";
+    }
+
+    function renderList() {
+        const items = blocksForDate(selectedDate);
+        listEl.innerHTML = "";
+        const status = dateStatus(selectedDate);
+        const pastDay = isPast(selectedDate);
+        selectedLabel.textContent = fmtDateLabel(selectedDate);
+        dayStatusPill.textContent = statusLabel(status);
+        const pillClass = status === "bloqueado" ? "pill pill-danger" : status === "disponible" ? "pill" : "pill pill-soft";
+        dayStatusPill.className = pillClass;
+        dayCountPill.textContent = `${items.length} bloque${items.length === 1 ? "" : "s"}`;
+        if (diasBloqueados[selectedDate]) {
+            dayCountPill.textContent = "Dia bloqueado";
+        }
+        if (pastDay) {
+            const notice = document.createElement("div");
+            notice.className = "muted small";
+            notice.textContent = "Dia pasado: solo lectura, no se permiten cambios.";
+            listEl.appendChild(notice);
+        }
+
+        if (items.length === 0) {
+            const empty = document.createElement("div");
+            empty.className = "muted";
+            empty.textContent = "No hay bloques para este dia.";
+            listEl.appendChild(empty);
+        } else {
+            items.forEach(b => {
+                const el = document.createElement("div");
+                el.className = `availability-item${pastDay ? " is-past" : ""}`;
+                el.innerHTML = `
+                    <div>
+                        <div class="time">${b.inicio} - ${b.fin}</div>
+                        <div class="muted small">${b.estado.replace("_", " ")}</div>
+                    </div>
+                    <div class="table-actions">
+                        <button class="btn-mini" data-edit="${b.id}" ${pastDay ? "disabled" : ""}>Editar</button>
+                        <button class="btn-mini danger" data-delete="${b.id}" ${pastDay ? "disabled" : ""}>Eliminar</button>
+                        <button class="btn-mini ghost" data-mark="${b.id}" ${pastDay ? "disabled" : ""}>Marcar no disp.</button>
+                    </div>
+                `;
+                listEl.appendChild(el);
+            });
+        }
+
+        listEl.querySelectorAll("[data-edit]").forEach(btn => {
+            btn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                const id = Number(btn.dataset.edit);
+                startEdit(id);
+            });
+        });
+        listEl.querySelectorAll("[data-delete]").forEach(btn => {
+            btn.addEventListener("click", async (e) => {
+                e.stopPropagation();
+                await deleteBlock(Number(btn.dataset.delete));
+            });
+        });
+        listEl.querySelectorAll("[data-mark]").forEach(btn => {
+            btn.addEventListener("click", async (e) => {
+                e.stopPropagation();
+                await markNoDisponible(Number(btn.dataset.mark));
+            });
+        });
+    }
+
+    function startEdit(id) {
+        const block = bloques.find(b => b.id === id);
+        if (!block) return;
+        if (isPast(block.fecha)) {
+            setError("No puedes editar bloques de dias pasados.");
+            return;
+        }
+        editId = id;
+        dateInput.value = block.fecha;
+        startInput.value = block.inicio;
+        endInput.value = block.fin;
+        statusInput.value = block.estado;
+        cancelBtn.disabled = false;
+        document.querySelector("#availability-form button[type='submit']").textContent = "Guardar cambios";
+        setError();
+        successEl.style.display = "none";
+    }
+
+    function validateBlock({ fecha, inicio, fin, id }) {
+        if (!fecha || !inicio || !fin) {
+            return "Completa fecha y horas.";
+        }
+        if (diasBloqueados[fecha]) {
+            return "El dia esta bloqueado. Desbloquealo para agregar bloques.";
+        }
+        if (isPast(fecha)) {
+            return "No puedes modificar dias pasados.";
+        }
+        const startM = timeToMinutes(inicio);
+        const endM = timeToMinutes(fin);
+        if (endM <= startM) {
+            return "La hora fin debe ser mayor que la hora inicio.";
+        }
+        const overlap = bloques.some(b => {
+            if (b.fecha !== fecha) return false;
+            if (id && b.id === id) return false;
+            const bStart = timeToMinutes(b.inicio);
+            const bEnd = timeToMinutes(b.fin);
+            return startM < bEnd && endM > bStart;
+        });
+        if (overlap) {
+            return "Ya existe un bloque que se traslapa en esa fecha.";
+        }
+        return "";
+    }
+
+    function selectDate(dateStr) {
+        selectedDate = dateStr;
+        resetForm();
+        renderCalendar();
+        renderList();
+        updatePastLock();
+    }
+
+    function updateStats() {
+        const month = currentMonth.getMonth();
+        const year = currentMonth.getFullYear();
+        const totalMes = bloques.filter(b => {
+            const [y, m] = b.fecha.split("-").map(Number);
+            return y === year && m === month + 1;
+        }).length;
+        statMes.textContent = totalMes;
+
+        const future = bloques
+            .filter(b => b.estado === "disponible")
+            .map(b => ({ ...b, sort: `${b.fecha}T${b.inicio}` }))
+            .sort((a, b) => a.sort.localeCompare(b.sort));
+        statProx.textContent = future.length ? `${fmtDateLabel(future[0].fecha)} ${future[0].inicio}` : "Sin bloques";
+
+        const bloqueados = Object.keys(diasBloqueados).length + bloques.filter(b => b.estado === "bloqueado").length;
+        statBloq.textContent = bloqueados;
+    }
+
+    document.querySelectorAll("[data-cal-nav]").forEach(btn => {
+        btn.addEventListener("click", () => {
+            const action = btn.dataset.calNav;
+            if (action === "prev") currentMonth.setMonth(currentMonth.getMonth() - 1);
+            if (action === "next") currentMonth.setMonth(currentMonth.getMonth() + 1);
+            if (action === "today") currentMonth = new Date();
+            renderCalendar();
+        });
+    });
+
+    newButtons.forEach(btn => {
+        btn.addEventListener("click", () => {
+            if (isPast(selectedDate)) {
+                setError("No puedes agregar bloques en dias pasados.");
+                return;
+            }
+            resetForm({ keepDate: false });
+            dateInput.focus();
+        });
+    });
+
+    if (blockTodayBtn) {
+        blockTodayBtn.addEventListener("click", () => {
+            const todayStr = toISO(new Date());
+            selectedDate = todayStr;
+            toggleBlockDay();
+        });
+    }
+
+    if (toggleBlockBtn) {
+        toggleBlockBtn.addEventListener("click", () => toggleBlockDay());
+    }
+
+    async function toggleBlockDay() {
+        if (isPast(selectedDate)) {
+            setError("No puedes modificar dias pasados.");
+            return;
+        }
+        if (!api.bloquearDia) {
+            setError("No se encontro endpoint para bloquear dia.");
+            return;
+        }
+        try {
+            const resp = await fetch(api.bloquearDia, {
+                method: "POST",
+                headers: buildHeaders(true),
+                body: JSON.stringify({
+                    fecha: selectedDate,
+                    accion: diasBloqueados[selectedDate] ? "desbloquear" : "bloquear",
+                }),
+            });
+            const body = await resp.text();
+            if (!resp.ok) {
+                setError(body || "No se pudo bloquear el dia.");
+                return;
+            }
+            const data = body ? JSON.parse(body) : {};
+            if (data.bloqueado) {
+                diasBloqueados[selectedDate] = "bloqueado";
+                setSuccess("Dia bloqueado por completo.");
+            } else {
+                delete diasBloqueados[selectedDate];
+                setSuccess("Dia desbloqueado.");
+            }
+            resetForm();
+            renderCalendar();
+            renderList();
+        } catch (e) {
+            setError("Error de red al bloquear el dia.");
+        }
+    }
+
+    if (cancelBtn) {
+        cancelBtn.addEventListener("click", () => {
+            resetForm();
+        });
+    }
+
+    const form = document.getElementById("availability-form");
+    form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const payload = {
+            id: editId,
+            fecha: dateInput.value || selectedDate,
+            inicio: startInput.value,
+            fin: endInput.value,
+            estado: statusInput.value || "disponible",
+        };
+        const validation = validateBlock(payload);
+        if (validation) {
+            setError(validation);
+            return;
+        }
+        await saveBlock(payload);
+    });
+
+    async function saveBlock(payload) {
+        const isUpdate = Boolean(editId);
+        const url = isUpdate
+            ? api.disponibilidadDetail && api.disponibilidadDetail.replace("__id__", editId)
+            : api.disponibilidad;
+        if (!url) {
+            setError("No se encontro endpoint para guardar.");
+            return;
+        }
+        try {
+            const resp = await fetch(url, {
+                method: isUpdate ? "PUT" : "POST",
+                headers: buildHeaders(true),
+                body: JSON.stringify(payload),
+            });
+            const body = await resp.text();
+            if (!resp.ok) {
+                setError(body || "No se pudo guardar.");
+                return;
+            }
+            const data = body ? JSON.parse(body) : {};
+            const bloque = data.bloque || payload;
+            if (isUpdate) {
+                bloques = bloques.map(b => b.id === bloque.id ? bloque : b);
+                setSuccess("Bloque actualizado.");
+            } else {
+                bloques.push(bloque);
+                setSuccess("Bloque creado.");
+            }
+            selectDate(bloque.fecha || payload.fecha);
+            resetForm();
+            renderCalendar();
+            renderList();
+        } catch (e) {
+            setError("Error de red al guardar el bloque.");
+        }
+    }
+
+    async function deleteBlock(id) {
+        const url = api.disponibilidadDetail && api.disponibilidadDetail.replace("__id__", id);
+        if (!url) return;
+        try {
+            const resp = await fetch(url, {
+                method: "DELETE",
+                headers: buildHeaders(),
+            });
+            const body = await resp.text();
+            if (!resp.ok) {
+                setError(body || "No se pudo eliminar.");
+                return;
+            }
+            bloques = bloques.filter(b => b.id !== id);
+            resetForm();
+            renderList();
+            renderCalendar();
+            setSuccess("Bloque eliminado.");
+        } catch (e) {
+            setError("Error de red al eliminar.");
+        }
+    }
+
+    async function markNoDisponible(id) {
+        const url = api.disponibilidadDetail && api.disponibilidadDetail.replace("__id__", id);
+        if (!url) return;
+        try {
+            const resp = await fetch(url, {
+                method: "PATCH",
+                headers: buildHeaders(true),
+                body: JSON.stringify({ estado: "no_disponible" }),
+            });
+            const body = await resp.text();
+            if (!resp.ok) {
+                setError(body || "No se pudo actualizar.");
+                return;
+            }
+            const data = body ? JSON.parse(body) : {};
+            const bloque = data.bloque;
+            if (bloque) {
+                bloques = bloques.map(b => b.id === bloque.id ? bloque : b);
+                renderList();
+                renderCalendar();
+            }
+        } catch (e) {
+            setError("Error de red al actualizar.");
+        }
+    }
+
+    async function loadRemote() {
+        if (!api.disponibilidad) return;
+        try {
+            const resp = await fetch(api.disponibilidad, { headers: buildHeaders() });
+            const body = await resp.text();
+            if (!resp.ok) return;
+            const data = body ? JSON.parse(body) : {};
+            bloques = Array.from(data.bloques || []);
+            diasBloqueados = {};
+            (data.dias_bloqueados || []).forEach(d => diasBloqueados[d] = "bloqueado");
+            renderCalendar();
+            renderList();
+        } catch (e) {
+            /* ignore network errors */
+        }
+    }
+
+    function updatePastLock() {
+        const past = isPast(selectedDate);
+        const inputs = [dateInput, startInput, endInput, statusInput];
+        inputs.forEach(inp => inp.disabled = past);
+        if (submitBtn) submitBtn.disabled = past;
+        if (cancelBtn) cancelBtn.disabled = past || !editId;
+        if (toggleBlockBtn) toggleBlockBtn.disabled = past;
+        newButtons.forEach(btn => btn.disabled = past);
+        if (pastWarning) pastWarning.style.display = past ? "block" : "none";
+        if (past && successEl) successEl.style.display = "none";
+    }
+
+    selectDate(selectedDate);
+    renderCalendar();
+    renderList();
+    loadRemote();
+});
+</script>
+

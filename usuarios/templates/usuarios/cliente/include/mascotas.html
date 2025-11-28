@@ -1,48 +1,323 @@
-<div class="card" style="margin-bottom: 16px;">
+<div class="card" style="margin-bottom:16px;">
     <h2>Mis Mascotas</h2>
-    <div class="table-responsive">
-        <table class="recep-table">
-            <thead>
-                <tr>
-                    <th>Nombre</th>
-                    <th>Raza</th>
-                    <th>Edad</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>Firulais</td>
-                    <td>Beagle</td>
-                    <td>4 años</td>
-                    <td>
-                        <button class="btn-small btn-ghost">Ver ficha</button>
-                        <button class="btn-small btn-ghost">Editar</button>
-                    </td>
-                </tr>
-                <tr>
-                    <td>Luna</td>
-                    <td>Mestiza</td>
-                    <td>2 años</td>
-                    <td>
-                        <button class="btn-small btn-ghost">Ver ficha</button>
-                        <button class="btn-small btn-ghost">Editar</button>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
+    {% if mascotas %}
+        <div class="pet-list">
+            {% for mascota in mascotas %}
+                <div class="pet-card">
+                    <div class="pet-photo">
+                        {% if mascota.foto %}
+                            <img src="{{ mascota.foto.url }}" alt="Foto de {{ mascota.nombre }}">
+                        {% else %}
+                            <div class="photo-placeholder">Cargar imagen</div>
+                        {% endif %}
+                    </div>
+                    <div class="pet-info">
+                        <div class="pet-title">
+                            <span class="pet-name">{{ mascota.nombre }}</span>
+                            <span class="pet-badge">{{ mascota.get_tipo_display }}</span>
+                            <span class="pet-badge alt">{{ mascota.get_sexo_display }}</span>
+                        </div>
+                        <div class="pet-meta">
+                            <span><strong>Edad:</strong> {% if mascota.edad_aproximada %}{{ mascota.edad_aproximada }} año{{ mascota.edad_aproximada|pluralize:"s" }}{% else %}No indicada{% endif %}</span>
+                            {% if mascota.tipo == "perro" or mascota.tipo == "gato" %}
+                                <span><strong>Raza:</strong> {{ mascota.raza|default:"Desconocido" }}</span>
+                            {% endif %}
+                        </div>
+                        <div class="pet-notes">
+                            <strong>Razgos particulares:</strong>
+                            <span>{% if mascota.senas_particulares %}{{ mascota.senas_particulares }}{% else %}Sin registrar{% endif %}</span>
+                        </div>
+                    </div>
+                    <div class="pet-actions">
+                        <div style="display:flex; gap:6px; flex-wrap:wrap; justify-content:flex-end;">
+                            <button type="button" class="btn-small btn-primary-lite" data-open-edit="edit-{{ mascota.id }}">Editar</button>
+                            {% if mascota.tiene_ficha_clinica %}
+                                <button type="button" class="btn-small btn-primary-lite">Ver ficha</button>
+                            {% else %}
+                                <button type="button" class="btn-small btn-ghost ficha-pendiente">Ver ficha</button>
+                            {% endif %}
+                        </div>
+                        <button type="button"
+                                class="btn-small btn-delete"
+                                data-open-delete="delete-{{ mascota.id }}"
+                                aria-label="Eliminar mascota">
+                            &#10005;
+                        </button>
+                    </div>
+                </div>
+
+                <div class="modal-overlay pet-delete-modal" id="delete-{{ mascota.id }}" data-name="{{ mascota.nombre }}">
+                    <div class="modal-card small">
+                        <div class="modal-header">
+                            <div>
+                                <h3 style="margin:0; color:#fff;">Eliminar {{ mascota.nombre }}</h3>
+                                <p style="color:var(--text-muted); margin:4px 0 0;">¿Estas seguro? esto eliminará a tu mascota y su ficha clínica.</p>
+                            </div>
+                            <button type="button" class="btn-small btn-ghost" data-close-modal>&#10005;</button>
+                        </div>
+                        <div class="modal-body">
+                            <form method="post" class="delete-form" data-modal-form>
+                                {% csrf_token %}
+                                <input type="hidden" name="form_type" value="delete_mascota">
+                                <input type="hidden" name="mascota_id" value="{{ mascota.id }}">
+                                <label for="confirm-name-{{ mascota.id }}" style="color:var(--text-muted);">Escribe el nombre de la mascota para confirmar:</label>
+                                <input id="confirm-name-{{ mascota.id }}"
+                                       name="confirm_name"
+                                       type="text"
+                                       placeholder="{{ mascota.nombre }}"
+                                       class="input-lite"
+                                       autocomplete="off"
+                                       data-confirm-name="{{ mascota.nombre }}">
+                                {% if delete_error_id == mascota.id %}
+                                    <div class="field-error" style="margin-top:6px;">{{ delete_error }}</div>
+                                {% endif %}
+                                <div class="form-actions" style="justify-content:flex-end; margin-top:14px;">
+                                    <button type="button" class="btn-small btn-primary-lite" data-close-modal>Cancelar</button>
+                                    <button type="submit" class="btn-small btn-danger" data-confirm-delete disabled>Estoy seguro</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-overlay pet-edit-modal" id="edit-{{ mascota.id }}">
+                    <div class="modal-card small">
+                        <div class="modal-header">
+                            <div>
+                                <h3 style="margin:0; color:#fff;">Editar {{ mascota.nombre }}</h3>
+                                <p style="color:var(--text-muted); margin:4px 0 0;">Actualiza los datos visibles para la recepcionista.</p>
+                            </div>
+                            <button type="button" class="btn-small btn-ghost" data-close-edit="edit-{{ mascota.id }}">&#10005;</button>
+                        </div>
+                        <div class="modal-body">
+                            <form method="post" enctype="multipart/form-data" class="pet-edit-form">
+                                {% csrf_token %}
+                                <input type="hidden" name="form_type" value="edit_mascota">
+                                <input type="hidden" name="mascota_id" value="{{ mascota.id }}">
+                                <div class="form-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+                                    <div class="form-field">
+                                        <label>Nombre</label>
+        <input type="text" name="nombre" value="{{ mascota.nombre }}">
+                                    </div>
+                                    <div class="form-field">
+                                        <label>Edad aproximada</label>
+        <input type="number" name="edad_aproximada" value="{{ mascota.edad_aproximada|default_if_none:'' }}">
+                                    </div>
+                                    {% if mascota.tipo == "perro" or mascota.tipo == "gato" %}
+                                    <div class="form-field">
+                                        <label>Raza</label>
+        <input type="text" name="raza" value="{{ mascota.raza|default_if_none:'' }}">
+                                    </div>
+                                    {% endif %}
+                                    <div class="form-field" style="grid-column: span 2;">
+                                        <label>Rasgos particulares</label>
+        <textarea name="senas_particulares" rows="3">{{ mascota.senas_particulares }}</textarea>
+                                    </div>
+                                    <div class="form-field" style="grid-column: span 2;">
+                                        <label>Actualizar foto (opcional)</label>
+        <input type="file" name="foto" accept="image/*">
+                                    </div>
+                                </div>
+                                {% if edit_error_id == mascota.id %}
+                                    <div class="field-error" style="margin-top:8px;">{{ edit_error }}</div>
+                                {% endif %}
+                                <div class="form-actions" style="justify-content:flex-end; margin-top:10px; gap:8px; flex-wrap:nowrap;">
+                                    <button type="button" class="btn-small btn-ghost" data-close-edit="edit-{{ mascota.id }}">Cancelar</button>
+                                    <button type="submit" class="btn-small btn-primary">Guardar cambios</button>
+                                </div>
+                            </form>
+                            {% if mascota.foto %}
+                            <div style="display:flex; justify-content:center; margin-top:14px;">
+                                <div class="pet-preview" style="width:220px; height:220px;">
+                                    <img src="{{ mascota.foto.url }}" alt="Foto de {{ mascota.nombre }}">
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p style="color:var(--text-muted); margin: 0;">Aún no registras mascotas. Agrega una a continuación.</p>
+    {% endif %}
 </div>
 
 <div class="card">
     <h3 style="margin-top:0;">Registrar Mascota</h3>
-    <div class="form-inline" style="margin-bottom: 10px;">
-        <input class="input-lite" placeholder="Nombre">
-        <input class="input-lite" placeholder="Especie/Raza">
-        <input class="input-lite" placeholder="Edad">
-    </div>
-    <textarea class="input-lite" rows="3" placeholder="Notas, vacunas, alergias"></textarea>
-    <div style="margin-top: 10px;">
-        <button class="btn-small btn-primary-lite" type="button">Guardar</button>
-    </div>
+    <form id="mascota-form" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="hidden" name="form_type" value="mascota">
+        <div class="form-grid">
+            <div class="form-field">
+                <label for="{{ mascota_form.nombre.id_for_label }}">Nombre</label>
+                {{ mascota_form.nombre }}
+                {% if mascota_form.nombre.errors %}<div class="field-error">{{ mascota_form.nombre.errors|join:", " }}</div>{% endif %}
+            </div>
+            <div class="form-field">
+                <label for="{{ mascota_form.tipo.id_for_label }}">Tipo de mascota</label>
+                {{ mascota_form.tipo }}
+                {% if mascota_form.tipo.errors %}<div class="field-error">{{ mascota_form.tipo.errors|join:", " }}</div>{% endif %}
+            </div>
+            <div class="form-field">
+                <label for="{{ mascota_form.sexo.id_for_label }}">Sexo</label>
+                {{ mascota_form.sexo }}
+                {% if mascota_form.sexo.errors %}<div class="field-error">{{ mascota_form.sexo.errors|join:", " }}</div>{% endif %}
+            </div>
+            <div class="form-field">
+                <label for="{{ mascota_form.estado_reproductivo.id_for_label }}">Estado reproductivo</label>
+                {{ mascota_form.estado_reproductivo }}
+                {% if mascota_form.estado_reproductivo.errors %}<div class="field-error">{{ mascota_form.estado_reproductivo.errors|join:", " }}</div>{% endif %}
+            </div>
+            <div class="form-field">
+                <label for="{{ mascota_form.edad_aproximada.id_for_label }}">Edad aproximada</label>
+                {{ mascota_form.edad_aproximada }}
+                {% if mascota_form.edad_aproximada.errors %}<div class="field-error">{{ mascota_form.edad_aproximada.errors|join:", " }}</div>{% endif %}
+            </div>
+            <div class="form-field" data-field="raza" style="display:none;">
+                <label for="{{ mascota_form.raza.id_for_label }}">Raza</label>
+                {{ mascota_form.raza }}
+                {% if mascota_form.raza.errors %}<div class="field-error">{{ mascota_form.raza.errors|join:", " }}</div>{% endif %}
+            </div>
+            <div class="form-field">
+                <label for="{{ mascota_form.senas_particulares.id_for_label }}">Razgos particulares</label>
+                {{ mascota_form.senas_particulares }}
+                {% if mascota_form.senas_particulares.errors %}<div class="field-error">{{ mascota_form.senas_particulares.errors|join:", " }}</div>{% endif %}
+            </div>
+            <div class="form-field">
+                <label for="{{ mascota_form.foto.id_for_label }}">Foto</label>
+                {{ mascota_form.foto }}
+                {% if mascota_form.foto.errors %}<div class="field-error">{{ mascota_form.foto.errors|join:", " }}</div>{% endif %}
+                <div class="pet-preview" id="foto-preview" style="display:none;">
+                    <img src="" alt="Preview mascota">
+                </div>
+            </div>
+        </div>
+        <div class="form-actions" style="justify-content:flex-end;">
+            <button class="btn-small btn-primary" type="submit">Guardar</button>
+        </div>
+    </form>
 </div>
+
+<script>
+(function() {
+    const form = document.getElementById("mascota-form");
+    if (!form) return;
+    const tipoSelect = form.querySelector("[name='tipo']");
+    const razaField = form.querySelector("[data-field='raza']");
+    const razaInput = razaField ? razaField.querySelector("input, select, textarea") : null;
+    function toggleRaza() {
+        const value = (tipoSelect.value || "").toLowerCase();
+        const show = value === "perro" || value === "gato";
+        if (razaField) {
+            razaField.style.display = show ? "" : "none";
+            if (!show && razaInput) {
+                razaInput.value = "";
+            }
+        }
+    }
+    if (tipoSelect) {
+        tipoSelect.addEventListener("change", toggleRaza);
+        toggleRaza();
+    }
+    const fotoInput = form.querySelector("input[name='foto']");
+    const preview = document.getElementById("foto-preview");
+    const previewImg = preview ? preview.querySelector("img") : null;
+    let objectUrl = null;
+    function updatePreview(file) {
+        if (!preview || !previewImg) return;
+        if (objectUrl) {
+            URL.revokeObjectURL(objectUrl);
+            objectUrl = null;
+        }
+        if (file) {
+            objectUrl = URL.createObjectURL(file);
+            previewImg.src = objectUrl;
+            preview.style.display = "";
+        } else {
+            previewImg.src = "";
+            preview.style.display = "none";
+        }
+    }
+    if (fotoInput) {
+        fotoInput.addEventListener("change", (e) => {
+            const file = e.target.files && e.target.files[0] ? e.target.files[0] : null;
+            updatePreview(file);
+        });
+    }
+    document.querySelectorAll(".ficha-pendiente").forEach(btn => {
+        btn.addEventListener("click", () => {
+            alert("Se creará tras la primera visita médica.");
+        });
+    });
+
+    const modals = document.querySelectorAll(".pet-delete-modal");
+    const openButtons = document.querySelectorAll("[data-open-delete]");
+    const editModals = document.querySelectorAll(".pet-edit-modal");
+    const editButtons = document.querySelectorAll("[data-open-edit]");
+
+    function openModal(id) {
+        const modal = document.getElementById(id);
+        if (modal) {
+            modal.classList.add("is-open");
+            const input = modal.querySelector("[name='confirm_name']");
+            const submit = modal.querySelector("[data-confirm-delete]");
+            if (input) input.focus();
+            if (submit) submit.disabled = true;
+        }
+    }
+
+    function closeModal(modal) {
+        modal.classList.remove("is-open");
+    }
+
+    openButtons.forEach(btn => {
+        btn.addEventListener("click", () => {
+            const target = btn.dataset.openDelete;
+            openModal(target);
+        });
+    });
+
+    modals.forEach(modal => {
+        const closeBtns = modal.querySelectorAll("[data-close-modal]");
+        const input = modal.querySelector("[name='confirm_name']");
+        const submit = modal.querySelector("[data-confirm-delete]");
+        const expected = (modal.dataset.name || "").trim().toLowerCase();
+
+        modal.addEventListener("click", (e) => {
+            if (e.target === modal) closeModal(modal);
+        });
+
+        closeBtns.forEach(btn => btn.addEventListener("click", () => closeModal(modal)));
+
+        if (input && submit) {
+            input.addEventListener("input", () => {
+                const value = (input.value || "").trim().toLowerCase();
+                submit.disabled = value !== expected;
+            });
+        }
+    });
+
+    const errorInfo = document.getElementById("delete-error-info");
+    if (errorInfo && errorInfo.dataset.id) {
+        openModal(`delete-${errorInfo.dataset.id}`);
+    }
+
+    // toggle edicion modal
+    editButtons.forEach(btn => {
+        btn.addEventListener("click", () => {
+            const target = btn.dataset.openEdit;
+            openModal(target);
+        });
+    });
+    editModals.forEach(modal => {
+        const closeBtns = modal.querySelectorAll("[data-close-edit]");
+        modal.addEventListener("click", (e) => {
+            if (e.target === modal) closeModal(modal);
+        });
+        closeBtns.forEach(btn => btn.addEventListener("click", () => closeModal(modal)));
+    });
+})();
+</script>
+
+<div id="delete-error-info" data-id="{{ delete_error_id|default:'' }}"></div>

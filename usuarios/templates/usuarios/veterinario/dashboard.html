@@ -5,10 +5,10 @@
 
 {% block sidebar_menu %}
     <a href="#" class="menu-link is-active" data-target="sec-inicio">Inicio</a>
-    <a href="#" class="menu-link" data-target="sec-consulta">Consulta actual</a>
-    <a href="#" class="menu-link" data-target="sec-agenda">Agenda</a>
-    <a href="#" class="menu-link" data-target="sec-historial">Historial</a>
-    <a href="/" class="menu-link logout">Cerrar turno</a>
+    <a href="#" class="menu-link" data-target="sec-disponibilidad">Mi Disponibilidad</a>
+    <a href="#" class="menu-link" data-target="sec-citas">Mis Citas</a>
+    <a href="#" class="menu-link" data-target="sec-datos">Mi Perfil</a>
+    <a href="{% url 'usuarios:logout' %}" class="menu-link logout">Cerrar turno</a>
 {% endblock %}
 
 {% block dashboard_content %}
@@ -16,15 +16,31 @@
         {% include "usuarios/veterinario/include/inicio.html" %}
     </section>
 
-    <section id="sec-consulta" class="dashboard-section">
-        {% include "usuarios/veterinario/include/consulta.html" %}
+    <section id="sec-disponibilidad" class="dashboard-section">
+        {% include "usuarios/veterinario/include/disponibilidad.html" %}
     </section>
 
-    <section id="sec-agenda" class="dashboard-section">
-        {% include "usuarios/veterinario/include/agenda.html" %}
+    <section id="sec-citas" class="dashboard-section">
+        {% include "usuarios/veterinario/include/citas.html" %}
     </section>
 
-    <section id="sec-historial" class="dashboard-section">
-        {% include "usuarios/veterinario/include/historial.html" %}
+    <section id="sec-datos" class="dashboard-section">
+        {% include "usuarios/veterinario/include/mis_datos.html" %}
     </section>
+{% endblock %}
+
+{% block extra_js %}
+<script id="vet-data-json" type="application/json">{{ vet_data_json|safe }}</script>
+<script>
+// URLs y datos iniciales desde backend (se separa el JSON para evitar falsos errores de lint)
+window.vetApi = {
+    disponibilidad: "{% url 'usuarios:vet_disponibilidad_api' %}",
+    disponibilidadDetail: "{% url 'usuarios:vet_disponibilidad_detail_api' 0 %}".replace("0", "__id__"),
+    bloquearDia: "{% url 'usuarios:vet_bloquear_dia_api' %}",
+    citas: "{% url 'usuarios:vet_citas_api' %}",
+    citaEstado: "{% url 'usuarios:vet_cita_estado_api' 0 %}".replace("0", "__id__"),
+};
+const vetDataEl = document.getElementById("vet-data-json");
+window.vetData = vetDataEl ? JSON.parse(vetDataEl.textContent || "{}") : {};
+</script>
 {% endblock %}
