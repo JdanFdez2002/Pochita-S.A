@@ -5,6 +5,11 @@ from .views import (
     DashboardAdministradorView,
     DashboardRecepcionistaView,
     DashboardVeterinarioView,
+    vet_disponibilidad_api,
+    vet_disponibilidad_detail_api,
+    vet_bloquear_dia_api,
+    vet_citas_api,
+    vet_cita_estado_api,
     LoginSelectorView,
     PersonalLoginView,
     logout_view,
@@ -23,4 +28,10 @@ urlpatterns = [
     path("dashboard/recepcionista/", DashboardRecepcionistaView.as_view(), name="dashboard_recepcionista"),
     path("dashboard/veterinario/", DashboardVeterinarioView.as_view(), name="dashboard_veterinario"),
     path("dashboard/administrador/", DashboardAdministradorView.as_view(), name="dashboard_administrador"),
+    # API Veterinario
+    path("api/veterinario/disponibilidad/", vet_disponibilidad_api, name="vet_disponibilidad_api"),
+    path("api/veterinario/disponibilidad/<int:pk>/", vet_disponibilidad_detail_api, name="vet_disponibilidad_detail_api"),
+    path("api/veterinario/disponibilidad/bloquear-dia/", vet_bloquear_dia_api, name="vet_bloquear_dia_api"),
+    path("api/veterinario/citas/", vet_citas_api, name="vet_citas_api"),
+    path("api/veterinario/citas/<int:pk>/estado/", vet_cita_estado_api, name="vet_cita_estado_api"),
 ]

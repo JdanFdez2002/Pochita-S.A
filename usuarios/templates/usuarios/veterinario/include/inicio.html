@@ -1,4 +1,75 @@
 <div class="card">
-    <h2>Inicio</h2>
-    <p style="color: var(--text-muted);">Selecciona una seccion del menu para ver su contenido.</p>
+    <div class="pill pill-soft">Dashboard veterinario</div>
+    <h2 style="margin:6px 0 4px;">Hola, {{ request.user.first_name|default:"veterinario" }}</h2>
+    <p class="muted">Revisa tu disponibilidad y citas del dia. Puedes saltar rapido a cada seccion.</p>
+
+    <div class="inicio-grid">
+        <div class="mini-card">
+            <small class="muted">Siguiente cita</small>
+            <div class="mini-strong" id="inicio-proxima-cita">--</div>
+            <div class="muted small" id="inicio-proxima-detalle"></div>
+            <button class="btn-mini" type="button" data-jump="sec-citas">Ir a Mis citas</button>
+        </div>
+        <div class="mini-card">
+            <small class="muted">Disponibilidad de hoy</small>
+            <div class="mini-strong" id="inicio-dispo-hoy">--</div>
+            <div class="muted small" id="inicio-dispo-detalle"></div>
+            <button class="btn-mini" type="button" data-jump="sec-disponibilidad">Gestionar disponibilidad</button>
+        </div>
+        <div class="mini-card">
+            <small class="muted">Perfil</small>
+            <div class="mini-strong">Datos profesionales</div>
+            <div class="muted small">Correo, RUT, especialidad y turno.</div>
+            <button class="btn-mini" type="button" data-jump="sec-datos">Abrir perfil</button>
+        </div>
+    </div>
 </div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const data = window.vetData || { citas: [], disponibilidad: [], dias_bloqueados: [] };
+
+    function jump(target) {
+        const link = document.querySelector(`.menu-link[data-target='${target}']`);
+        if (link) link.click();
+        else window.location.hash = target;
+    }
+    document.querySelectorAll("[data-jump]").forEach(btn => {
+        btn.addEventListener("click", () => jump(btn.dataset.jump));
+    });
+
+    const nextCita = (data.citas || [])
+        .filter(c => c.estado !== "cancelada")
+        .map(c => ({ ...c, sort: `${c.fecha}T${c.hora}` }))
+        .sort((a, b) => a.sort.localeCompare(b.sort))[0];
+    if (nextCita) {
+        document.getElementById("inicio-proxima-cita").textContent = `${nextCita.fecha} ${nextCita.hora}`;
+        document.getElementById("inicio-proxima-detalle").textContent = `${nextCita.mascota} - ${nextCita.servicio}`;
+    } else {
+        document.getElementById("inicio-proxima-cita").textContent = "Sin citas";
+    }
+
+    const today = new Date();
+    const toISO = (d) => {
+        const year = d.getFullYear();
+        const month = `${d.getMonth() + 1}`.padStart(2, "0");
+        const day = `${d.getDate()}`.padStart(2, "0");
+        return `${year}-${month}-${day}`;
+    };
+    const hoy = toISO(today);
+    const bloquesHoy = (data.disponibilidad || []).filter(b => b.fecha === hoy);
+    const blocked = (data.dias_bloqueados || []).includes(hoy);
+    const dispoLabel = document.getElementById("inicio-dispo-hoy");
+    const dispoDetalle = document.getElementById("inicio-dispo-detalle");
+    if (blocked) {
+        dispoLabel.textContent = "Dia bloqueado";
+        dispoDetalle.textContent = "No disponible para agendar";
+    } else if (bloquesHoy.length) {
+        dispoLabel.textContent = `${bloquesHoy.length} bloque${bloquesHoy.length === 1 ? "" : "s"}`;
+        dispoDetalle.textContent = "Gestiona o edita tus horarios";
+    } else {
+        dispoLabel.textContent = "Sin bloques";
+        dispoDetalle.textContent = "Agrega disponibilidad para hoy";
+    }
+});
+</script>

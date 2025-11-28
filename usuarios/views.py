@@ -1,13 +1,17 @@
+import json
+
 from django.contrib.auth import logout
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.views import LoginView
 from django.core.paginator import Paginator
 from django.db.models import Q
-from django.http import Http404
+from django.http import Http404, HttpResponseBadRequest, HttpResponseForbidden, JsonResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse, reverse_lazy
+from django.views.decorators.http import require_http_methods
 from django.views.generic import TemplateView
+from django.utils import timezone
 
 from .forms import (
     ClienteAuthenticationForm,
@@ -31,11 +35,28 @@ from .models import (
     ServicioSeccion,
     Veterinario,
 )
+from veterinarios.models import DisponibilidadVeterinario, DiaBloqueadoVeterinario
+from agenda.models import Cita
 
 
 
 class LoginSelectorView(TemplateView):
     template_name = "usuarios/login_selector.html"
+
+
+def _require_veterinario(request):
+    if not request.user.is_authenticated:
+        return HttpResponseForbidden("No autenticado.")
+    try:
+        perfil = request.user.perfil
+    except Perfil.DoesNotExist:
+        return HttpResponseForbidden("Usuario sin perfil.")
+    if perfil.rol != Perfil.Roles.VETERINARIO:
+        return HttpResponseForbidden("Solo disponible para veterinarios.")
+    try:
+        return Veterinario.objects.get(perfil=perfil)
+    except Veterinario.DoesNotExist:
+        return HttpResponseForbidden("Veterinario no encontrado.")
 
 
 class ClienteLoginView(LoginView):
@@ -283,6 +304,55 @@ class DashboardVeterinarioView(PerfilDashboardMixin):
         )
         return base
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        vet = self.get_instance()
+        bloques = (
+            DisponibilidadVeterinario.objects.filter(veterinario=vet)
+            .order_by("fecha", "hora_inicio")
+        )
+        dias_bloqueados = DiaBloqueadoVeterinario.objects.filter(veterinario=vet)
+        citas = (
+            Cita.objects.filter(veterinario=vet)
+            .select_related(
+                "cliente__perfil__user",
+                "mascota",
+                "servicio",
+            )
+            .order_by("fecha", "hora")
+        )
+        data = {
+            "disponibilidad": [
+                {
+                    "id": b.id,
+                    "fecha": b.fecha.isoformat(),
+                    "inicio": b.hora_inicio.strftime("%H:%M"),
+                    "fin": b.hora_fin.strftime("%H:%M"),
+                    "estado": b.estado,
+                }
+                for b in bloques
+            ],
+            "dias_bloqueados": [d.fecha.isoformat() for d in dias_bloqueados],
+            "citas": [
+                {
+                    "id": c.id,
+                    "fecha": c.fecha.isoformat(),
+                    "hora": c.hora.strftime("%H:%M"),
+                    "cliente": c.cliente.perfil.user.get_full_name() or c.cliente.perfil.user.username,
+                    "contacto": c.cliente.telefono,
+                    "mascota": c.mascota.nombre,
+                    "especie": c.mascota.tipo,
+                    "edad": f"{c.mascota.edad_aproximada or ''}".strip(),
+                    "servicio": c.servicio.nombre if c.servicio else "",
+                    "estado": c.estado,
+                    "notas": c.notas or "",
+                }
+                for c in citas
+            ],
+        }
+        context["vet_data_json"] = json.dumps(data)
+        return context
+
 
 class DashboardAdministradorView(PerfilDashboardMixin):
     required_role = Perfil.Roles.ADMINISTRADOR
@@ -408,3 +478,160 @@ def csrf_failure(request, reason="", template_name=None):
         context = {"form": form}
         return render(request, "usuarios/registro_clientes.html", context, status=403)
     return render(request, template_name or "403.html", {"reason": reason}, status=403)
+
+
+# === API Veterinario: Disponibilidad y Citas ===
+
+def _parse_json(request):
+    try:
+        return json.loads(request.body.decode("utf-8") or "{}")
+    except json.JSONDecodeError:
+        return {}
+
+
+def _serialize_bloque(b):
+    return {
+        "id": b.id,
+        "fecha": b.fecha.isoformat(),
+        "inicio": b.hora_inicio.strftime("%H:%M"),
+        "fin": b.hora_fin.strftime("%H:%M"),
+        "estado": b.estado,
+    }
+
+
+def _serialize_cita(c):
+    return {
+        "id": c.id,
+        "fecha": c.fecha.isoformat(),
+        "hora": c.hora.strftime("%H:%M"),
+        "cliente": c.cliente.perfil.user.get_full_name()
+        or c.cliente.perfil.user.username,
+        "contacto": c.cliente.telefono,
+        "mascota": c.mascota.nombre,
+        "especie": c.mascota.tipo,
+        "edad": f"{c.mascota.edad_aproximada or ''}".strip(),
+        "servicio": c.servicio.nombre if c.servicio else "",
+        "estado": c.estado,
+        "notas": c.notas or "",
+    }
+
+
+@require_http_methods(["GET", "POST"])
+def vet_disponibilidad_api(request):
+    vet = _require_veterinario(request)
+    if isinstance(vet, HttpResponseForbidden):
+        return vet
+    if request.method == "GET":
+        bloques = DisponibilidadVeterinario.objects.filter(veterinario=vet).order_by(
+            "fecha", "hora_inicio"
+        )
+        dias = DiaBloqueadoVeterinario.objects.filter(veterinario=vet).order_by("fecha")
+        return JsonResponse(
+            {
+                "bloques": [_serialize_bloque(b) for b in bloques],
+                "dias_bloqueados": [d.fecha.isoformat() for d in dias],
+            }
+        )
+
+    data = _parse_json(request)
+    fecha = data.get("fecha")
+    inicio = data.get("inicio") or data.get("hora_inicio")
+    fin = data.get("fin") or data.get("hora_fin")
+    estado = data.get("estado") or DisponibilidadVeterinario.Estado.DISPONIBLE
+    if not all([fecha, inicio, fin]):
+        return HttpResponseBadRequest("Faltan datos obligatorios.")
+    bloque = DisponibilidadVeterinario(
+        veterinario=vet, fecha=fecha, hora_inicio=inicio, hora_fin=fin, estado=estado
+    )
+    try:
+        bloque.save()
+    except Exception as exc:
+        return HttpResponseBadRequest(str(exc))
+    return JsonResponse({"bloque": _serialize_bloque(bloque)}, status=201)
+
+
+@require_http_methods(["PUT", "PATCH", "DELETE"])
+def vet_disponibilidad_detail_api(request, pk):
+    vet = _require_veterinario(request)
+    if isinstance(vet, HttpResponseForbidden):
+        return vet
+    try:
+        bloque = DisponibilidadVeterinario.objects.get(pk=pk, veterinario=vet)
+    except DisponibilidadVeterinario.DoesNotExist:
+        return HttpResponseBadRequest("Bloque no encontrado.")
+
+    if request.method == "DELETE":
+        bloque.delete()
+        return JsonResponse({"deleted": True})
+
+    data = _parse_json(request)
+    if "fecha" in data:
+        bloque.fecha = data["fecha"]
+    if "inicio" in data or "hora_inicio" in data:
+        bloque.hora_inicio = data.get("inicio") or data.get("hora_inicio")
+    if "fin" in data or "hora_fin" in data:
+        bloque.hora_fin = data.get("fin") or data.get("hora_fin")
+    if "estado" in data:
+        bloque.estado = data["estado"]
+    try:
+        bloque.save()
+    except Exception as exc:
+        return HttpResponseBadRequest(str(exc))
+    return JsonResponse({"bloque": _serialize_bloque(bloque)})
+
+
+@require_http_methods(["POST"])
+def vet_bloquear_dia_api(request):
+    vet = _require_veterinario(request)
+    if isinstance(vet, HttpResponseForbidden):
+        return vet
+    data = _parse_json(request)
+    fecha = data.get("fecha")
+    accion = data.get("accion") or "toggle"
+    if not fecha:
+        return HttpResponseBadRequest("Fecha requerida.")
+    if str(timezone.now().date()) > str(fecha):
+        return HttpResponseBadRequest("No puedes modificar dias pasados.")
+
+    try:
+        bloqueo = DiaBloqueadoVeterinario.objects.get(veterinario=vet, fecha=fecha)
+        if accion in ("desbloquear", "toggle"):
+            bloqueo.delete()
+            return JsonResponse({"bloqueado": False})
+    except DiaBloqueadoVeterinario.DoesNotExist:
+        bloqueo = None
+
+    if bloqueo is None:
+        DiaBloqueadoVeterinario.objects.get_or_create(veterinario=vet, fecha=fecha)
+    return JsonResponse({"bloqueado": True})
+
+
+@require_http_methods(["GET"])
+def vet_citas_api(request):
+    vet = _require_veterinario(request)
+    if isinstance(vet, HttpResponseForbidden):
+        return vet
+    citas = (
+        Cita.objects.filter(veterinario=vet)
+        .select_related("cliente__perfil__user", "mascota", "servicio")
+        .order_by("fecha", "hora")
+    )
+    return JsonResponse({"citas": [_serialize_cita(c) for c in citas]})
+
+
+@require_http_methods(["POST"])
+def vet_cita_estado_api(request, pk):
+    vet = _require_veterinario(request)
+    if isinstance(vet, HttpResponseForbidden):
+        return vet
+    try:
+        cita = Cita.objects.get(pk=pk, veterinario=vet)
+    except Cita.DoesNotExist:
+        return HttpResponseBadRequest("Cita no encontrada.")
+    data = _parse_json(request)
+    estado = data.get("estado")
+    if estado not in dict(Cita.Estado.choices):
+        return HttpResponseBadRequest("Estado invalido.")
+    cita.estado = estado
+    cita.save(update_fields=["estado", "actualizado_en"])
+    return JsonResponse({"cita": _serialize_cita(cita)})

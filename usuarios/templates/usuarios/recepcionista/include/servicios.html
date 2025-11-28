@@ -1,14 +1,19 @@
 <style>
-    .servicios-list {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-    }
+.servicios-list {
+    display: flex;
+    flex-direction: column;
+    gap: 26px;
+}
     .servicio-panel {
         border: 1px solid var(--border);
         border-radius: 12px;
         background: linear-gradient(135deg, rgba(65,211,190,0.04), rgba(255,255,255,0.01));
         overflow: hidden;
+        transition: opacity 0.25s ease, transform 0.25s ease;
+    }
+    .servicio-panel.is-dim {
+        opacity: 0.45;
+        transform: scale(0.995);
     }
     .servicio-header {
         padding: 12px 14px;
@@ -25,11 +30,16 @@
         color: var(--text-muted);
     }
     .servicio-body {
-        display: none;
-        padding: 0 14px 14px;
+        max-height: 0;
+        overflow: hidden;
+        padding: 0 14px;
+        transition: max-height 0.18s ease, padding 0.18s ease, opacity 0.18s ease;
+        opacity: 0;
     }
     .servicio-body.is-open {
-        display: block;
+        max-height: 1200px;
+        padding: 12px 14px 14px;
+        opacity: 1;
     }
     .servicios-grid {
         display: grid;
@@ -47,17 +57,25 @@
         flex-direction: column;
         gap: 6px;
         min-height: 160px;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .servicio-card:hover {
+        transform: translateY(-2px) scale(1.01);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.25);
     }
     .servicio-card h4 {
         margin: 0;
         color: #fff;
+        font-size: 1.2rem;
+        letter-spacing: 0.2px;
     }
     .servicio-meta {
         color: var(--text-muted);
         display: flex;
         gap: 10px;
         flex-wrap: wrap;
-        font-size: 0.9rem;
+        font-size: 0.95rem;
+        font-weight: 600;
     }
     .servicio-tags {
         display: flex;
@@ -67,13 +85,17 @@
     .servicio-tag {
         padding: 4px 8px;
         border-radius: 8px;
-        border: 1px solid var(--border);
-        color: var(--text-muted);
+        border: 1px solid rgba(65,211,190,0.35);
+        color: var(--primary);
+        background: rgba(65,211,190,0.12);
         font-size: 0.85rem;
+        font-weight: 700;
+        box-shadow: 0 3px 8px rgba(0,0,0,0.15);
     }
     .servicio-desc {
         color: var(--text-muted);
-        line-height: 1.4;
+        line-height: 1.5;
+        font-size: 0.95rem;
     }
     .servicio-empty {
         color: var(--text-muted);
@@ -135,13 +157,22 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", () => {
-    document.querySelectorAll('.servicio-panel').forEach(panel => {
+    const panels = Array.from(document.querySelectorAll('.servicio-panel'));
+    panels.forEach(panel => {
         const toggle = panel.querySelector('[data-toggle]');
         const body = panel.querySelector('.servicio-body');
         const arrow = toggle.querySelector('span');
         toggle.addEventListener('click', () => {
             const open = body.classList.toggle('is-open');
             if (arrow) arrow.style.transform = open ? 'rotate(90deg)' : 'rotate(0deg)';
+            panels.forEach(p => {
+                if (p !== panel) {
+                    p.classList.toggle('is-dim', open);
+                }
+            });
+            if (!open) {
+                panels.forEach(p => p.classList.remove('is-dim'));
+            }
         });
     });
 });

@@ -1,0 +1,365 @@
+<div class="card appointments-hero">
+    <div>
+        <div class="pill pill-soft">Mis citas</div>
+        <h2 style="margin:6px 0 4px;">Agenda de pacientes</h2>
+        <p class="muted">Revisa las citas asignadas, marca como atendida o cancelalas para alertar a recepcion.</p>
+        <div class="hero-stats">
+            <div class="hero-stat">
+                <small>Totales</small>
+                <strong id="citas-total">--</strong>
+            </div>
+            <div class="hero-stat">
+                <small>Pendientes / Confirmadas</small>
+                <strong id="citas-pendientes">--</strong>
+            </div>
+            <div class="hero-stat">
+                <small>Atendidas</small>
+                <strong id="citas-atendidas">--</strong>
+            </div>
+        </div>
+    </div>
+    <div class="hero-actions">
+        <button class="btn btn-primary" type="button" data-cita-action="mark-attended">Marcar atendida</button>
+        <button class="btn btn-outline" type="button" data-cita-action="cancel">Cancelar cita</button>
+    </div>
+</div>
+
+<div class="card filters-card">
+    <div class="filters-grid">
+        <div class="form-field">
+            <label for="f-estado">Estado</label>
+            <select id="f-estado">
+                <option value="">Todos</option>
+                <option value="pendiente">Pendiente</option>
+                <option value="confirmada">Confirmada</option>
+                <option value="atendida">Atendida</option>
+                <option value="cancelada">Cancelada</option>
+            </select>
+        </div>
+        <div class="form-field">
+            <label for="f-fecha">Fecha</label>
+            <input type="date" id="f-fecha">
+        </div>
+        <div class="form-field">
+            <label for="f-servicio">Servicio</label>
+            <input type="text" id="f-servicio" placeholder="Ej: vacuna, control">
+        </div>
+        <div class="form-field">
+            <label>&nbsp;</label>
+            <button class="btn btn-outline" type="button" data-cita-action="clear-filters">Limpiar filtros</button>
+        </div>
+    </div>
+</div>
+
+<div class="appointments-layout">
+    <div class="card">
+        <div class="table-responsive">
+            <table class="recep-table">
+                <thead>
+                    <tr>
+                        <th>Fecha y hora</th>
+                        <th>Cliente</th>
+                        <th>Mascota</th>
+                        <th>Servicio</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="citas-body">
+                    <tr><td colspan="6" class="muted">Cargando...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card cita-detalle">
+        <div class="pill pill-soft">Detalle de cita</div>
+        <h3 id="detalle-fecha" style="margin:8px 0 6px;">Selecciona una cita</h3>
+        <div class="status-badge" id="detalle-estado">--</div>
+        <div class="detalle-grid">
+            <div>
+                <small class="muted">Cliente</small>
+                <div id="detalle-cliente" class="detalle-strong">--</div>
+                <div id="detalle-contacto" class="muted small">--</div>
+            </div>
+            <div>
+                <small class="muted">Mascota</small>
+                <div id="detalle-mascota" class="detalle-strong">--</div>
+                <div id="detalle-especie" class="muted small">--</div>
+            </div>
+            <div>
+                <small class="muted">Servicio</small>
+                <div id="detalle-servicio" class="detalle-strong">--</div>
+                <div id="detalle-notas" class="muted small">--</div>
+            </div>
+        </div>
+        <div class="detalle-actions">
+            <button class="btn btn-primary" type="button" data-cita-action="mark-attended">Marcar como atendida</button>
+            <button class="btn btn-outline" type="button" data-cita-action="cancel">Cancelar cita</button>
+        </div>
+        <div class="alert-card" id="detalle-alerta" style="display:none; margin-top:10px;">
+            Se notifico a recepcion para reprogramar/avisar al cliente.
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const api = window.vetApi || {};
+    const state = {
+        citas: Array.from((window.vetData && window.vetData.citas) || []),
+        seleccionada: null,
+        filtros: { estado: "", fecha: "", servicio: "" }
+    };
+
+    const body = document.getElementById("citas-body");
+    const detalleEstado = document.getElementById("detalle-estado");
+    const detalleFecha = document.getElementById("detalle-fecha");
+    const detalleCliente = document.getElementById("detalle-cliente");
+    const detalleContacto = document.getElementById("detalle-contacto");
+    const detalleMascota = document.getElementById("detalle-mascota");
+    const detalleEspecie = document.getElementById("detalle-especie");
+    const detalleServicio = document.getElementById("detalle-servicio");
+    const detalleNotas = document.getElementById("detalle-notas");
+    const alerta = document.getElementById("detalle-alerta");
+    const filtros = {
+        estado: document.getElementById("f-estado"),
+        fecha: document.getElementById("f-fecha"),
+        servicio: document.getElementById("f-servicio")
+    };
+    const totals = {
+        total: document.getElementById("citas-total"),
+        pendientes: document.getElementById("citas-pendientes"),
+        atendidas: document.getElementById("citas-atendidas"),
+    };
+
+    function getCsrf() {
+        const name = "csrftoken=";
+        const cookies = document.cookie ? document.cookie.split(";") : [];
+        for (const cookie of cookies) {
+            const c = cookie.trim();
+            if (c.startsWith(name)) return decodeURIComponent(c.slice(name.length));
+        }
+        return "";
+    }
+
+    function buildHeaders(withJson = false) {
+        const headers = { "X-Requested-With": "XMLHttpRequest" };
+        const csrf = getCsrf();
+        if (csrf) headers["X-CSRFToken"] = csrf;
+        if (withJson) headers["Content-Type"] = "application/json";
+        return headers;
+    }
+
+    function statusClass(estado) {
+        switch (estado) {
+            case "pendiente": return "status-pending";
+            case "confirmada": return "status-ok";
+            case "atendida": return "status-done";
+            case "cancelada": return "status-cancel";
+            default: return "";
+        }
+    }
+
+    function statusLabel(estado) {
+        if (estado === "pendiente") return "Pendiente";
+        if (estado === "confirmada") return "Confirmada";
+        if (estado === "atendida") return "Atendida";
+        if (estado === "cancelada") return "Cancelada";
+        return "Desconocido";
+    }
+
+    function fmtFecha(fecha, hora) {
+        const [y, m, d] = fecha.split("-").map(Number);
+        const meses = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+        return `${d} ${meses[m - 1]} ${y} - ${hora}`;
+    }
+
+    async function loadCitas() {
+        if (!api.citas) return;
+        try {
+            const resp = await fetch(api.citas, { headers: buildHeaders() });
+            const body = await resp.text();
+            if (!resp.ok) return;
+            const data = body ? JSON.parse(body) : {};
+            state.citas = Array.from(data.citas || []);
+            state.seleccionada = state.citas.length ? state.citas[0].id : null;
+            renderTable();
+            renderDetail();
+            updateTotals();
+        } catch (e) {
+            /* ignore network errors */
+        }
+    }
+
+    function applyFilters() {
+        return state.citas.filter(c => {
+            if (state.filtros.estado && c.estado !== state.filtros.estado) return false;
+            if (state.filtros.fecha && c.fecha !== state.filtros.fecha) return false;
+            if (state.filtros.servicio && !c.servicio.toLowerCase().includes(state.filtros.servicio.toLowerCase())) return false;
+            return true;
+        });
+    }
+
+    function renderTable() {
+        const filtered = applyFilters();
+        body.innerHTML = "";
+        if (!filtered.length) {
+            const row = document.createElement("tr");
+            const td = document.createElement("td");
+            td.colSpan = 6;
+            td.className = "muted";
+            td.textContent = "No hay citas con estos filtros.";
+            row.appendChild(td);
+            body.appendChild(row);
+            return;
+        }
+
+        filtered.forEach(cita => {
+            const row = document.createElement("tr");
+            row.innerHTML = `
+                <td>${fmtFecha(cita.fecha, cita.hora)}</td>
+                <td>${cita.cliente}</td>
+                <td>${cita.mascota}</td>
+                <td>${cita.servicio}</td>
+                <td><span class="status-badge ${statusClass(cita.estado)}">${statusLabel(cita.estado)}</span></td>
+                <td class="table-actions">
+                    <button class="btn-mini" data-view="${cita.id}">Ver</button>
+                    <button class="btn-mini" data-done="${cita.id}">Atendida</button>
+                    <button class="btn-mini danger" data-cancel="${cita.id}">Cancelar</button>
+                </td>
+            `;
+            if (state.seleccionada === cita.id) {
+                row.classList.add("row-selected");
+            }
+            body.appendChild(row);
+        });
+
+        body.querySelectorAll("[data-view]").forEach(btn => {
+            btn.addEventListener("click", () => selectCita(Number(btn.dataset.view)));
+        });
+        body.querySelectorAll("[data-done]").forEach(btn => {
+            btn.addEventListener("click", () => markAttended(Number(btn.dataset.done)));
+        });
+        body.querySelectorAll("[data-cancel]").forEach(btn => {
+            btn.addEventListener("click", () => cancelCita(Number(btn.dataset.cancel)));
+        });
+    }
+
+    function renderDetail() {
+        const cita = state.citas.find(c => c.id === state.seleccionada);
+        if (!cita) {
+            detalleFecha.textContent = "Selecciona una cita";
+            detalleEstado.textContent = "--";
+            detalleEstado.className = "status-badge";
+            detalleCliente.textContent = "--";
+            detalleContacto.textContent = "--";
+            detalleMascota.textContent = "--";
+            detalleEspecie.textContent = "--";
+            detalleServicio.textContent = "--";
+            detalleNotas.textContent = "--";
+            alerta.style.display = "none";
+            return;
+        }
+        detalleFecha.textContent = fmtFecha(cita.fecha, cita.hora);
+        detalleEstado.textContent = statusLabel(cita.estado);
+        detalleEstado.className = `status-badge ${statusClass(cita.estado)}`;
+        detalleCliente.textContent = cita.cliente;
+        detalleContacto.textContent = cita.contacto;
+        detalleMascota.textContent = cita.mascota;
+        detalleEspecie.textContent = cita.especie;
+        detalleServicio.textContent = cita.servicio;
+        detalleNotas.textContent = cita.notas || "Sin notas";
+        alerta.style.display = cita.estado === "cancelada" ? "block" : "none";
+    }
+
+    async function markAttended(id) {
+        await updateEstado(id, "atendida");
+    }
+
+    async function cancelCita(id) {
+        await updateEstado(id, "cancelada");
+    }
+
+    function selectCita(id) {
+        state.seleccionada = id;
+        renderTable();
+        renderDetail();
+    }
+
+    async function updateEstado(id, estado) {
+        const url = api.citaEstado && api.citaEstado.replace("__id__", id);
+        if (!url) {
+            return;
+        }
+        try {
+            const resp = await fetch(url, {
+                method: "POST",
+                headers: buildHeaders(true),
+                body: JSON.stringify({ estado }),
+            });
+            const body = await resp.text();
+            if (!resp.ok) {
+                return;
+            }
+            const data = body ? JSON.parse(body) : {};
+            const cita = data.cita;
+            if (cita) {
+                state.citas = state.citas.map(c => c.id === cita.id ? cita : c);
+                if (state.seleccionada === cita.id) state.seleccionada = cita.id;
+                renderTable();
+                renderDetail();
+                updateTotals();
+            }
+        } catch (e) {
+            /* ignore network errors */
+        }
+    }
+
+    function updateTotals() {
+        totals.total.textContent = state.citas.length;
+        const pendientes = state.citas.filter(c => ["pendiente", "confirmada"].includes(c.estado)).length;
+        const atendidas = state.citas.filter(c => c.estado === "atendida").length;
+        totals.pendientes.textContent = pendientes;
+        totals.atendidas.textContent = atendidas;
+    }
+
+    Object.keys(filtros).forEach(key => {
+        filtros[key].addEventListener("input", () => {
+            state.filtros[key] = filtros[key].value || "";
+            renderTable();
+        });
+    });
+
+    document.querySelectorAll("[data-cita-action='clear-filters']").forEach(btn => {
+        btn.addEventListener("click", () => {
+            Object.keys(filtros).forEach(key => {
+                filtros[key].value = "";
+                state.filtros[key] = "";
+            });
+            renderTable();
+        });
+    });
+
+    document.querySelectorAll("[data-cita-action='mark-attended']").forEach(btn => {
+        btn.addEventListener("click", () => {
+            if (state.seleccionada) {
+                markAttended(state.seleccionada);
+            }
+        });
+    });
+    document.querySelectorAll("[data-cita-action='cancel']").forEach(btn => {
+        btn.addEventListener("click", () => {
+            if (state.seleccionada) {
+                cancelCita(state.seleccionada);
+            }
+        });
+    });
+
+    state.seleccionada = state.citas.length ? state.citas[0].id : null;
+    updateTotals();
+    renderTable();
+    renderDetail();
+    loadCitas();
+});
+</script>
