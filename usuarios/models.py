@@ -203,6 +203,7 @@ class Servicio(models.Model):
         max_length=50, blank=True, help_text="Ej: por visita, por dosis, por día"
     )
     duracion_minutos = models.PositiveIntegerField(blank=True, null=True)
+    duracion_min = models.PositiveIntegerField(default=15)
     destacado = models.BooleanField(default=False)
     etiquetas = models.CharField(
         max_length=255, blank=True, help_text="Separar con comas (ej: incluye certificado, 24/7)"
@@ -210,6 +211,17 @@ class Servicio(models.Model):
     activo = models.BooleanField(default=True)
     creado_en = models.DateTimeField(auto_now_add=True)
     actualizado_en = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        """
+        Sincroniza la nueva duracion_min con el valor historico duracion_minutos
+        para mantener la configuracion de servicios existente.
+        """
+        if self.duracion_minutos:
+            self.duracion_min = self.duracion_minutos
+        if not self.duracion_min:
+            self.duracion_min = 15
+        return super().save(*args, **kwargs)
 
     def __str__(self):
         return self.nombre

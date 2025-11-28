@@ -1,3 +1,6 @@
+import math
+from datetime import date, datetime, timedelta
+
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
@@ -25,13 +28,31 @@ class Cita(models.Model):
     )
     fecha = models.DateField()
     hora = models.TimeField()
+    hora_fin = models.TimeField(blank=True, null=True)
     estado = models.CharField(
         max_length=20, choices=Estado.choices, default=Estado.PENDIENTE
     )
     motivo_cancelacion = models.TextField(blank=True, null=True)
+    cancelado_por = models.CharField(max_length=50, blank=True, null=True)
     notas = models.TextField(blank=True)
     creado_en = models.DateTimeField(auto_now_add=True)
     actualizado_en = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        """
+        Completa hora_fin usando la duracion del servicio (en bloques de 15 min)
+        si no se entrega explicitamente.
+        """
+        if self.hora and not self.hora_fin:
+            duracion = (
+                getattr(self.servicio, "duracion_min", None)
+                or getattr(self.servicio, "duracion_minutos", None)
+                or 15
+            )
+            minutos = math.ceil(duracion / 15) * 15
+            inicio_dt = datetime.combine(date.today(), self.hora)
+            self.hora_fin = (inicio_dt + timedelta(minutes=minutos)).time()
+        return super().save(*args, **kwargs)
 
     class Meta:
         verbose_name = "Cita"

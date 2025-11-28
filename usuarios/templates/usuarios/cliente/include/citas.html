@@ -1,9 +1,5 @@
 <div class="card" style="margin-bottom: 16px;">
     <h2>Citas</h2>
-    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr)); gap:12px; margin-bottom:12px;">
-        <input class="input-lite" placeholder="Filtrar por fecha">
-        <input class="input-lite" placeholder="Veterinario">
-    </div>
     <div class="table-responsive">
         <table class="recep-table">
             <thead>
@@ -11,37 +7,27 @@
                     <th>Fecha</th>
                     <th>Hora</th>
                     <th>Paciente</th>
+                    <th>Servicio</th>
+                    <th>Veterinario</th>
                     <th>Estado</th>
-                    <th>Accion</th>
                 </tr>
             </thead>
             <tbody>
+                {% for c in citas_cliente %}
                 <tr>
-                    <td>12 Dic</td>
-                    <td>10:00</td>
-                    <td>Luna</td>
-                    <td><span class="status-badge status-ok">Confirmada</span></td>
-                    <td><button class="btn-small btn-ghost">Cancelar</button></td>
+                    <td>{{ c.fecha }}</td>
+                    <td>{{ c.hora }}</td>
+                    <td>{{ c.mascota.nombre }}</td>
+                    <td>{{ c.servicio.nombre|default:"-" }}</td>
+                    <td>{{ c.veterinario.perfil.user.get_full_name|default:c.veterinario.perfil.user.username }}</td>
+                    <td>{{ c.get_estado_display }}</td>
                 </tr>
+                {% empty %}
                 <tr>
-                    <td>20 Dic</td>
-                    <td>09:30</td>
-                    <td>Firulais</td>
-                    <td><span class="status-badge status-wait">Pendiente</span></td>
-                    <td><button class="btn-small btn-ghost">Replanificar</button></td>
+                    <td colspan="6" class="muted" style="text-align:center;">Sin citas registradas.</td>
                 </tr>
+                {% endfor %}
             </tbody>
         </table>
     </div>
-</div>
-
-<div class="card">
-    <h3 style="margin-top:0;">Agendar nueva cita</h3>
-    <div class="form-inline" style="margin-bottom: 10px;">
-        <input class="input-lite" placeholder="Mascota">
-        <input class="input-lite" placeholder="Veterinario">
-        <input class="input-lite" placeholder="Fecha">
-        <input class="input-lite" placeholder="Hora">
-    </div>
-    <button class="btn-small btn-primary-lite" type="button">Agendar</button>
 </div>

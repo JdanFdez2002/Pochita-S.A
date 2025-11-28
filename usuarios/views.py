@@ -1,4 +1,5 @@
 import json
+import math
 from datetime import datetime, timedelta, date
 
 from django.contrib.auth import logout
@@ -227,6 +228,11 @@ class DashboardClienteView(PerfilDashboardMixin):
             .select_related("seccion")
             .order_by("seccion__orden", "nombre")
         )
+        context["citas_cliente"] = (
+            Cita.objects.filter(cliente=cliente)
+            .select_related("mascota", "servicio", "veterinario__perfil__user")
+            .order_by("-fecha", "-hora")
+        )
         return context
 
     def post(self, request, *args, **kwargs):
@@ -315,20 +321,25 @@ class DashboardRecepcionistaView(PerfilDashboardMixin):
         page_obj = paginator.get_page(page_number)
         context["clientes_page"] = page_obj
         context["query"] = query
-        # resumen del dia
+        # resumen proximas citas
         today = timezone.now().date()
-        citas_hoy = (
-            Cita.objects.filter(fecha=today)
+        citas_proximas = (
+            Cita.objects.filter(fecha__gte=today)
+            .exclude(estado=Cita.Estado.CANCELADA)
             .select_related("cliente__perfil__user", "mascota", "servicio", "veterinario__perfil__user")
-            .order_by("hora")
+            .order_by("fecha", "hora")
         )
-        context["citas_hoy"] = citas_hoy
+        context["citas_hoy"] = citas_proximas  # se usa en plantilla como proximas
         context["citas_stats"] = {
-            "total": citas_hoy.count(),
-            "pendientes": citas_hoy.filter(estado=Cita.Estado.PENDIENTE).count(),
-            "canceladas": citas_hoy.filter(estado=Cita.Estado.CANCELADA).count(),
+            "total": citas_proximas.count(),
+            "pendientes": citas_proximas.filter(estado=Cita.Estado.PENDIENTE).count(),
+            "canceladas": citas_proximas.filter(estado=Cita.Estado.CANCELADA).count(),
         }
-        recientes = Cita.objects.filter(motivo_cancelacion__isnull=False).order_by("-actualizado_en")[:5]
+        recientes = (
+            Cita.objects.filter(motivo_cancelacion__isnull=False)
+            .exclude(cancelado_por="replanificada")
+            .order_by("-actualizado_en")[:5]
+        )
         context["alertas_canceladas"] = recientes
         context["servicio_secciones"] = (
             ServicioSeccion.objects.filter(activo=True)
@@ -561,6 +572,121 @@ def _parse_json(request):
     except json.JSONDecodeError:
         return {}
 
+SLOT_MINUTES = 15
+
+
+def _slot_minutes():
+    return SLOT_MINUTES
+
+
+def _time_to_minutes(t):
+    return t.hour * 60 + t.minute
+
+
+def _minutes_to_hhmm(minutes: int) -> str:
+    h, m = divmod(int(minutes), 60)
+    return f"{h:02d}:{m:02d}"
+
+
+def _ceil_to_slot(minutes: int) -> int:
+    base = _slot_minutes()
+    return int(math.ceil(minutes / base) * base)
+
+
+def _floor_to_slot(minutes: int) -> int:
+    base = _slot_minutes()
+    return int(math.floor(minutes / base) * base)
+
+
+def _servicio_duracion_min(servicio):
+    if not servicio:
+        return _slot_minutes()
+    return (
+        getattr(servicio, "duracion_min", None)
+        or getattr(servicio, "duracion_minutos", None)
+        or _slot_minutes()
+    )
+
+
+def _hora_fin_desde_inicio(inicio, duracion_min):
+    minutos = _ceil_to_slot(duracion_min)
+    return (datetime.combine(date.today(), inicio) + timedelta(minutes=minutos)).time()
+
+
+def _cita_hora_fin(cita):
+    if getattr(cita, "hora_fin", None):
+        return cita.hora_fin
+    return _hora_fin_desde_inicio(cita.hora, _servicio_duracion_min(cita.servicio))
+
+
+def _restar_intervalos(disponible_inicio, disponible_fin, ocupados):
+    intervalos = [(disponible_inicio, disponible_fin)]
+    for o_inicio, o_fin in ocupados:
+        if o_fin <= disponible_inicio or o_inicio >= disponible_fin:
+            continue
+        nuevos = []
+        for inicio, fin in intervalos:
+            if o_fin <= inicio or o_inicio >= fin:
+                nuevos.append((inicio, fin))
+                continue
+            if o_inicio > inicio:
+                nuevos.append((inicio, o_inicio))
+            if o_fin < fin:
+                nuevos.append((o_fin, fin))
+        intervalos = nuevos
+        if not intervalos:
+            break
+    alineados = []
+    for inicio, fin in intervalos:
+        ini_slot = _ceil_to_slot(inicio)
+        fin_slot = _floor_to_slot(fin)
+        if ini_slot < fin_slot:
+            alineados.append((ini_slot, fin_slot))
+    return alineados
+
+
+def _build_busy_intervals(vet, fecha, exclude_cita_id=None):
+    qs = (
+        Cita.objects.filter(veterinario=vet, fecha=fecha)
+        .exclude(estado=Cita.Estado.CANCELADA)
+        .select_related("servicio")
+    )
+    if exclude_cita_id:
+        qs = qs.exclude(id=exclude_cita_id)
+    ocupados = []
+    for c in qs:
+        inicio = _time_to_minutes(c.hora)
+        fin = _time_to_minutes(_cita_hora_fin(c))
+        ocupados.append((inicio, fin))
+    return ocupados
+
+
+def _intervalos_disponibles_para_bloque(bloque, ocupados):
+    return _restar_intervalos(
+        _time_to_minutes(bloque.hora_inicio), _time_to_minutes(bloque.hora_fin), ocupados
+    )
+
+
+def _rango_disponible(vet, fecha, inicio, fin, exclude_cita_id=None):
+    if DiaBloqueadoVeterinario.objects.filter(veterinario=vet, fecha=fecha).exists():
+        return False
+    start_min = _time_to_minutes(inicio)
+    end_min = _time_to_minutes(fin)
+    if end_min <= start_min:
+        return False
+    ocupados = _build_busy_intervals(vet, fecha, exclude_cita_id)
+    bloques = DisponibilidadVeterinario.objects.filter(
+        veterinario=vet,
+        fecha=fecha,
+        estado=DisponibilidadVeterinario.Estado.DISPONIBLE,
+    )
+    for bloque in bloques:
+        libres = _intervalos_disponibles_para_bloque(bloque, ocupados)
+        for libre_inicio, libre_fin in libres:
+            if start_min >= libre_inicio and end_min <= libre_fin:
+                return True
+    return False
+
 
 def _serialize_bloque(b):
     return {
@@ -579,10 +705,14 @@ def _serialize_cita(c):
         vet_name = f"{user.first_name} {user.last_name}".strip() or user.username
     fecha_val = c.fecha.isoformat() if hasattr(c.fecha, "isoformat") else str(c.fecha)
     hora_val = c.hora.strftime("%H:%M") if hasattr(c.hora, "strftime") else str(c.hora)
+    hora_fin_obj = _cita_hora_fin(c)
+    hora_fin_val = hora_fin_obj.strftime("%H:%M") if hasattr(hora_fin_obj, "strftime") else str(hora_fin_obj)
     return {
         "id": c.id,
         "fecha": fecha_val,
         "hora": hora_val,
+        "hora_fin": hora_fin_val,
+        "duracion_min": _servicio_duracion_min(c.servicio),
         "cliente": c.cliente.perfil.user.get_full_name()
         or c.cliente.perfil.user.username,
         "contacto": c.cliente.telefono,
@@ -593,6 +723,8 @@ def _serialize_cita(c):
         "estado": c.estado,
         "notas": c.notas or "",
         "veterinario": vet_name,
+        "motivo_cancelacion": getattr(c, "motivo_cancelacion", "") or "",
+        "cancelado_por": getattr(c, "cancelado_por", "") or "",
     }
 
 
@@ -670,11 +802,23 @@ def vet_bloquear_dia_api(request):
     accion = data.get("accion") or "toggle"
     if not fecha:
         return HttpResponseBadRequest("Fecha requerida.")
-    if str(timezone.now().date()) > str(fecha):
-        return HttpResponseBadRequest("No puedes modificar dias pasados.")
-
     try:
-        bloqueo = DiaBloqueadoVeterinario.objects.get(veterinario=vet, fecha=fecha)
+        fecha_obj = datetime.strptime(str(fecha), "%Y-%m-%d").date()
+    except Exception:
+        return HttpResponseBadRequest("Fecha invalida.")
+    if timezone.now().date() > fecha_obj:
+        return HttpResponseBadRequest("No puedes modificar dias pasados.")
+    # Si intenta bloquear, validar citas y limpiar bloques
+    if accion in ("bloquear", "toggle"):
+        citas_existentes = Cita.objects.filter(
+            veterinario=vet, fecha=fecha_obj
+        ).exclude(estado=Cita.Estado.CANCELADA)
+        if citas_existentes.exists():
+            return HttpResponseBadRequest("No puedes bloquear un dia con citas agendadas.")
+        # eliminar bloques de disponibilidad del dia
+        DisponibilidadVeterinario.objects.filter(veterinario=vet, fecha=fecha_obj).delete()
+    try:
+        bloqueo = DiaBloqueadoVeterinario.objects.get(veterinario=vet, fecha=fecha_obj)
         if accion in ("desbloquear", "toggle"):
             bloqueo.delete()
             return JsonResponse({"bloqueado": False})
@@ -682,7 +826,7 @@ def vet_bloquear_dia_api(request):
         bloqueo = None
 
     if bloqueo is None:
-        DiaBloqueadoVeterinario.objects.get_or_create(veterinario=vet, fecha=fecha)
+        DiaBloqueadoVeterinario.objects.get_or_create(veterinario=vet, fecha=fecha_obj)
     return JsonResponse({"bloqueado": True})
 
 
@@ -712,8 +856,17 @@ def vet_cita_estado_api(request, pk):
     estado = data.get("estado")
     if estado not in dict(Cita.Estado.choices):
         return HttpResponseBadRequest("Estado invalido.")
+    if estado == Cita.Estado.CANCELADA:
+        motivo = (data.get("motivo_cancelacion") or "").strip()
+        if not motivo:
+            return HttpResponseBadRequest("Motivo requerido para cancelar.")
+        cita.motivo_cancelacion = motivo
+        cita.cancelado_por = "veterinario"
     cita.estado = estado
-    cita.save(update_fields=["estado", "actualizado_en"])
+    update_fields = ["estado", "actualizado_en"]
+    if estado == Cita.Estado.CANCELADA:
+        update_fields += ["motivo_cancelacion", "cancelado_por"]
+    cita.save(update_fields=update_fields)
     return JsonResponse({"cita": _serialize_cita(cita)})
 
 
@@ -825,7 +978,13 @@ def recep_servicios_api(request):
     return JsonResponse(
         {
             "servicios": [
-                {"id": s.id, "nombre": s.nombre, "duracion_minutos": s.duracion_minutos, "seccion": s.seccion.nombre if s.seccion else ""}
+                {
+                    "id": s.id,
+                    "nombre": s.nombre,
+                    "duracion_min": getattr(s, "duracion_min", None),
+                    "duracion_minutos": s.duracion_minutos,
+                    "seccion": s.seccion.nombre if s.seccion else "",
+                }
                 for s in servicios
             ]
         }
@@ -882,6 +1041,7 @@ def recep_disponibilidad_api(request):
     vencidas.update(
         estado=Cita.Estado.CANCELADA,
         motivo_cancelacion="No atendida (expiró)",
+        cancelado_por="sistema",
         actualizado_en=timezone.now(),
     )
     vet_id = request.GET.get("veterinario_id")
@@ -889,24 +1049,51 @@ def recep_disponibilidad_api(request):
     month = int(request.GET.get("month") or timezone.now().month)
     qs = DisponibilidadVeterinario.objects.filter(fecha__year=year, fecha__month=month)
     bloqueados_qs = DiaBloqueadoVeterinario.objects.filter(fecha__year=year, fecha__month=month)
-    citas_qs = Cita.objects.filter(fecha__year=year, fecha__month=month).select_related(
-        "cliente__perfil__user", "mascota", "servicio", "veterinario__perfil__user"
+    citas_qs = (
+        Cita.objects.filter(fecha__year=year, fecha__month=month)
+        .exclude(estado=Cita.Estado.CANCELADA)
+        .select_related("cliente__perfil__user", "mascota", "servicio", "veterinario__perfil__user")
     )
     if vet_id:
         qs = qs.filter(veterinario_id=vet_id)
         bloqueados_qs = bloqueados_qs.filter(veterinario_id=vet_id)
         citas_qs = citas_qs.filter(veterinario_id=vet_id)
-    bloques = [
-        {
-            "id": b.id,
-            "veterinario_id": b.veterinario_id,
-            "fecha": b.fecha.isoformat(),
-            "inicio": b.hora_inicio.strftime("%H:%M"),
-            "fin": b.hora_fin.strftime("%H:%M"),
-            "estado": b.estado,
-        }
-        for b in qs.order_by("fecha", "hora_inicio")
-    ]
+
+    busy_map = {}
+    for c in citas_qs:
+        key = (c.veterinario_id, c.fecha)
+        busy_map.setdefault(key, []).append(
+            (_time_to_minutes(c.hora), _time_to_minutes(_cita_hora_fin(c)))
+        )
+    for key in busy_map:
+        busy_map[key].sort()
+
+    bloques = []
+    for b in qs.order_by("fecha", "hora_inicio"):
+        if b.estado != DisponibilidadVeterinario.Estado.DISPONIBLE:
+            bloques.append(
+                {
+                    "id": b.id,
+                    "veterinario_id": b.veterinario_id,
+                    "fecha": b.fecha.isoformat(),
+                    "inicio": b.hora_inicio.strftime("%H:%M"),
+                    "fin": b.hora_fin.strftime("%H:%M"),
+                    "estado": b.estado,
+                }
+            )
+            continue
+        libres = _intervalos_disponibles_para_bloque(b, busy_map.get((b.veterinario_id, b.fecha), []))
+        for idx, (ini, fin) in enumerate(libres):
+            bloques.append(
+                {
+                    "id": f"{b.id}-{idx}" if idx else b.id,
+                    "veterinario_id": b.veterinario_id,
+                    "fecha": b.fecha.isoformat(),
+                    "inicio": _minutes_to_hhmm(ini),
+                    "fin": _minutes_to_hhmm(fin),
+                    "estado": b.estado,
+                }
+            )
     bloqueados = [
         {
             "id": d.id,
@@ -942,22 +1129,10 @@ def recep_cita_create_api(request):
         fecha_obj = datetime.strptime(data["fecha"], "%Y-%m-%d").date()
     except Exception:
         return HttpResponseBadRequest("Formato de fecha invalido.")
-    existe = Cita.objects.filter(
-        veterinario=vet, fecha=fecha_obj, hora=hora_obj
-    ).exclude(estado=Cita.Estado.CANCELADA).exists()
-    if existe:
-        return HttpResponseBadRequest("Horario ya reservado.")
-    bloque = (
-        DisponibilidadVeterinario.objects.filter(
-            veterinario=vet,
-            fecha=fecha_obj,
-            hora_inicio__lte=hora_obj,
-            hora_fin__gt=hora_obj,
-            estado=DisponibilidadVeterinario.Estado.DISPONIBLE,
-        ).first()
-    )
-    if not bloque:
-        return HttpResponseBadRequest("No hay disponibilidad para ese horario.")
+    duracion_min = _servicio_duracion_min(servicio)
+    hora_fin = _hora_fin_desde_inicio(hora_obj, duracion_min)
+    if not _rango_disponible(vet, fecha_obj, hora_obj, hora_fin):
+        return HttpResponseBadRequest("No hay disponibilidad para ese horario y duracion.")
     cita = Cita(
         cliente=cliente,
         mascota=mascota,
@@ -965,12 +1140,11 @@ def recep_cita_create_api(request):
         veterinario=vet,
         fecha=fecha_obj,
         hora=hora_obj,
+        hora_fin=hora_fin,
         notas=data.get("notas") or "",
         estado=Cita.Estado.PENDIENTE,
     )
     cita.save()
-    bloque.estado = DisponibilidadVeterinario.Estado.NO_DISPONIBLE
-    bloque.save(update_fields=["estado", "actualizado_en"])
     return JsonResponse({"cita": _serialize_cita(cita)}, status=201)
 
 
@@ -981,9 +1155,10 @@ def recep_citas_hoy_api(request):
         return recep
     today = timezone.now().date()
     qs = (
-        Cita.objects.filter(fecha=today)
+        Cita.objects.filter(fecha__gte=today)
+        .exclude(estado=Cita.Estado.CANCELADA)
         .select_related("cliente__perfil__user", "mascota", "servicio", "veterinario__perfil__user")
-        .order_by("hora")
+        .order_by("fecha", "hora")
     )
     vet_id = request.GET.get("veterinario_id")
     servicio_id = request.GET.get("servicio_id")
@@ -1011,6 +1186,7 @@ def recep_cita_estado_api(request, pk):
     cita.estado = estado
     if estado == Cita.Estado.CANCELADA:
         cita.motivo_cancelacion = motivo or "Cancelada por recepcion."
+        cita.cancelado_por = "recepcionista"
         # liberar bloque correspondiente si existe
         bloque = (
             DisponibilidadVeterinario.objects.filter(
@@ -1025,7 +1201,10 @@ def recep_cita_estado_api(request, pk):
         if bloque:
             bloque.estado = DisponibilidadVeterinario.Estado.DISPONIBLE
             bloque.save(update_fields=["estado", "actualizado_en"])
-    cita.save(update_fields=["estado", "motivo_cancelacion", "actualizado_en"])
+    update_fields = ["estado", "actualizado_en"]
+    if estado == Cita.Estado.CANCELADA:
+        update_fields += ["motivo_cancelacion", "cancelado_por"]
+    cita.save(update_fields=update_fields)
     return JsonResponse({"cita": _serialize_cita(cita)})
 
 
@@ -1034,9 +1213,14 @@ def recep_replanificar_alertas_api(request):
     recep = _require_recepcionista(request)
     if isinstance(recep, HttpResponseForbidden):
         return recep
-    reciente = timezone.now().date() - timedelta(days=30)
+    # Usamos fecha de actualizacion para incluir cancelaciones recientes sin depender de la fecha de la cita
+    reciente = timezone.now() - timedelta(days=30)
     canceladas = (
-        Cita.objects.filter(estado=Cita.Estado.CANCELADA, motivo_cancelacion__isnull=False, fecha__gte=reciente)
+        Cita.objects.filter(
+            estado=Cita.Estado.CANCELADA,
+            motivo_cancelacion__isnull=False,
+            actualizado_en__gte=reciente,
+        ).exclude(cancelado_por="replanificada")
         .select_related("cliente__perfil__user", "mascota", "servicio", "veterinario__perfil__user")
         .order_by("-fecha", "-hora")
     )
@@ -1057,12 +1241,22 @@ def recep_replanificar_disponibilidad_api(request):
     fecha = request.GET.get("fecha")
     if not vet_id or not fecha:
         return HttpResponseBadRequest("Se requiere veterinario y fecha.")
-    bloques = DisponibilidadVeterinario.objects.filter(
-        veterinario_id=vet_id, fecha=fecha, estado=DisponibilidadVeterinario.Estado.DISPONIBLE
+    try:
+        fecha_obj = datetime.strptime(str(fecha), "%Y-%m-%d").date()
+    except Exception:
+        return HttpResponseBadRequest("Fecha invalida.")
+    bloques_qs = DisponibilidadVeterinario.objects.filter(
+        veterinario_id=vet_id, fecha=fecha_obj, estado=DisponibilidadVeterinario.Estado.DISPONIBLE
     ).order_by("hora_inicio")
-    return JsonResponse(
-        {"bloques": [{"id": b.id, "inicio": b.hora_inicio.strftime("%H:%M"), "fin": b.hora_fin.strftime("%H:%M")} for b in bloques]}
-    )
+    ocupados = _build_busy_intervals(vet_id, fecha_obj)
+    bloques = []
+    for b in bloques_qs:
+        libres = _intervalos_disponibles_para_bloque(b, ocupados)
+        for idx, (ini, fin) in enumerate(libres):
+            bloques.append(
+                {"id": f"{b.id}-{idx}" if idx else b.id, "inicio": _minutes_to_hhmm(ini), "fin": _minutes_to_hhmm(fin)}
+            )
+    return JsonResponse({"bloques": bloques})
 
 
 @require_http_methods(["POST"])
@@ -1079,18 +1273,29 @@ def recep_replanificar_cita_api(request):
         vet = Veterinario.objects.get(id=data["veterinario_id"])
     except (Cita.DoesNotExist, Veterinario.DoesNotExist):
         return HttpResponseBadRequest("Datos invalidos.")
+    try:
+        nueva_fecha = datetime.strptime(str(data["nueva_fecha"]), "%Y-%m-%d").date()
+        nueva_hora = datetime.strptime(str(data["nueva_hora"]), "%H:%M").time()
+    except Exception:
+        return HttpResponseBadRequest("Fecha u hora invalidas.")
+    duracion_min = _servicio_duracion_min(cita.servicio)
+    hora_fin = _hora_fin_desde_inicio(nueva_hora, duracion_min)
+    if not _rango_disponible(vet, nueva_fecha, nueva_hora, hora_fin, exclude_cita_id=cita.id):
+        return HttpResponseBadRequest("No hay disponibilidad para la nueva duracion.")
     # cancelar cita original
     cita.estado = Cita.Estado.CANCELADA
     cita.motivo_cancelacion = data.get("motivo") or "Replanificada"
-    cita.save(update_fields=["estado", "motivo_cancelacion", "actualizado_en"])
+    cita.cancelado_por = "replanificada"
+    cita.save(update_fields=["estado", "motivo_cancelacion", "cancelado_por", "actualizado_en"])
     # crear nueva
     nueva = Cita.objects.create(
         cliente=cita.cliente,
         mascota=cita.mascota,
         servicio=cita.servicio,
         veterinario=vet,
-        fecha=data["nueva_fecha"],
-        hora=data["nueva_hora"],
+        fecha=nueva_fecha,
+        hora=nueva_hora,
+        hora_fin=hora_fin,
         notas=cita.notas,
         estado=Cita.Estado.PENDIENTE,
     )
@@ -1115,5 +1320,6 @@ def recep_historial_citas_cliente_api(request, cliente_id):
     for c in citas:
         base = _serialize_cita(c)
         base["motivo_cancelacion"] = c.motivo_cancelacion or ""
+        base["cancelado_por"] = getattr(c, "cancelado_por", "") or ""
         data.append(base)
     return JsonResponse({"citas": data})

@@ -20,7 +20,7 @@
     </div>
     <div class="availability-hero__actions">
         <button class="btn btn-primary" type="button" data-avail-action="new">Agregar bloque</button>
-        <button class="btn btn-outline" type="button" data-avail-action="block-today">Bloquear hoy</button>
+        <button class="btn btn-danger" type="button" data-avail-action="block-today">Bloquear hoy</button>
     </div>
 </div>
 
@@ -58,7 +58,9 @@
             </div>
             <div class="side-actions">
                 <button class="btn-small btn-primary-lite" type="button" data-avail-action="new">Agregar bloque</button>
-                <button class="btn-small btn-ghost" type="button" data-avail-action="toggle-block">Bloquear dia</button>
+                <button class="btn-small btn-danger" type="button" data-avail-action="toggle-block">Bloquear dia</button>
+                <button class="btn-small btn-primary-lite" type="button" data-avail-action="morning">Agregar toda la mañana</button>
+                <button class="btn-small btn-primary-lite" type="button" data-avail-action="afternoon">Agregar toda la tarde</button>
             </div>
         </div>
 
@@ -128,8 +130,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const cancelBtn = document.querySelector("[data-avail-action='cancel-edit']");
     const blockTodayBtn = document.querySelector("[data-avail-action='block-today']");
     const toggleBlockBtn = document.querySelector("[data-avail-action='toggle-block']");
+    const morningBtn = document.querySelector("[data-avail-action='morning']");
+    const afternoonBtn = document.querySelector("[data-avail-action='afternoon']");
     const submitBtn = document.querySelector("#availability-form button[type='submit']");
     const newButtons = document.querySelectorAll("[data-avail-action='new']");
+    const presetButtons = document.querySelectorAll("[data-avail-action='morning'], [data-avail-action='afternoon']");
     const pastWarning = document.getElementById("past-warning");
     const statMes = document.getElementById("stat-bloques-mes");
     const statProx = document.getElementById("stat-proximo");
@@ -138,14 +143,20 @@ document.addEventListener("DOMContentLoaded", () => {
     const dayStatusPill = document.getElementById("day-status-pill");
     const dayCountPill = document.getElementById("day-count-pill");
     let currentMonth = new Date();
-    const today = new Date();
+    function toLocalDate(dateStr) {
+        if (dateStr instanceof Date) return new Date(dateStr.getFullYear(), dateStr.getMonth(), dateStr.getDate());
+        const [y, m, d] = String(dateStr).split("-").map(Number);
+        return new Date(y, (m || 1) - 1, d || 1);
+    }
+
+    const today = toLocalDate(new Date());
     today.setHours(0, 0, 0, 0);
     if (dateInput) {
         dateInput.setAttribute("min", toISO(today));
     }
 
     function toISO(d) {
-        const dt = typeof d === "string" ? new Date(d) : d;
+        const dt = typeof d === "string" ? toLocalDate(d) : d;
         const year = dt.getFullYear();
         const month = `${dt.getMonth() + 1}`.padStart(2, "0");
         const day = `${dt.getDate()}`.padStart(2, "0");
@@ -171,7 +182,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function isPast(dateStr) {
-        const dt = new Date(dateStr);
+        const dt = toLocalDate(dateStr);
         dt.setHours(0, 0, 0, 0);
         return dt < today;
     }
@@ -426,6 +437,7 @@ document.addEventListener("DOMContentLoaded", () => {
         resetForm();
         renderCalendar();
         renderList();
+        updateBlockButton();
         updatePastLock();
     }
 
@@ -458,6 +470,12 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
+    function updateBlockButton() {
+        if (!toggleBlockBtn) return;
+        const bloqueado = Boolean(diasBloqueados[selectedDate]);
+        toggleBlockBtn.textContent = bloqueado ? "Desbloquear dia" : "Bloquear dia";
+    }
+
     newButtons.forEach(btn => {
         btn.addEventListener("click", () => {
             if (isPast(selectedDate)) {
@@ -469,6 +487,28 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
+    function createPresetBlock(inicio, fin) {
+        const fecha = selectedDate || toISO(new Date());
+        if (isPast(fecha)) {
+            setError("No puedes agregar bloques en dias pasados.");
+            return;
+        }
+        const payload = { fecha, inicio, fin, estado: "disponible" };
+        const validation = validateBlock(payload);
+        if (validation) {
+            setError(validation);
+            return;
+        }
+        saveBlock(payload);
+    }
+
+    if (morningBtn) {
+        morningBtn.addEventListener("click", () => createPresetBlock("08:00", "12:00"));
+    }
+    if (afternoonBtn) {
+        afternoonBtn.addEventListener("click", () => createPresetBlock("13:00", "18:00"));
+    }
+
     if (blockTodayBtn) {
         blockTodayBtn.addEventListener("click", () => {
             const todayStr = toISO(new Date());
@@ -479,6 +519,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (toggleBlockBtn) {
         toggleBlockBtn.addEventListener("click", () => toggleBlockDay());
+        updateBlockButton();
     }
 
     async function toggleBlockDay() {
@@ -507,6 +548,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const data = body ? JSON.parse(body) : {};
             if (data.bloqueado) {
                 diasBloqueados[selectedDate] = "bloqueado";
+                bloques = bloques.filter(b => b.fecha !== selectedDate);
                 setSuccess("Dia bloqueado por completo.");
             } else {
                 delete diasBloqueados[selectedDate];
@@ -515,6 +557,7 @@ document.addEventListener("DOMContentLoaded", () => {
             resetForm();
             renderCalendar();
             renderList();
+            updateBlockButton();
         } catch (e) {
             setError("Error de red al bloquear el dia.");
         }
@@ -643,6 +686,7 @@ document.addEventListener("DOMContentLoaded", () => {
             (data.dias_bloqueados || []).forEach(d => diasBloqueados[d] = "bloqueado");
             renderCalendar();
             renderList();
+            updateBlockButton();
         } catch (e) {
             /* ignore network errors */
         }
@@ -656,6 +700,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (cancelBtn) cancelBtn.disabled = past || !editId;
         if (toggleBlockBtn) toggleBlockBtn.disabled = past;
         newButtons.forEach(btn => btn.disabled = past);
+        presetButtons.forEach(btn => btn.disabled = past);
         if (pastWarning) pastWarning.style.display = past ? "block" : "none";
         if (past && successEl) successEl.style.display = "none";
     }

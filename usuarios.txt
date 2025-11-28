@@ -1,21 +1,36 @@
-Cliente:
-- cliente@gmail.com
-- contraseñacliente1
-
 Administrador:
-- admin@gmail.com
-- contraseñaadministrador1
+- Nombres: Ignacio Andrés
+- Apellidos: Paredes Contreras
+- ignacio.paredes@pochita.sa
+- brisaverde86
+- 13.478.225-4
+- +56 9 7621 8843
+- Av. Pedro de Valdivia 1450, Ñuñoa, Santiago, Región Metropolitana
 
 Veterinario:
-- veterinario@gmail.com
-- contraseñaveterinario1
+- Nombres: Sebastián Eduardo
+- Apellidos: Araya Fuentes
+- sebastian.araya@pochita.sa
+- montelargo92
+- 17.892.114-7
+- +56 9 9345 2217
+- Pasaje Los Nogales 233, Villa El Rosario, Talca, Región del Maule
 
 Recepcionista:
-- recepcionista@gmail.com
-- contraseñaderecepcionista1
+- Nombres: Carolina Isabel
+- Apellidos: Muñoz Herrera
+- carolina.munoz@pochita.sa
+- solturquesa14
+- 16.554.990-2
+- +56 9 5812 4430
+- Calle Las Petunias 89, Barrio Norte, Concepción, Región del Biobío
 
-Genéricos
-12.345.678-9
-+56 9 1234 5678
-Numero, Calle, Sector, Comuna, Región
+Cliente:
+- Nombres: Valentina Sofía
+- Apellidos: Ríos Alarcón
+- valentina.rios@gmail.com
+- luceserena58
+- 18.233.567-1
+- +56 9 4483 9055
+- Calle O’Higgins 1023, Centro, Temuco, Región de La Araucanía
 

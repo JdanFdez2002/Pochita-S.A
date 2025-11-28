@@ -1,36 +1,241 @@
+<!-- CODIGO NUEVO: Replanificar UI 3 columnas -->
 <div class="card">
-    <h2>Replanificar horas</h2>
-    <p class="muted" style="margin-bottom:8px;">Citas canceladas con motivo; selecciona una para replanificar.</p>
-    <div class="availability-list" id="rep-alertas" style="max-height:200px; overflow-y:auto;">
-        <div class="muted">Cargando...</div>
+    <div class="rep-header">
+        <div>
+            <div class="pill pill-soft">Replanificar horas</div>
+            <h2 style="margin:6px 0 4px;">Citas canceladas con motivo</h2>
+            <p class="muted" style="margin:0;">Selecciona una cita para replanificarla en un solo flujo.</p>
+        </div>
+        <button class="btn btn-small btn-outline" type="button" id="rep-refresh">Actualizar</button>
+    </div>
+
+    <div class="rep-grid">
+        <!-- Columna 1: Cita original -->
+        <div class="rep-panel">
+            <h4 class="rep-title">Cita original</h4>
+            <div id="rep-alertas" class="rep-list" style="max-height:260px;">
+                <div class="muted">Cargando...</div>
+            </div>
+            <div class="rep-info" id="rep-original">
+                <div class="muted">Selecciona una cita para ver sus detalles.</div>
+            </div>
+        </div>
+
+        <!-- Columna 2: Vet + fecha + bloques -->
+        <div class="rep-panel">
+            <h4 class="rep-title">Veterinario y fecha</h4>
+            <div class="form-grid" style="grid-template-columns: repeat(auto-fit, minmax(160px,1fr)); gap:8px;">
+                <div class="form-field">
+                    <label for="rep-vet">Veterinario</label>
+                    <select id="rep-vet"></select>
+                </div>
+                <div class="form-field">
+                    <label for="rep-fecha">Fecha</label>
+                    <input type="date" id="rep-fecha">
+                </div>
+            </div>
+            <div class="rep-bloques" id="rep-bloques">
+                <div class="muted">Selecciona veterinario y fecha.</div>
+            </div>
+        </div>
+
+        <!-- Columna 3: Previsualizacion -->
+        <div class="rep-panel">
+            <h4 class="rep-title">Nueva cita</h4>
+            <div class="rep-preview" id="rep-preview">
+                <div class="muted">Elige un bloque para previsualizar.</div>
+            </div>
+            <div class="form-field" style="margin-top:10px;">
+                <label for="rep-motivo">Motivo de replanificacion</label>
+                <textarea id="rep-motivo" rows="2" placeholder="Ej: Bloque cancelado por veterinario"></textarea>
+            </div>
+            <div class="form-actions" style="justify-content:flex-end; margin-top:10px;">
+                <button class="btn btn-primary" type="button" id="rep-guardar">Confirmar replanificacion</button>
+            </div>
+            <div class="alert-success" id="rep-ok" style="display:none; margin-top:8px;">Cita replanificada.</div>
+            <div class="field-error" id="rep-error" style="display:none; margin-top:8px;"></div>
+        </div>
+    </div>
+    <!-- CODIGO NUEVO: Calendario compacto -->
+    <div class="rep-panel" style="margin-top:12px;">
+        <div class="collapse-header rep-cal-header" data-cal-toggle>
+            <div>
+                <strong>Calendario de disponibilidad</strong>
+                <div class="muted small">Ver d&iacute;as con bloques del veterinario</div>
+            </div>
+            <button class="btn btn-small btn-outline" type="button" id="rep-cal-nav-prev">&#9664;</button>
+            <span id="rep-cal-label" class="muted" style="min-width:120px; text-align:center;"></span>
+            <button class="btn btn-small btn-outline" type="button" id="rep-cal-nav-next">&#9654;</button>
+        </div>
+        <div id="rep-cal-body" class="rep-cal" aria-hidden="false"></div>
     </div>
 </div>
 
-<div class="card">
-    <h3 style="margin-top:0;">Replanificar cita seleccionada</h3>
-    <div class="form-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
-        <div class="form-field">
-            <label>Veterinario</label>
-            <select id="rep-vet"></select>
-        </div>
-        <div class="form-field">
-            <label>Nueva fecha</label>
-            <input type="date" id="rep-fecha">
-        </div>
-    </div>
-    <div class="availability-list" id="rep-bloques" style="margin-top:10px;">
-        <div class="muted">Selecciona fecha y veterinario.</div>
-    </div>
-    <div class="form-field" style="margin-top:10px;">
-        <label>Motivo de cancelación</label>
-        <textarea id="rep-motivo" rows="2" placeholder="Ej: Bloque cancelado por veterinario"></textarea>
-    </div>
-    <div class="form-actions" style="justify-content:flex-end; margin-top:8px;">
-        <button class="btn-small btn-primary" type="button" id="rep-guardar">Replanificar</button>
-    </div>
-    <div class="alert-success" id="rep-ok" style="display:none; margin-top:8px;">Cita replanificada.</div>
-    <div class="field-error" id="rep-error" style="display:none; margin-top:8px;"></div>
-</div>
+<style>
+/* CODIGO NUEVO: Estilos locales para replanificar */
+.rep-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 14px;
+    margin-top: 12px;
+}
+.rep-panel {
+    border: 1px solid var(--border, rgba(255,255,255,0.08));
+    border-radius: 12px;
+    padding: 12px;
+    background: rgba(255,255,255,0.03);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.rep-title {
+    margin: 0;
+    font-size: 1rem;
+    letter-spacing: 0.1px;
+}
+.rep-list {
+    border: 1px solid var(--border, rgba(255,255,255,0.08));
+    border-radius: 10px;
+    padding: 8px;
+    background: rgba(0,0,0,0.08);
+    overflow-y: auto;
+}
+.rep-card {
+    border: 1px solid var(--border, rgba(255,255,255,0.08));
+    border-radius: 10px;
+    padding: 10px;
+    background: rgba(255,255,255,0.02);
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: border-color 0.15s ease, transform 0.1s ease;
+}
+.rep-card:hover {
+    border-color: rgba(65, 211, 190, 0.6);
+    transform: translateY(-1px);
+}
+.rep-card.selected {
+    border-color: var(--primary, #41d3be);
+    box-shadow: 0 6px 18px rgba(65, 211, 190, 0.2);
+}
+.rep-meta {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 6px;
+    margin-top: 6px;
+    font-size: 0.9rem;
+}
+.rep-info {
+    border: 1px dashed var(--border, rgba(255,255,255,0.12));
+    border-radius: 10px;
+    padding: 10px;
+    background: rgba(255,255,255,0.02);
+    min-height: 140px;
+}
+.rep-info-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 6px;
+    font-size: 0.95rem;
+}
+.rep-label {
+    color: var(--text-muted, #94a3b8);
+    font-weight: 600;
+}
+.rep-bloques {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 8px;
+    margin-top: 6px;
+}
+.rep-bloque {
+    border: 1px solid rgba(65, 211, 190, 0.35);
+    background: rgba(65, 211, 190, 0.12);
+    color: var(--text, #e9f0fb);
+    border-radius: 10px;
+    padding: 10px;
+    cursor: pointer;
+    transition: transform 0.1s ease, box-shadow 0.15s ease, filter 0.1s ease;
+}
+.rep-bloque:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 20px rgba(65, 211, 190, 0.18);
+}
+.rep-bloque.disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    background: rgba(239, 68, 68, 0.12);
+    border-color: rgba(239, 68, 68, 0.4);
+}
+.rep-bloque.selected {
+    border-color: #1ca58d;
+    background: linear-gradient(135deg, #2ed1b6, #1ca58d);
+    color: #0b1320;
+    box-shadow: 0 12px 24px rgba(46, 209, 182, 0.28);
+}
+.rep-preview {
+    border: 1px solid var(--border, rgba(255,255,255,0.08));
+    border-radius: 10px;
+    padding: 10px;
+    background: rgba(0,0,0,0.08);
+    min-height: 120px;
+}
+.rep-cal-header {
+    display: grid;
+    grid-template-columns: 1fr auto auto auto;
+    align-items: center;
+    gap: 8px;
+}
+.rep-cal {
+    margin-top: 8px;
+    border: 1px solid var(--border, rgba(255,255,255,0.08));
+    border-radius: 10px;
+    padding: 8px;
+    background: rgba(255,255,255,0.02);
+}
+.rep-cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(32px, 1fr));
+    gap: 4px;
+    text-align: center;
+}
+.rep-cal-cell {
+    padding: 8px 4px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid transparent;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: var(--text, #e9f0fb);
+}
+.rep-cal-cell.available {
+    border-color: rgba(65, 211, 190, 0.4);
+    background: rgba(65, 211, 190, 0.12);
+}
+.rep-cal-cell.selected {
+    background: linear-gradient(135deg, #2ed1b6, #1ca58d);
+    color: #0b1320;
+    border-color: #1ca58d;
+    font-weight: 700;
+}
+.rep-cal-head {
+    color: var(--text-muted, #94a3b8);
+    font-size: 0.85rem;
+    padding: 4px;
+}
+.rep-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+.rep-header .pill {
+    margin-bottom: 4px;
+}
+@media (max-width: 900px) {
+    .rep-grid { grid-template-columns: 1fr; }
+}
+</style>
 
 <script>
 (function(){
@@ -39,6 +244,7 @@
         vets: "{% url 'usuarios:recep_veterinarios_api' %}",
         disp: "{% url 'usuarios:recep_replanificar_disponibilidad_api' %}",
         action: "{% url 'usuarios:recep_replanificar_cita_api' %}",
+        dispMes: "{% url 'usuarios:recep_disponibilidad_api' %}",
     };
     const alertasBox = document.getElementById("rep-alertas");
     const vetSel = document.getElementById("rep-vet");
@@ -48,8 +254,18 @@
     const btn = document.getElementById("rep-guardar");
     const okEl = document.getElementById("rep-ok");
     const errEl = document.getElementById("rep-error");
+    const originalBox = document.getElementById("rep-original");
+    const previewBox = document.getElementById("rep-preview");
+    const refreshBtn = document.getElementById("rep-refresh");
+    const calBody = document.getElementById("rep-cal-body");
+    const calLabel = document.getElementById("rep-cal-label");
+    const calPrev = document.getElementById("rep-cal-nav-prev");
+    const calNext = document.getElementById("rep-cal-nav-next");
+    let calMonth = new Date();
+    let calAvailable = new Set();
     let selectedCita = null;
     let selectedBlock = null;
+    let serviceDuration = 0;
 
     function setError(msg="") {
         if (!msg) { errEl.style.display="none"; errEl.textContent=""; return; }
@@ -59,47 +275,140 @@
         okEl.textContent = msg; okEl.style.display="block"; errEl.style.display="none";
     }
 
+    function minutesBetween(start, end) {
+        const [sh, sm] = start.split(":").map(Number);
+        const [eh, em] = end.split(":").map(Number);
+        return (eh * 60 + em) - (sh * 60 + sm);
+    }
+    function addMinutes(timeStr, mins) {
+        const [h, m] = timeStr.split(":").map(Number);
+        const total = h * 60 + m + mins;
+        const hh = Math.floor(total / 60) % 24;
+        const mm = total % 60;
+        return `${String(hh).padStart(2,"0")}:${String(mm).padStart(2,"0")}`;
+    }
+
+    function renderOriginal(c) {
+        if (!c) {
+            originalBox.innerHTML = "<div class='muted'>Selecciona una cita para ver sus detalles.</div>";
+            return;
+        }
+        const durLabel = c.duracion_min ? `${c.duracion_min} min` : " - ";
+        const finLabel = c.hora_fin || "";
+        originalBox.innerHTML = `
+            <div class="rep-info-row"><span class="rep-label">Cliente</span><span>${c.cliente || "-"}</span></div>
+            <div class="rep-info-row"><span class="rep-label">Mascota</span><span>${c.mascota || "-"}</span></div>
+            <div class="rep-info-row"><span class="rep-label">Servicio</span><span>${c.servicio || "-"} (${durLabel})</span></div>
+            <div class="rep-info-row"><span class="rep-label">Veterinario</span><span>${c.veterinario || "-"}</span></div>
+            <div class="rep-info-row"><span class="rep-label">Fecha</span><span>${c.fecha || "-"}</span></div>
+            <div class="rep-info-row"><span class="rep-label">Hora</span><span>${c.hora || "-"} ${finLabel ? " - "+finLabel : ""}</span></div>
+            <div class="rep-info-row"><span class="rep-label">Motivo cancelación</span><span>${c.motivo_cancelacion || "-"}</span></div>
+            <div class="rep-info-row"><span class="rep-label">Cancelado por</span><span>${c.cancelado_por || "-"}</span></div>
+            <div class="rep-info-row"><span class="rep-label">Estado</span><span>${c.estado || "-"}</span></div>
+        `;
+    }
+
+    function renderPreview(block) {
+        if (!selectedCita || !block) {
+            previewBox.innerHTML = "<div class='muted'>Elige un bloque para previsualizar.</div>";
+            return;
+        }
+        const horaFinNueva = addMinutes(block.inicio, serviceDuration || 0);
+        previewBox.innerHTML = `
+            <div class="rep-info-row"><span class="rep-label">Veterinario</span><span>${vetSel.options[vetSel.selectedIndex]?.text || "-"}</span></div>
+            <div class="rep-info-row"><span class="rep-label">Fecha</span><span>${fechaInput.value || "-"}</span></div>
+            <div class="rep-info-row"><span class="rep-label">Hora</span><span>${block.inicio} - ${horaFinNueva}</span></div>
+            <div class="rep-info-row"><span class="rep-label">Duración</span><span>${serviceDuration || "-"} min</span></div>
+        `;
+    }
+
+    function renderAlertas(items) {
+        if (!items.length) {
+            alertasBox.innerHTML = "<div class='muted'>Sin alertas recientes.</div>";
+            return;
+        }
+        alertasBox.innerHTML = "";
+        items.forEach(c => {
+            const el = document.createElement("div");
+            el.className = "rep-card";
+            el.innerHTML = `
+                <div><strong>${c.fecha} ${c.hora}</strong> - ${c.mascota} (${c.servicio})</div>
+                <div class="rep-meta">
+                    <span class="muted small">Vet: ${c.veterinario || "-"}</span>
+                    <span class="muted small">Motivo: ${c.motivo_cancelacion || "-"}</span>
+                    <span class="muted small">Cancelado por: ${c.cancelado_por || "-"}</span>
+                </div>
+            `;
+            el.addEventListener("click", () => {
+                selectedCita = c;
+                serviceDuration = c.duracion_min || 0;
+                selectedBlock = null;
+                alertasBox.querySelectorAll(".rep-card").forEach(i => i.classList.remove("selected"));
+                el.classList.add("selected");
+                renderOriginal(c);
+                renderPreview(null);
+                setError("");
+            });
+            alertasBox.appendChild(el);
+        });
+    }
+
+    function renderBloques(list) {
+        if (!list.length) {
+            bloquesBox.innerHTML = "<div class='muted'>Sin bloques disponibles.</div>";
+            return;
+        }
+        bloquesBox.innerHTML = "";
+        list.forEach(b => {
+            const card = document.createElement("button");
+            card.type = "button";
+            card.className = "rep-bloque";
+            const durDisponible = minutesBetween(b.inicio, b.fin);
+            const notEnough = serviceDuration && durDisponible < serviceDuration;
+            if (notEnough) card.classList.add("disabled");
+            card.innerHTML = `
+                <div><strong>${b.inicio} - ${b.fin}</strong></div>
+                <div class="muted small">${durDisponible} min libres</div>
+            `;
+            card.addEventListener("click", () => {
+                if (notEnough) {
+                    setError("El bloque no cubre la duración del servicio.");
+                    return;
+                }
+                selectedBlock = b;
+                bloquesBox.querySelectorAll(".rep-bloque").forEach(i => i.classList.remove("selected"));
+                card.classList.add("selected");
+                setError("");
+                renderPreview(b);
+            });
+            bloquesBox.appendChild(card);
+        });
+    }
+
     function loadAlertas() {
         alertasBox.innerHTML = "<div class='muted'>Cargando...</div>";
         fetch(api.alertas).then(r=>r.json()).then(data=>{
             const items = data.alertas || [];
-            if (!items.length) {
-                alertasBox.innerHTML = "<div class='muted'>Sin alertas recientes.</div>";
-                return;
-            }
-            alertasBox.innerHTML="";
-            items.forEach(c=>{
-                const el = document.createElement("div");
-                el.className="availability-item";
-                el.innerHTML = `
-                    <div>
-                        <div><strong>${c.fecha} ${c.hora}</strong> - ${c.mascota} (${c.servicio})</div>
-                        <div class="muted small">${c.motivo_cancelacion||""}</div>
-                    </div>
-                `;
-                el.addEventListener("click", ()=>{
-                    selectedCita = c;
-                    alertasBox.querySelectorAll(".availability-item").forEach(i=>i.classList.remove("row-selected"));
-                    el.classList.add("row-selected");
-                });
-                alertasBox.appendChild(el);
-            });
+            renderAlertas(items);
+        }).catch(()=> {
+            alertasBox.innerHTML = "<div class='muted'>No se pudieron cargar las alertas.</div>";
         });
     }
 
     function loadVets() {
-        fetch(api.vets).then(r=>r.json()).then(data=>{
-            vetSel.innerHTML="";
+        return fetch(api.vets).then(r=>r.json()).then(data=>{
+            vetSel.innerHTML = "";
             (data.results||[]).forEach(v=>{
                 const opt=document.createElement("option");
                 opt.value=v.id; opt.textContent=v.nombre;
                 vetSel.appendChild(opt);
             });
-        });
+        }).catch(()=>{});
     }
 
     function loadBloques() {
         selectedBlock = null;
+        renderPreview(null);
         const vet = vetSel.value;
         const fecha = fechaInput.value;
         if (!vet || !fecha) {
@@ -108,28 +417,78 @@
         }
         const params = new URLSearchParams({ veterinario_id: vet, fecha });
         fetch(`${api.disp}?${params.toString()}`).then(r=>r.json()).then(data=>{
-            const bloques = data.bloques || [];
-            if (!bloques.length) {
-                bloquesBox.innerHTML = "<div class='muted'>Sin bloques disponibles.</div>";
-                return;
-            }
-            bloquesBox.innerHTML = "";
-            bloques.forEach(b=>{
-                const row = document.createElement("div");
-                row.className="availability-item";
-                row.innerHTML = `<div><strong>${b.inicio} - ${b.fin}</strong></div>`;
-                row.addEventListener("click", ()=>{
-                    selectedBlock = b;
-                    bloquesBox.querySelectorAll(".availability-item").forEach(i=>i.classList.remove("row-selected"));
-                    row.classList.add("row-selected");
-                });
-                bloquesBox.appendChild(row);
-            });
+            renderBloques(data.bloques || []);
+        }).catch(()=> {
+            bloquesBox.innerHTML = "<div class='muted'>No se pudieron cargar los bloques.</div>";
         });
     }
 
-    vetSel.addEventListener("change", loadBloques);
-    fechaInput.addEventListener("change", loadBloques);
+    function renderCalendar() {
+        const months = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+        const year = calMonth.getFullYear();
+        const month = calMonth.getMonth();
+        calLabel.textContent = `${months[month]} ${year}`;
+        if (!calBody) return;
+        calBody.innerHTML = "";
+        const grid = document.createElement("div");
+        grid.className = "rep-cal-grid";
+        ["L","M","X","J","V","S","D"].forEach(h=>{
+            const hd=document.createElement("div");
+            hd.className="rep-cal-head";
+            hd.textContent=h;
+            grid.appendChild(hd);
+        });
+        const start = new Date(year, month, 1);
+        const startDay = start.getDay() === 0 ? 6 : start.getDay()-1;
+        const daysInMonth = new Date(year, month+1, 0).getDate();
+        for(let i=0;i<startDay;i++){
+            const empty=document.createElement("div");
+            grid.appendChild(empty);
+        }
+        for(let d=1; d<=daysInMonth; d++){
+            const dateStr = `${year}-${String(month+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+            const cell=document.createElement("button");
+            cell.type="button";
+            cell.className="rep-cal-cell";
+            if (calAvailable.has(dateStr)) cell.classList.add("available");
+            if (fechaInput.value === dateStr) cell.classList.add("selected");
+            cell.textContent = d;
+            cell.addEventListener("click", ()=>{
+                fechaInput.value = dateStr;
+                renderCalendar();
+                loadBloques();
+            });
+            grid.appendChild(cell);
+        }
+        calBody.appendChild(grid);
+    }
+
+    function loadCalendarMonth() {
+        const vet = vetSel.value;
+        if (!vet || !api.dispMes) {
+            calAvailable = new Set();
+            renderCalendar();
+            return;
+        }
+        const params = new URLSearchParams({
+            veterinario_id: vet,
+            year: calMonth.getFullYear(),
+            month: calMonth.getMonth()+1,
+        });
+        fetch(`${api.dispMes}?${params.toString()}`).then(r=>r.json()).then(data=>{
+            const bloques = data.bloques || [];
+            const fechas = new Set(bloques.map(b=>b.fecha));
+            calAvailable = fechas;
+            renderCalendar();
+        }).catch(()=>{
+            calAvailable = new Set();
+            renderCalendar();
+        });
+    }
+
+    vetSel.addEventListener("change", () => { loadBloques(); loadCalendarMonth(); });
+    fechaInput.addEventListener("change", renderCalendar);
+    if (refreshBtn) refreshBtn.addEventListener("click", loadAlertas);
 
     btn.addEventListener("click", () => {
         if (!selectedCita) { setError("Selecciona una cita cancelada."); return; }
@@ -154,10 +513,19 @@
             if (!r.ok) { setError(body||"No se pudo replanificar."); return; }
             setOk("Cita replanificada.");
             loadAlertas();
+            renderOriginal(null);
+            renderPreview(null);
+            selectedCita = null;
+            selectedBlock = null;
+            bloquesBox.innerHTML = "<div class='muted'>Selecciona veterinario y fecha.</div>";
         }).catch(()=>setError("Error de red."));
     });
 
     loadAlertas();
-    loadVets();
+    loadVets().then(()=>{ loadBloques(); loadCalendarMonth(); });
+
+    if (calPrev) calPrev.addEventListener("click", () => { calMonth.setMonth(calMonth.getMonth()-1); loadCalendarMonth(); });
+    if (calNext) calNext.addEventListener("click", () => { calMonth.setMonth(calMonth.getMonth()+1); loadCalendarMonth(); });
+    renderCalendar();
 })();
 </script>

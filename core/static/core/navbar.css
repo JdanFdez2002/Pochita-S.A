@@ -227,3 +227,34 @@ body.sidebar-collapsed .page-content {
         margin-left: 0;
     }
 }
+/* Icon tweaks for Bootstrap Icons */
+.nav-item .icon,
+.sidebar-footer .icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    color: inherit;
+}
+
+.nav-item .icon i,
+.sidebar-footer .icon i,
+.hamburger-btn i {
+    pointer-events: none;
+    font-size: 1.1rem;
+}
+
+.btn-sidebar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn-sidebar .icon {
+    width: 18px;
+}
+
+.btn-sidebar .icon i {
+    font-size: 1rem;
+}

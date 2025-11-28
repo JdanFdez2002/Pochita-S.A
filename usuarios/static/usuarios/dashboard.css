@@ -551,6 +551,7 @@ body, html {
     display: flex;
     gap: 6px;
     flex-wrap: wrap;
+    align-items: center;
 }
 
 .tag-list {
@@ -1141,6 +1142,15 @@ body, html {
 .availability-form .form-field label {
     color: var(--text-muted);
     font-weight: 600;
+}
+.availability-form input[type="date"],
+.availability-form input[type="time"] {
+    color-scheme: dark;
+}
+#avail-date::-webkit-calendar-picker-indicator,
+#avail-start::-webkit-calendar-picker-indicator,
+#avail-end::-webkit-calendar-picker-indicator {
+    filter: invert(1) brightness(1.4);
 }
 .availability-form input,
 .availability-form select {
