@@ -6,9 +6,14 @@
 {% block sidebar_menu %}
     <a href="#" class="menu-link is-active" data-target="sec-inicio">Inicio</a>
     <a href="#" class="menu-link" data-target="sec-usuarios">Gestionar Usuarios</a>
-    <a href="#" class="menu-link" data-target="sec-agenda">Agenda</a>
+    <a href="#" class="menu-link" data-target="sec-disponibilidad">Disponibilidad</a>
+    <a href="#" class="menu-link" data-target="sec-agendar">Agendar hora</a>
+    <a href="#" class="menu-link" data-target="sec-replanificar">Replanificar</a>
+    <a href="#" class="menu-link" data-target="sec-citas-hoy">Citas de hoy</a>
     <a href="#" class="menu-link" data-target="sec-hosp">Hospitalizacion</a>
     <a href="#" class="menu-link" data-target="sec-servicios">Servicios</a>
+    <a href="#" class="menu-link" data-target="sec-detalle-cliente">Detalle cliente</a>
+    <a href="#" class="menu-link" data-target="sec-historial-citas">Historial citas</a>
     <a href="#" class="menu-link" data-target="sec-datos">Mis datos</a>
     <a href="{% url 'usuarios:logout' %}" class="menu-link logout">Cerrar turno</a>
 {% endblock %}
@@ -22,8 +27,20 @@
         {% include "usuarios/recepcionista/include/usuarios.html" %}
     </section>
 
-    <section id="sec-agenda" class="dashboard-section">
-        {% include "usuarios/recepcionista/include/agenda.html" %}
+    <section id="sec-disponibilidad" class="dashboard-section">
+        {% include "usuarios/recepcionista/include/disponibilidad.html" %}
+    </section>
+
+    <section id="sec-agendar" class="dashboard-section">
+        {% include "usuarios/recepcionista/include/agendar.html" %}
+    </section>
+
+    <section id="sec-replanificar" class="dashboard-section">
+        {% include "usuarios/recepcionista/include/replanificar.html" %}
+    </section>
+
+    <section id="sec-citas-hoy" class="dashboard-section">
+        {% include "usuarios/recepcionista/include/citas_hoy.html" %}
     </section>
 
     <section id="sec-hosp" class="dashboard-section">
@@ -32,6 +49,14 @@
 
     <section id="sec-servicios" class="dashboard-section">
         {% include "usuarios/recepcionista/include/servicios.html" %}
+    </section>
+
+    <section id="sec-detalle-cliente" class="dashboard-section">
+        {% include "usuarios/recepcionista/include/detalle_cliente.html" %}
+    </section>
+
+    <section id="sec-historial-citas" class="dashboard-section">
+        {% include "usuarios/recepcionista/include/historial_citas.html" %}
     </section>
 
     <section id="sec-datos" class="dashboard-section">

@@ -1,0 +1,183 @@
+<div class="card">
+    <h2>Agendar hora</h2>
+    <div class="form-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px,1fr));">
+        <div class="form-field">
+            <label>Cliente</label>
+            <input id="agendar-cliente-q" class="input-lite" placeholder="Nombre, RUT, correo o teléfono">
+            <select id="agendar-cliente" style="margin-top:6px;"></select>
+        </div>
+        <div class="form-field">
+            <label>Mascota</label>
+            <select id="agendar-mascota"></select>
+        </div>
+        <div class="form-field">
+            <label>Servicio</label>
+            <select id="agendar-servicio"></select>
+        </div>
+        <div class="form-field">
+            <label>Veterinario</label>
+            <select id="agendar-vet"></select>
+        </div>
+        <div class="form-field">
+            <label>Fecha</label>
+            <input type="date" id="agendar-fecha">
+        </div>
+    </div>
+    <div class="availability-list" id="agendar-bloques" style="margin-top:10px;">
+        <div class="muted">Selecciona fecha y veterinario para ver bloques disponibles.</div>
+    </div>
+    <div class="form-actions" style="justify-content:flex-end; margin-top:10px;">
+        <button class="btn-small btn-primary" type="button" id="agendar-confirmar">Confirmar cita</button>
+    </div>
+    <div class="alert-success" id="agendar-ok" style="display:none; margin-top:8px;">Cita creada.</div>
+    <div class="field-error" id="agendar-error" style="display:none; margin-top:8px;"></div>
+</div>
+
+<script>
+(function(){
+    const api = {
+        clientes: "{% url 'usuarios:recep_clientes_api' %}",
+        mascotas: (id) => "{% url 'usuarios:recep_mascotas_api' 0 %}".replace("0", id),
+        servicios: "{% url 'usuarios:recep_servicios_api' %}",
+        vets: "{% url 'usuarios:recep_veterinarios_api' %}",
+        disponibilidad: "{% url 'usuarios:recep_disponibilidad_api' %}",
+        create: "{% url 'usuarios:recep_cita_create_api' %}",
+    };
+    const qInput = document.getElementById("agendar-cliente-q");
+    const clienteSel = document.getElementById("agendar-cliente");
+    const mascotaSel = document.getElementById("agendar-mascota");
+    const servSel = document.getElementById("agendar-servicio");
+    const vetSel = document.getElementById("agendar-vet");
+    const fechaInput = document.getElementById("agendar-fecha");
+    const bloquesList = document.getElementById("agendar-bloques");
+    const btnConfirm = document.getElementById("agendar-confirmar");
+    const okEl = document.getElementById("agendar-ok");
+    const errEl = document.getElementById("agendar-error");
+    let selectedBlock = null;
+
+    function setError(msg="") {
+        if (!msg) { errEl.style.display="none"; errEl.textContent=""; return; }
+        errEl.textContent = msg; errEl.style.display="block"; okEl.style.display="none";
+    }
+    function setOk(msg="Cita creada.") {
+        okEl.textContent = msg; okEl.style.display="block"; errEl.style.display="none";
+    }
+
+    function fetchServicios() {
+        fetch(api.servicios).then(r=>r.json()).then(data=>{
+            servSel.innerHTML="";
+            (data.servicios||[]).forEach(s=>{
+                const opt=document.createElement("option");
+                opt.value=s.id; opt.textContent=s.nombre;
+                servSel.appendChild(opt);
+            });
+        });
+    }
+    function fetchVets() {
+        fetch(api.vets).then(r=>r.json()).then(data=>{
+            vetSel.innerHTML="";
+            (data.results||[]).forEach(v=>{
+                const opt=document.createElement("option");
+                opt.value=v.id; opt.textContent=v.nombre;
+                vetSel.appendChild(opt);
+            });
+        });
+    }
+    function searchClientes() {
+        const q = (qInput.value||"").trim();
+        if (q.length < 2) { clienteSel.innerHTML=""; return; }
+        fetch(api.clientes + `?q=${encodeURIComponent(q)}`).then(r=>r.json()).then(data=>{
+            clienteSel.innerHTML="";
+            (data.results||[]).forEach(c=>{
+                const opt=document.createElement("option");
+                opt.value=c.id; opt.textContent=`${c.nombre} (${c.email})`;
+                clienteSel.appendChild(opt);
+            });
+            loadMascotas();
+        });
+    }
+    function loadMascotas() {
+        const cid = clienteSel.value;
+        if (!cid) { mascotaSel.innerHTML=""; return; }
+        fetch(api.mascotas(cid)).then(r=>r.json()).then(data=>{
+            mascotaSel.innerHTML="";
+            (data.mascotas||[]).forEach(m=>{
+                const opt=document.createElement("option");
+                opt.value=m.id; opt.textContent=m.nombre;
+                mascotaSel.appendChild(opt);
+            });
+        });
+    }
+    function loadBloques() {
+        selectedBlock = null;
+        const vet = vetSel.value;
+        const fecha = fechaInput.value;
+        if (!vet || !fecha) {
+            bloquesList.innerHTML = `<div class="muted">Selecciona veterinario y fecha.</div>`;
+            return;
+        }
+        const d = new Date(fecha);
+        const params = new URLSearchParams({ veterinario_id: vet, year: d.getFullYear(), month: d.getMonth()+1 });
+        fetch(`${api.disponibilidad}?${params.toString()}`).then(r=>r.json()).then(data=>{
+            const bloques = (data.bloques||[]).filter(b=>b.fecha===fecha && b.estado==="disponible");
+            if (!bloques.length) {
+                bloquesList.innerHTML = `<div class="muted">Sin bloques disponibles para este día.</div>`;
+                return;
+            }
+            bloquesList.innerHTML="";
+            bloques.forEach(b=>{
+                const row=document.createElement("div");
+                row.className="availability-item";
+                row.innerHTML = `<div><strong>${b.inicio} - ${b.fin}</strong></div>`;
+                row.addEventListener("click", ()=>{
+                    selectedBlock = b;
+                    bloquesList.querySelectorAll(".availability-item").forEach(el=>el.classList.remove("row-selected"));
+                    row.classList.add("row-selected");
+                });
+                bloquesList.appendChild(row);
+            });
+        });
+    }
+
+    qInput.addEventListener("input", () => { setError(""); searchClientes(); });
+    clienteSel.addEventListener("change", loadMascotas);
+    vetSel.addEventListener("change", loadBloques);
+    fechaInput.addEventListener("change", loadBloques);
+
+    btnConfirm.addEventListener("click", () => {
+        const payload = {
+            cliente_id: clienteSel.value,
+            mascota_id: mascotaSel.value,
+            servicio_id: servSel.value,
+            veterinario_id: vetSel.value,
+            fecha: fechaInput.value,
+            hora: selectedBlock ? selectedBlock.inicio : "",
+            notas: "",
+        };
+        if (!payload.cliente_id || !payload.mascota_id || !payload.servicio_id || !payload.veterinario_id || !payload.fecha || !payload.hora) {
+            setError("Completa cliente, mascota, servicio, veterinario, fecha y bloque.");
+            return;
+        }
+        fetch(api.create, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": (document.cookie.match(/csrftoken=([^;]+)/)||[])[1] || "",
+                "X-Requested-With": "XMLHttpRequest",
+            },
+            body: JSON.stringify(payload)
+        }).then(async r=>{
+            const body = await r.text();
+            if (!r.ok) {
+                setError(body||"No se pudo agendar.");
+                return;
+            }
+            setOk("Cita creada.");
+            loadBloques();
+        }).catch(()=>setError("Error de red."));
+    });
+
+    fetchServicios();
+    fetchVets();
+})();
+</script>

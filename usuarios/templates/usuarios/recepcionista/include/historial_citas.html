@@ -1,0 +1,83 @@
+<div class="card">
+    <h2>Historial de citas</h2>
+    <div class="form-grid" style="grid-template-columns: repeat(auto-fit, minmax(240px,1fr));">
+        <div class="form-field">
+            <label>Cliente</label>
+            <input id="hist-q" class="input-lite" placeholder="Nombre, correo, RUT">
+            <select id="hist-cliente" style="margin-top:6px;"></select>
+        </div>
+    </div>
+    <div class="table-responsive" style="margin-top:10px;">
+        <table class="recep-table">
+            <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Hora</th>
+                    <th>Mascota</th>
+                    <th>Servicio</th>
+                    <th>Veterinario</th>
+                    <th>Estado</th>
+                    <th>Motivo cancelación</th>
+                </tr>
+            </thead>
+            <tbody id="hist-body">
+                <tr><td colspan="7" class="muted">Selecciona un cliente.</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+(function(){
+    const api = {
+        clientes: "{% url 'usuarios:recep_clientes_api' %}",
+        historial: (id) => "{% url 'usuarios:recep_historial_citas_cliente_api' 0 %}".replace("0", id),
+    };
+    const qInput = document.getElementById("hist-q");
+    const clienteSel = document.getElementById("hist-cliente");
+    const body = document.getElementById("hist-body");
+
+    function searchClientes() {
+        const q=(qInput.value||"").trim();
+        if (q.length<2) { clienteSel.innerHTML=""; return; }
+        fetch(api.clientes + `?q=${encodeURIComponent(q)}`).then(r=>r.json()).then(data=>{
+            clienteSel.innerHTML="";
+            (data.results||[]).forEach(c=>{
+                const opt=document.createElement("option");
+                opt.value=c.id; opt.textContent=`${c.nombre} (${c.email})`;
+                clienteSel.appendChild(opt);
+            });
+            if (clienteSel.value) loadHistorial();
+        });
+    }
+
+    function loadHistorial() {
+        const id = clienteSel.value;
+        if (!id) return;
+        fetch(api.historial(id)).then(r=>r.json()).then(data=>{
+            const citas = data.citas || [];
+            body.innerHTML = "";
+            if (!citas.length) {
+                body.innerHTML = `<tr><td colspan="7" class="muted">Sin citas.</td></tr>`;
+                return;
+            }
+            citas.forEach(c=>{
+                const tr=document.createElement("tr");
+                tr.innerHTML = `
+                    <td>${c.fecha}</td>
+                    <td>${c.hora}</td>
+                    <td>${c.mascota}</td>
+                    <td>${c.servicio}</td>
+                    <td>${c.veterinario||""}</td>
+                    <td>${c.estado}</td>
+                    <td>${c.motivo_cancelacion||""}</td>
+                `;
+                body.appendChild(tr);
+            });
+        });
+    }
+
+    qInput.addEventListener("input", searchClientes);
+    clienteSel.addEventListener("change", loadHistorial);
+})();
+</script>

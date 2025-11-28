@@ -28,6 +28,7 @@ class Cita(models.Model):
     estado = models.CharField(
         max_length=20, choices=Estado.choices, default=Estado.PENDIENTE
     )
+    motivo_cancelacion = models.TextField(blank=True, null=True)
     notas = models.TextField(blank=True)
     creado_en = models.DateTimeField(auto_now_add=True)
     actualizado_en = models.DateTimeField(auto_now=True)

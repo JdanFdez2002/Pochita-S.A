@@ -1,0 +1,60 @@
+<div class="card">
+    <h2>Detalle de cliente</h2>
+    <div class="form-grid" style="grid-template-columns: repeat(auto-fit, minmax(240px,1fr));">
+        <div class="form-field">
+            <label>Buscar cliente</label>
+            <input id="det-cliente-q" class="input-lite" placeholder="Nombre, RUT, correo, teléfono, mascota">
+            <select id="det-cliente" style="margin-top:6px;"></select>
+        </div>
+    </div>
+    <div id="det-info" class="availability-list" style="margin-top:10px;">
+        <div class="muted">Selecciona un cliente.</div>
+    </div>
+</div>
+
+<script>
+(function(){
+    const api = {
+        clientes: "{% url 'usuarios:recep_clientes_api' %}",
+        detalle: (id) => "{% url 'usuarios:recep_cliente_detalle_api' 0 %}".replace("0", id),
+    };
+    const qInput = document.getElementById("det-cliente-q");
+    const clienteSel = document.getElementById("det-cliente");
+    const infoBox = document.getElementById("det-info");
+
+    function searchClientes() {
+        const q=(qInput.value||"").trim();
+        if (q.length<2) { clienteSel.innerHTML=""; return; }
+        fetch(api.clientes + `?q=${encodeURIComponent(q)}`).then(r=>r.json()).then(data=>{
+            clienteSel.innerHTML="";
+            (data.results||[]).forEach(c=>{
+                const opt=document.createElement("option");
+                opt.value=c.id; opt.textContent=`${c.nombre} (${c.email})`;
+                clienteSel.appendChild(opt);
+            });
+            if (clienteSel.value) loadDetalle();
+        });
+    }
+
+    function loadDetalle() {
+        const id = clienteSel.value;
+        if (!id) return;
+        fetch(api.detalle(id)).then(r=>r.json()).then(data=>{
+            const c = data.cliente;
+            const mascotas = data.mascotas||[];
+            const citas = data.citas||[];
+            infoBox.innerHTML = `
+                <div><strong>${c.nombre}</strong></div>
+                <div class="muted small">RUT: ${c.rut} | Tel: ${c.telefono} | Email: ${c.email}</div>
+                <div style="margin-top:8px;"><strong>Mascotas</strong></div>
+                <ul style="margin:4px 0 8px 16px; color:var(--text-muted);">${mascotas.map(m=>`<li>${m.nombre} (${m.tipo})</li>`).join("")||"<li>Sin mascotas</li>"}</ul>
+                <div><strong>Citas</strong></div>
+                <ul style="margin:4px 0 8px 16px; color:var(--text-muted);">${citas.map(c=>`<li>${c.fecha} ${c.hora} - ${c.mascota} (${c.servicio||""}) [${c.estado}]</li>`).join("")||"<li>Sin citas</li>"}</ul>
+            `;
+        });
+    }
+
+    qInput.addEventListener("input", searchClientes);
+    clienteSel.addEventListener("change", loadDetalle);
+})();
+</script>
