@@ -278,6 +278,10 @@ body, html {
     flex-wrap: wrap;
     margin-top: 8px;
 }
+.pet-edit-form .form-actions {
+    justify-content: flex-end;
+    flex-wrap: nowrap;
+}
 
 .profile-actions .actions-right {
     margin-left: auto;

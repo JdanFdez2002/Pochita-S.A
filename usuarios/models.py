@@ -105,7 +105,7 @@ class Administrador(PersonalBase):
 
 class Mascota(models.Model):
     class EstadoReproductivo(models.TextChoices):
-        SIN_CASTRAR = "sin_castrar", "Sin castrar"
+        SIN_CASTRAR = "sin_castrar", "Sin esterilizar"
         ESTERILIZADO = "esterilizado", "Esterilizado"
         DESCONOCIDO = "desconocido", "Desconocido"
 

@@ -224,6 +224,34 @@ class DashboardClienteView(PerfilDashboardMixin):
                 context["delete_error_id"] = mascota.id
             context["delete_error"] = "El nombre no coincide."
             return self.render_to_response(context)
+        if request.POST.get("form_type") == "edit_mascota":
+            cliente = self.get_instance()
+            mascota_id = request.POST.get("mascota_id")
+            mascota = Mascota.objects.filter(id=mascota_id, cliente=cliente).first()
+            if not mascota:
+                return redirect(reverse("usuarios:dashboard_cliente") + "#sec-mascotas")
+            nombre = (request.POST.get("nombre") or "").strip()
+            if not nombre:
+                context = self.get_context_data()
+                context["edit_error"] = "El nombre es obligatorio."
+                context["edit_error_id"] = mascota.id
+                return self.render_to_response(context)
+            mascota.nombre = nombre
+            edad_raw = request.POST.get("edad_aproximada")
+            mascota.edad_aproximada = int(edad_raw) if edad_raw not in (None, "",) else None
+            raza = (request.POST.get("raza") or "").strip()
+            if mascota.tipo in {Mascota.Tipo.PERRO, Mascota.Tipo.GATO}:
+                mascota.raza = raza or "Desconocido"
+            else:
+                mascota.raza = ""
+            mascota.senas_particulares = request.POST.get("senas_particulares") or ""
+            foto = request.FILES.get("foto")
+            if foto:
+                if mascota.foto and mascota.foto.name:
+                    mascota.foto.delete(save=False)
+                mascota.foto = foto
+            mascota.save()
+            return redirect(reverse("usuarios:dashboard_cliente") + "#sec-mascotas")
         return super().post(request, *args, **kwargs)
 
 

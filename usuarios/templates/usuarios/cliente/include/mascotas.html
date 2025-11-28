@@ -8,7 +8,7 @@
                         {% if mascota.foto %}
                             <img src="{{ mascota.foto.url }}" alt="Foto de {{ mascota.nombre }}">
                         {% else %}
-                            <div class="photo-placeholder">Sin foto</div>
+                            <div class="photo-placeholder">Cargar imagen</div>
                         {% endif %}
                     </div>
                     <div class="pet-info">
@@ -30,6 +30,7 @@
                     </div>
                     <div class="pet-actions">
                         <div style="display:flex; gap:6px; flex-wrap:wrap; justify-content:flex-end;">
+                            <button type="button" class="btn-small btn-primary-lite" data-open-edit="edit-{{ mascota.id }}">Editar</button>
                             {% if mascota.tiene_ficha_clinica %}
                                 <button type="button" class="btn-small btn-primary-lite">Ver ficha</button>
                             {% else %}
@@ -78,6 +79,63 @@
                         </div>
                     </div>
                 </div>
+
+                <div class="modal-overlay pet-edit-modal" id="edit-{{ mascota.id }}">
+                    <div class="modal-card small">
+                        <div class="modal-header">
+                            <div>
+                                <h3 style="margin:0; color:#fff;">Editar {{ mascota.nombre }}</h3>
+                                <p style="color:var(--text-muted); margin:4px 0 0;">Actualiza los datos visibles para la recepcionista.</p>
+                            </div>
+                            <button type="button" class="btn-small btn-ghost" data-close-edit="edit-{{ mascota.id }}">&#10005;</button>
+                        </div>
+                        <div class="modal-body">
+                            <form method="post" enctype="multipart/form-data" class="pet-edit-form">
+                                {% csrf_token %}
+                                <input type="hidden" name="form_type" value="edit_mascota">
+                                <input type="hidden" name="mascota_id" value="{{ mascota.id }}">
+                                <div class="form-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+                                    <div class="form-field">
+                                        <label>Nombre</label>
+        <input type="text" name="nombre" value="{{ mascota.nombre }}">
+                                    </div>
+                                    <div class="form-field">
+                                        <label>Edad aproximada</label>
+        <input type="number" name="edad_aproximada" value="{{ mascota.edad_aproximada|default_if_none:'' }}">
+                                    </div>
+                                    {% if mascota.tipo == "perro" or mascota.tipo == "gato" %}
+                                    <div class="form-field">
+                                        <label>Raza</label>
+        <input type="text" name="raza" value="{{ mascota.raza|default_if_none:'' }}">
+                                    </div>
+                                    {% endif %}
+                                    <div class="form-field" style="grid-column: span 2;">
+                                        <label>Rasgos particulares</label>
+        <textarea name="senas_particulares" rows="3">{{ mascota.senas_particulares }}</textarea>
+                                    </div>
+                                    <div class="form-field" style="grid-column: span 2;">
+                                        <label>Actualizar foto (opcional)</label>
+        <input type="file" name="foto" accept="image/*">
+                                    </div>
+                                </div>
+                                {% if edit_error_id == mascota.id %}
+                                    <div class="field-error" style="margin-top:8px;">{{ edit_error }}</div>
+                                {% endif %}
+                                <div class="form-actions" style="justify-content:flex-end; margin-top:10px; gap:8px; flex-wrap:nowrap;">
+                                    <button type="button" class="btn-small btn-ghost" data-close-edit="edit-{{ mascota.id }}">Cancelar</button>
+                                    <button type="submit" class="btn-small btn-primary">Guardar cambios</button>
+                                </div>
+                            </form>
+                            {% if mascota.foto %}
+                            <div style="display:flex; justify-content:center; margin-top:14px;">
+                                <div class="pet-preview" style="width:220px; height:220px;">
+                                    <img src="{{ mascota.foto.url }}" alt="Foto de {{ mascota.nombre }}">
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
             {% endfor %}
         </div>
     {% else %}
@@ -105,6 +163,11 @@
                 <label for="{{ mascota_form.sexo.id_for_label }}">Sexo</label>
                 {{ mascota_form.sexo }}
                 {% if mascota_form.sexo.errors %}<div class="field-error">{{ mascota_form.sexo.errors|join:", " }}</div>{% endif %}
+            </div>
+            <div class="form-field">
+                <label for="{{ mascota_form.estado_reproductivo.id_for_label }}">Estado reproductivo</label>
+                {{ mascota_form.estado_reproductivo }}
+                {% if mascota_form.estado_reproductivo.errors %}<div class="field-error">{{ mascota_form.estado_reproductivo.errors|join:", " }}</div>{% endif %}
             </div>
             <div class="form-field">
                 <label for="{{ mascota_form.edad_aproximada.id_for_label }}">Edad aproximada</label>
@@ -190,6 +253,8 @@
 
     const modals = document.querySelectorAll(".pet-delete-modal");
     const openButtons = document.querySelectorAll("[data-open-delete]");
+    const editModals = document.querySelectorAll(".pet-edit-modal");
+    const editButtons = document.querySelectorAll("[data-open-edit]");
 
     function openModal(id) {
         const modal = document.getElementById(id);
@@ -237,6 +302,21 @@
     if (errorInfo && errorInfo.dataset.id) {
         openModal(`delete-${errorInfo.dataset.id}`);
     }
+
+    // toggle edicion modal
+    editButtons.forEach(btn => {
+        btn.addEventListener("click", () => {
+            const target = btn.dataset.openEdit;
+            openModal(target);
+        });
+    });
+    editModals.forEach(modal => {
+        const closeBtns = modal.querySelectorAll("[data-close-edit]");
+        modal.addEventListener("click", (e) => {
+            if (e.target === modal) closeModal(modal);
+        });
+        closeBtns.forEach(btn => btn.addEventListener("click", () => closeModal(modal)));
+    });
 })();
 </script>
 
