@@ -58,7 +58,6 @@ cover/
 # Django stuff:
 *.log
 local_settings.py
-db.sqlite3-journal
 
 # Flask stuff:
 instance/
@@ -209,10 +208,6 @@ __marimo__/
 
 # Django secret env file
 .env
-
-# SQLite (ya lo tienes, pero por si usas otro nombre)
-db.sqlite3
-db.sqlite3-journal
 
 # Config local opcional
 local_settings.py
