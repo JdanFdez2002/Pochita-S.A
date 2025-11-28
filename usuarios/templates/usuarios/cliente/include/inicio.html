@@ -1,4 +1,28 @@
 <div class="card">
     <h2>Inicio</h2>
-    <p style="color: var(--text-muted);">Selecciona una seccion del menu para ver su contenido.</p>
+    <p style="color: var(--text-muted); margin-bottom:10px;">Resumen de tu cuenta con datos reales.</p>
+    <div class="inicio-grid">
+        <div class="mini-card">
+            <small class="muted">Mascotas registradas</small>
+            <div class="mini-strong">{{ mascotas|length }}</div>
+        </div>
+        <div class="mini-card">
+            <small class="muted">Citas totales</small>
+            <div class="mini-strong">{{ citas_total }}</div>
+            {% if ultima_cita %}
+                <div class="muted small">Última: {{ ultima_cita.fecha }} {{ ultima_cita.hora }}</div>
+            {% endif %}
+        </div>
+        <div class="mini-card">
+            <small class="muted">Próxima cita</small>
+            {% if proxima_cita %}
+                <div class="mini-strong">{{ proxima_cita.fecha }} {{ proxima_cita.hora }}</div>
+                <div class="muted small">{{ proxima_cita.mascota }} · {{ proxima_cita.servicio }}</div>
+                <div class="muted small">Con {{ proxima_cita.veterinario }}</div>
+            {% else %}
+                <div class="mini-strong">Sin agendar</div>
+                <div class="muted small">Agenda tu próxima atención</div>
+            {% endif %}
+        </div>
+    </div>
 </div>

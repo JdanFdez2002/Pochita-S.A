@@ -23,6 +23,29 @@
     <div class="calendar-grid" id="disp-calendar"></div>
 </div>
 
+<div class="modal-overlay" id="disp-modal">
+    <div class="modal-card small">
+        <div class="modal-header">
+            <div>
+                <div class="pill pill-soft">Bloques del día</div>
+                <h3 id="disp-modal-title" style="margin:6px 0 0;">--</h3>
+                <small class="muted" id="disp-modal-vet"></small>
+            </div>
+            <button class="btn btn-outline" type="button" id="disp-modal-close">&times;</button>
+        </div>
+        <div class="modal-body" id="disp-modal-body">
+            <div class="muted">Selecciona un día con bloques.</div>
+        </div>
+    </div>
+    <script>
+    // cierre al fondo click
+    document.addEventListener("click", (e)=>{
+        const modal = document.getElementById("disp-modal");
+        if (e.target === modal) modal.classList.remove("is-open");
+    });
+    </script>
+</div>
+
 <script>
 (function() {
     const vetSelect = document.getElementById("disp-vet");
@@ -33,6 +56,7 @@
     let vetId = "";
     let bloques = [];
     let bloqueados = [];
+    let citasMes = [];
 
     function toISO(d) {
         const year = d.getFullYear();
@@ -67,6 +91,7 @@
             .then(data => {
                 bloques = data.bloques || [];
                 bloqueados = data.dias_bloqueados || [];
+                citasMes = data.citas || [];
                 renderCalendar();
             });
     }
@@ -115,8 +140,115 @@
                     <div class="cell-status">${status}</div>
                 </div>
             `;
+            const dayBlocks = bloques.filter(b => b.fecha === dateStr);
+            if (dayBlocks.length) {
+                cell.style.cursor = "pointer";
+                cell.addEventListener("click", () => openModal(dateStr, dayBlocks));
+            }
             calendar.appendChild(cell);
         }
+    }
+
+    function openModal(dateStr, dayBlocks) {
+        const modal = document.getElementById("disp-modal");
+        const title = document.getElementById("disp-modal-title");
+        const vetLabel = document.getElementById("disp-modal-vet");
+        const body = document.getElementById("disp-modal-body");
+        const selectedVetName = vetSelect.options[vetSelect.selectedIndex]?.text || "Todos";
+        title.textContent = dateStr;
+        vetLabel.textContent = `Veterinario: ${selectedVetName}`;
+        const citasDia = (citasMes || []).filter(c => c.fecha === dateStr);
+        const visibleBlocks = dayBlocks.filter(b => b.estado !== "no_disponible");
+        if (!visibleBlocks.length) {
+            body.innerHTML = "<div class='muted'>No hay bloques para este día.</div>";
+        } else {
+            const blocWrap = document.createElement("div");
+            blocWrap.className = "collapse";
+            blocWrap.innerHTML = `
+                <div class="collapse-header" data-collapse>
+                    <strong>Bloques disponibles (${visibleBlocks.length})</strong>
+                    <span class="muted small">&#9656;</span>
+                </div>
+                <div class="collapse-body">
+                    ${visibleBlocks.map(b=>`
+                        <div class="availability-item">
+                            <div>
+                                <div class="time">${b.inicio} - ${b.fin}</div>
+                                <div class="muted small">Estado: ${b.estado.replace("_"," ")}</div>
+                            </div>
+                        </div>
+                    `).join("")}
+                </div>
+            `;
+            body.appendChild(blocWrap);
+        }
+        if (citasDia.length) {
+            const pending = citasDia.filter(c => c.estado !== "cancelada");
+            const canceled = citasDia.filter(c => c.estado === "cancelada");
+
+            if (pending.length) {
+                const wrap = document.createElement("div");
+                wrap.className = "collapse";
+                wrap.innerHTML = `
+                    <div class="collapse-header" data-collapse>
+                        <strong>Citas pendientes/confirmadas/atendidas (${pending.length})</strong>
+                        <span class="muted small">&#9656;</span>
+                    </div>
+                    <div class="collapse-body">
+                        ${pending.map(c=>`
+                            <div class="availability-item">
+                                <div>
+                                    <div class="time">${c.hora}</div>
+                                    <div class="muted small">${c.cliente} · ${c.mascota}</div>
+                                    <div class="muted small">Servicio: ${c.servicio}</div>
+                                    <div class="muted small">Vet: ${c.veterinario || ''}</div>
+                                </div>
+                                <div class="muted small">${c.estado}</div>
+                            </div>
+                        `).join("")}
+                    </div>
+                `;
+                body.appendChild(wrap);
+            }
+            if (canceled.length) {
+                const wrap = document.createElement("div");
+                wrap.className = "collapse";
+                wrap.innerHTML = `
+                    <div class="collapse-header" data-collapse>
+                        <strong>Citas canceladas (${canceled.length})</strong>
+                        <span class="muted small">&#9656;</span>
+                    </div>
+                    <div class="collapse-body">
+                        ${canceled.map(c=>`
+                            <div class="availability-item">
+                                <div>
+                                    <div class="time">${c.hora}</div>
+                                    <div class="muted small">${c.cliente} · ${c.mascota}</div>
+                                    <div class="muted small">Servicio: ${c.servicio}</div>
+                                    <div class="muted small">Vet: ${c.veterinario || ''}</div>
+                                    ${c.motivo_cancelacion ? `<div class="muted small">Motivo: ${c.motivo_cancelacion}</div>` : ""}
+                                </div>
+                                <div class="muted small">${c.estado}</div>
+                            </div>
+                        `).join("")}
+                    </div>
+                `;
+                body.appendChild(wrap);
+            }
+        }
+        modal.classList.add("is-open");
+        // inicializar colapsables
+        body.querySelectorAll("[data-collapse]").forEach(header => {
+            const wrap = header.parentElement;
+            const bodyEl = wrap.querySelector(".collapse-body");
+            bodyEl.style.display = "none";
+            header.addEventListener("click", ()=>{
+                const open = bodyEl.style.display === "none";
+                bodyEl.style.display = open ? "" : "none";
+                const arrow = header.querySelector("span");
+                if (arrow) arrow.style.transform = open ? "rotate(90deg)" : "rotate(0deg)";
+            });
+        });
     }
 
     vetSelect.addEventListener("change", loadData);
@@ -127,6 +259,10 @@
             else current.setMonth(current.getMonth() + step);
             loadData();
         });
+    });
+    const modalClose = document.getElementById("disp-modal-close");
+    if (modalClose) modalClose.addEventListener("click", () => {
+        document.getElementById("disp-modal").classList.remove("is-open");
     });
 
     fetchVets();

@@ -1,18 +1,18 @@
 <div class="card" style="margin-bottom:16px;">
-    <h2>Resumen del dia</h2>
-    <p style="color: var(--text-muted); margin-bottom: 12px;">Indicadores rapidos de recepcion (placeholder).</p>
-    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px,1fr)); gap:12px;">
-        <div class="card" style="padding:14px;">
-            <small style="color:var(--text-muted);">Citas de hoy</small>
-            <div style="font-size:1.6rem; font-weight:700;">12</div>
+    <h2>Resumen del día</h2>
+    <p style="color: var(--text-muted); margin-bottom: 12px;">Indicadores en tiempo real.</p>
+    <div class="inicio-grid">
+        <div class="mini-card">
+            <small class="muted">Citas de hoy</small>
+            <div class="mini-strong">{{ citas_stats.total }}</div>
         </div>
-        <div class="card" style="padding:14px;">
-            <small style="color:var(--text-muted);">Pendientes</small>
-            <div style="font-size:1.6rem; font-weight:700; color:var(--primary);">4</div>
+        <div class="mini-card">
+            <small class="muted">Pendientes</small>
+            <div class="mini-strong" style="color:var(--primary);">{{ citas_stats.pendientes }}</div>
         </div>
-        <div class="card" style="padding:14px;">
-            <small style="color:var(--text-muted);">Atrasadas / canceladas</small>
-            <div style="font-size:1.6rem; font-weight:700; color:#ef4444;">2</div>
+        <div class="mini-card">
+            <small class="muted">Canceladas</small>
+            <div class="mini-strong" style="color:#ef4444;">{{ citas_stats.canceladas }}</div>
         </div>
     </div>
 </div>
@@ -20,126 +20,43 @@
 <div style="display:grid; grid-template-columns: 2fr 1fr; gap:12px; margin-bottom:16px;">
     <div class="card">
         <h2>Citas de hoy</h2>
-        <table style="width:100%; border-collapse:collapse; color:var(--text-main);">
-            <thead>
-                <tr style="text-align:left; color:var(--text-muted); border-bottom:1px solid var(--border);">
-                    <th style="padding:8px 0;">Hora</th>
-                    <th style="padding:8px 0;">Paciente</th>
-                    <th style="padding:8px 0;">Tutor</th>
-                    <th style="padding:8px 0;">Con</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td style="padding:8px 0;">09:30</td>
-                    <td style="padding:8px 0;">Luna (Canino)</td>
-                    <td style="padding:8px 0;">Camila P.</td>
-                    <td style="padding:8px 0;">Dr. Soto</td>
-                </tr>
-                <tr>
-                    <td style="padding:8px 0;">10:15</td>
-                    <td style="padding:8px 0;">Milo (Felino)</td>
-                    <td style="padding:8px 0;">Juan C.</td>
-                    <td style="padding:8px 0;">Dra. Rivas</td>
-                </tr>
-                <tr>
-                    <td style="padding:8px 0;">11:00</td>
-                    <td style="padding:8px 0;">Rocky (Canino)</td>
-                    <td style="padding:8px 0;">Barbara S.</td>
-                    <td style="padding:8px 0;">Dr. Vega</td>
-                </tr>
-                <tr>
-                    <td style="padding:8px 0;">11:45</td>
-                    <td style="padding:8px 0;">Kira (Felino)</td>
-                    <td style="padding:8px 0;">Pablo G.</td>
-                    <td style="padding:8px 0;">Dra. Torres</td>
-                </tr>
-                <tr>
-                    <td style="padding:8px 0;">12:30</td>
-                    <td style="padding:8px 0;">Bruno (Canino)</td>
-                    <td style="padding:8px 0;">Andrea M.</td>
-                    <td style="padding:8px 0;">Dr. Soto</td>
-                </tr>
-                <tr>
-                    <td style="padding:8px 0;">13:15</td>
-                    <td style="padding:8px 0;">Nala (Felino)</td>
-                    <td style="padding:8px 0;">Jorge T.</td>
-                    <td style="padding:8px 0;">Dra. Rivas</td>
-                </tr>
-                <tr>
-                    <td style="padding:8px 0;">14:00</td>
-                    <td style="padding:8px 0;">Max (Canino)</td>
-                    <td style="padding:8px 0;">Claudia R.</td>
-                    <td style="padding:8px 0;">Dr. Vega</td>
-                </tr>
-                <tr>
-                    <td style="padding:8px 0;">14:45</td>
-                    <td style="padding:8px 0;">Loki (Felino)</td>
-                    <td style="padding:8px 0;">Diego H.</td>
-                    <td style="padding:8px 0;">Dra. Torres</td>
-                </tr>
-                <tr>
-                    <td style="padding:8px 0;">15:30</td>
-                    <td style="padding:8px 0;">Simba (Canino)</td>
-                    <td style="padding:8px 0;">Camila P.</td>
-                    <td style="padding:8px 0;">Dr. Soto</td>
-                </tr>
-                <tr>
-                    <td style="padding:8px 0;">16:15</td>
-                    <td style="padding:8px 0;">Maya (Felino)</td>
-                    <td style="padding:8px 0;">Juan C.</td>
-                    <td style="padding:8px 0;">Dra. Rivas</td>
-                </tr>
-                <tr>
-                    <td style="padding:8px 0;">17:00</td>
-                    <td style="padding:8px 0;">Firulais (Canino)</td>
-                    <td style="padding:8px 0;">Barbara S.</td>
-                    <td style="padding:8px 0;">Dr. Vega</td>
-                </tr>
-                <tr>
-                    <td style="padding:8px 0;">17:45</td>
-                    <td style="padding:8px 0;">Coco (Felino)</td>
-                    <td style="padding:8px 0;">Pablo G.</td>
-                    <td style="padding:8px 0;">Dra. Torres</td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-    <div class="card">
-        <h2>Horarios de emergencia (hoy)</h2>
-        <p style="color:var(--text-muted); margin:6px 0 10px;">Separados entre slots libres y liberados por cancelacion.</p>
-        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px,1fr)); gap:10px;">
-            <div>
-                <small style="color:var(--text-muted);">Disponibles (libres)</small>
-                <ul style="margin:6px 0 0; padding-left:16px; color:var(--text-muted); line-height:1.5;">
-                    <li>08:30 - 08:50</li>
-                    <li>18:00 - 18:20</li>
-                </ul>
-            </div>
-            <div>
-                <small style="color:var(--text-muted);">Liberados por cancelacion</small>
-                <ul style="margin:6px 0 0; padding-left:16px; color:var(--text-muted); line-height:1.5;">
-                    <li>12:40 - 13:00</li>
-                </ul>
-            </div>
+        <div class="table-responsive">
+            <table class="recep-table">
+                <thead>
+                    <tr>
+                        <th>Hora</th>
+                        <th>Paciente</th>
+                        <th>Cliente</th>
+                        <th>Veterinario</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in citas_hoy %}
+                    <tr>
+                        <td>{{ c.hora }}</td>
+                        <td>{{ c.mascota.nombre }}</td>
+                        <td>{{ c.cliente.perfil.user.get_full_name|default:c.cliente.perfil.user.username }}</td>
+                        <td>{{ c.veterinario.perfil.user.get_full_name|default:c.veterinario.perfil.user.username }}</td>
+                        <td>{{ c.get_estado_display }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="muted" style="text-align:center;">Sin citas hoy.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
-</div>
-
-<div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px,1fr)); gap:12px; margin-bottom:16px;">
-    <div class="card notice-card">
-        <h2>Avisos recientes</h2>
+    <div class="card">
+        <h2>Cancelaciones recientes</h2>
         <ul style="margin:8px 0 0; padding-left:16px; color:var(--text-muted); line-height:1.5;">
-            <li>Dr. Vega cancelo bloque de 14:00 - 15:00.</li>
-            <li>Usuario camila.p@ agendo 16:30 el 28/11.</li>
-            <li>Paciente Nala requiere replanificacion de control.</li>
-        </ul>
-    </div>
-    <div class="card alert-card">
-        <h2>Alertas</h2>
-        <ul style="margin:8px 0 0; padding-left:16px; color:var(--text-muted); line-height:1.5;">
-            <li>Paciente Kira llego con 10 min de adelanto.</li>
-            <li>Recordar pago pendiente de Milo.</li>
+            {% for c in alertas_canceladas %}
+            <li><strong>{{ c.fecha }} {{ c.hora }}</strong> - {{ c.mascota.nombre }} ({{ c.servicio.nombre|default:"Sin servicio" }})<br><small>{{ c.motivo_cancelacion }}</small></li>
+            {% empty %}
+            <li>No hay cancelaciones recientes.</li>
+            {% endfor %}
         </ul>
     </div>
 </div>
