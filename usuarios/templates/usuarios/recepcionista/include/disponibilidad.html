@@ -27,14 +27,14 @@
     <div class="modal-card small">
         <div class="modal-header">
             <div>
-                <div class="pill pill-soft">Bloques del día</div>
+                <div class="pill pill-soft">Bloques del d&iacute;a</div>
                 <h3 id="disp-modal-title" style="margin:6px 0 0;">--</h3>
                 <small class="muted" id="disp-modal-vet"></small>
             </div>
             <button class="btn btn-outline" type="button" id="disp-modal-close">&times;</button>
         </div>
         <div class="modal-body" id="disp-modal-body">
-            <div class="muted">Selecciona un día con bloques.</div>
+            <div class="muted">Selecciona un d&iacute;a con bloques.</div>
         </div>
     </div>
     <script>
@@ -57,6 +57,7 @@
     let bloques = [];
     let bloqueados = [];
     let citasMes = [];
+    const vetsMap = new Map();
 
     function toISO(d) {
         const year = d.getFullYear();
@@ -69,8 +70,10 @@
         fetch("{% url 'usuarios:recep_veterinarios_api' %}")
             .then(r => r.json())
             .then(data => {
+                vetsMap.clear();
                 vetSelect.innerHTML = `<option value=\"\">Todos</option>`;
                 (data.results || []).forEach(v => {
+                    vetsMap.set(v.id, v);
                     const opt = document.createElement("option");
                     opt.value = v.id;
                     opt.textContent = v.nombre;
@@ -154,13 +157,14 @@
         const title = document.getElementById("disp-modal-title");
         const vetLabel = document.getElementById("disp-modal-vet");
         const body = document.getElementById("disp-modal-body");
+        body.innerHTML = "";
         const selectedVetName = vetSelect.options[vetSelect.selectedIndex]?.text || "Todos";
         title.textContent = dateStr;
         vetLabel.textContent = `Veterinario: ${selectedVetName}`;
         const citasDia = (citasMes || []).filter(c => c.fecha === dateStr);
         const visibleBlocks = dayBlocks.filter(b => b.estado !== "no_disponible");
         if (!visibleBlocks.length) {
-            body.innerHTML = "<div class='muted'>No hay bloques para este día.</div>";
+            body.innerHTML = "<div class='muted'>No hay bloques para este d&iacute;a.</div>";
         } else {
             const blocWrap = document.createElement("div");
             blocWrap.className = "collapse";
@@ -175,6 +179,8 @@
                             <div>
                                 <div class="time">${b.inicio} - ${b.fin}</div>
                                 <div class="muted small">Estado: ${b.estado.replace("_"," ")}</div>
+                                <div class="muted small">Vet: ${vetsMap.get(b.veterinario_id)?.nombre || "-"}</div>
+                                <div class="muted small">Correo: ${vetsMap.get(b.veterinario_id)?.email || "-"}</div>
                             </div>
                         </div>
                     `).join("")}
@@ -199,7 +205,7 @@
                             <div class="availability-item">
                                 <div>
                                     <div class="time">${c.hora}</div>
-                                    <div class="muted small">${c.cliente} · ${c.mascota}</div>
+                                    <div class="muted small">${c.cliente} �� ${c.mascota}</div>
                                     <div class="muted small">Servicio: ${c.servicio}</div>
                                     <div class="muted small">Vet: ${c.veterinario || ''}</div>
                                 </div>
@@ -223,7 +229,7 @@
                             <div class="availability-item">
                                 <div>
                                     <div class="time">${c.hora}</div>
-                                    <div class="muted small">${c.cliente} · ${c.mascota}</div>
+                                    <div class="muted small">${c.cliente} �� ${c.mascota}</div>
                                     <div class="muted small">Servicio: ${c.servicio}</div>
                                     <div class="muted small">Vet: ${c.veterinario || ''}</div>
                                     ${c.motivo_cancelacion ? `<div class="muted small">Motivo: ${c.motivo_cancelacion}</div>` : ""}

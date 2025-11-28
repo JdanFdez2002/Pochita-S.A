@@ -18,7 +18,11 @@
             <a class="btn btn-primary" href="{% url 'usuarios:login_clientes' %}">Ingresar como cliente</a>
             <a class="btn btn-outline" href="{% url 'usuarios:login_personal' %}">Ingresar como personal</a>
         </div>
-        <div>ㅤ</div>
+        <div class="hero-icons" aria-hidden="true">
+            <span class="icon-chip"><i class="bi bi-shield-check"></i></span>
+            <span class="icon-chip alt"><i class="bi bi-heart-pulse"></i></span>
+            <span class="icon-chip"><i class="bi bi-wifi"></i></span>
+        </div>
         <div class="badges">
             <div class="badge">Agendas rapidas</div>
             <div class="badge">Urgencias 24/7</div>
@@ -125,3 +129,4 @@
     </div>
 </section>
 {% endblock %}
+

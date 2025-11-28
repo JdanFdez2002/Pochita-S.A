@@ -17,11 +17,12 @@
                     <th>Servicio</th>
                     <th>Veterinario</th>
                     <th>Estado</th>
-                    <th>Motivo cancelación</th>
+                    <th>Motivo cancelaci&oacute;n</th>
+                    <th>Cancelado por</th>
                 </tr>
             </thead>
             <tbody id="hist-body">
-                <tr><td colspan="7" class="muted">Selecciona un cliente.</td></tr>
+                <tr><td colspan="8" class="muted">Selecciona un cliente.</td></tr>
             </tbody>
         </table>
     </div>
@@ -58,7 +59,7 @@
             const citas = data.citas || [];
             body.innerHTML = "";
             if (!citas.length) {
-                body.innerHTML = `<tr><td colspan="7" class="muted">Sin citas.</td></tr>`;
+                body.innerHTML = `<tr><td colspan="8" class="muted">Sin citas.</td></tr>`;
                 return;
             }
             citas.forEach(c=>{
@@ -71,6 +72,7 @@
                     <td>${c.veterinario||""}</td>
                     <td>${c.estado}</td>
                     <td>${c.motivo_cancelacion||""}</td>
+                    <td>${c.cancelado_por||""}</td>
                 `;
                 body.appendChild(tr);
             });

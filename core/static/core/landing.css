@@ -274,6 +274,32 @@ p {
     box-shadow: 0 0 0 6px rgba(247, 201, 72, 0.16);
 }
 
+.hero-icons {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 10px 0 14px;
+}
+
+.icon-chip {
+    width: 42px;
+    height: 42px;
+    border-radius: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--stroke);
+    background: rgba(65, 211, 190, 0.12);
+    color: #2ed1b6;
+    box-shadow: 0 10px 25px rgba(46, 209, 182, 0.18);
+}
+
+.icon-chip.alt {
+    background: rgba(247, 201, 72, 0.12);
+    color: #f7c948;
+    box-shadow: 0 10px 25px rgba(247, 201, 72, 0.14);
+}
+
 .badges {
     display: flex;
     gap: 12px;

@@ -19,32 +19,21 @@
 
 <div style="display:grid; grid-template-columns: 2fr 1fr; gap:12px; margin-bottom:16px;">
     <div class="card">
-        <h2>Citas de hoy</h2>
+        <h2>Pr&oacute;ximas citas</h2>
         <div class="table-responsive">
             <table class="recep-table">
                 <thead>
                     <tr>
+                        <th>Fecha</th>
                         <th>Hora</th>
                         <th>Paciente</th>
-                        <th>Cliente</th>
+                        <th>Tutor</th>
                         <th>Veterinario</th>
                         <th>Estado</th>
                     </tr>
                 </thead>
-                <tbody>
-                    {% for c in citas_hoy %}
-                    <tr>
-                        <td>{{ c.hora }}</td>
-                        <td>{{ c.mascota.nombre }}</td>
-                        <td>{{ c.cliente.perfil.user.get_full_name|default:c.cliente.perfil.user.username }}</td>
-                        <td>{{ c.veterinario.perfil.user.get_full_name|default:c.veterinario.perfil.user.username }}</td>
-                        <td>{{ c.get_estado_display }}</td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="5" class="muted" style="text-align:center;">Sin citas hoy.</td>
-                    </tr>
-                    {% endfor %}
+                <tbody id="prox-citas-body">
+                    <tr><td colspan="6" class="muted" style="text-align:center;">Cargando...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -53,10 +42,51 @@
         <h2>Cancelaciones recientes</h2>
         <ul style="margin:8px 0 0; padding-left:16px; color:var(--text-muted); line-height:1.5;">
             {% for c in alertas_canceladas %}
-            <li><strong>{{ c.fecha }} {{ c.hora }}</strong> - {{ c.mascota.nombre }} ({{ c.servicio.nombre|default:"Sin servicio" }})<br><small>{{ c.motivo_cancelacion }}</small></li>
+            <li><strong>{{ c.fecha }} {{ c.hora }}</strong> - {{ c.mascota.nombre }} ({{ c.servicio.nombre|default:"Sin servicio" }})<br><small>{{ c.motivo_cancelacion }} {% if c.cancelado_por %} — Cancelado por: {{ c.cancelado_por }}{% endif %}</small></li>
             {% empty %}
             <li>No hay cancelaciones recientes.</li>
             {% endfor %}
         </ul>
     </div>
 </div>
+
+<script>
+// Refresca próximas citas al cargar y al volver a la pestaña
+document.addEventListener("DOMContentLoaded", () => {
+    const body = document.getElementById("prox-citas-body");
+    const apiUrl = "{% url 'usuarios:recep_citas_hoy_api' %}";
+
+    function renderRows(citas) {
+        if (!citas.length) {
+            body.innerHTML = `<tr><td colspan="6" class="muted" style="text-align:center;">Sin citas programadas.</td></tr>`;
+            return;
+        }
+        body.innerHTML = "";
+        citas.forEach(c => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+                <td>${c.fecha}</td>
+                <td>${c.hora}</td>
+                <td>${c.mascota}</td>
+                <td>${c.cliente}</td>
+                <td>${c.veterinario||""}</td>
+                <td>${c.estado}</td>
+            `;
+            body.appendChild(tr);
+        });
+    }
+
+    function loadProximas() {
+        fetch(apiUrl).then(r=>r.json()).then(data=>{
+            renderRows(data.citas || []);
+        }).catch(()=>{
+            body.innerHTML = `<tr><td colspan="6" class="muted" style="text-align:center;">No se pudieron cargar las citas.</td></tr>`;
+        });
+    }
+
+    loadProximas();
+    document.addEventListener("visibilitychange", () => {
+        if (!document.hidden) loadProximas();
+    });
+});
+</script>

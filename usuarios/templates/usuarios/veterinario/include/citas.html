@@ -103,6 +103,29 @@
     </div>
 </div>
 
+<!-- Modal motivo cancelacion -->
+<div class="modal-overlay" id="vet-cancel-modal">
+    <div class="modal-card small">
+        <div class="modal-header">
+            <div>
+                <div class="pill pill-soft">Cancelar cita</div>
+                <h3 style="margin:6px 0 0;">Ingresa el motivo</h3>
+            </div>
+            <button class="btn btn-outline" type="button" id="vet-cancel-close">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-field">
+                <label for="vet-cancel-motivo">Motivo de cancelacion</label>
+                <textarea id="vet-cancel-motivo" rows="3" placeholder="Ej: Emergencia en quirofano, reagendar"></textarea>
+            </div>
+            <div class="field-error" id="vet-cancel-error" style="display:none; margin-top:6px;"></div>
+            <div class="form-actions" style="justify-content:flex-end; margin-top:10px;">
+                <button class="btn btn-primary" type="button" id="vet-cancel-confirm">Confirmar cancelacion</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 document.addEventListener("DOMContentLoaded", () => {
     const api = window.vetApi || {};
@@ -122,6 +145,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const detalleServicio = document.getElementById("detalle-servicio");
     const detalleNotas = document.getElementById("detalle-notas");
     const alerta = document.getElementById("detalle-alerta");
+    const cancelModal = document.getElementById("vet-cancel-modal");
+    const cancelTextarea = document.getElementById("vet-cancel-motivo");
+    const cancelError = document.getElementById("vet-cancel-error");
+    const cancelConfirmBtn = document.getElementById("vet-cancel-confirm");
+    const cancelCloseBtn = document.getElementById("vet-cancel-close");
     const filtros = {
         estado: document.getElementById("f-estado"),
         fecha: document.getElementById("f-fecha"),
@@ -217,6 +245,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
         filtered.forEach(cita => {
             const row = document.createElement("tr");
+            const cerrada = ["atendida", "cancelada"].includes(cita.estado);
+            const actions = [`<button class="btn-mini" data-view="${cita.id}">Ver</button>`];
+            if (!cerrada) {
+                actions.push(`<button class="btn-mini" data-done="${cita.id}">Atendida</button>`);
+                actions.push(`<button class="btn-mini danger" data-cancel="${cita.id}">Cancelar</button>`);
+            }
             row.innerHTML = `
                 <td>${fmtFecha(cita.fecha, cita.hora)}</td>
                 <td>${cita.cliente}</td>
@@ -224,9 +258,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 <td>${cita.servicio}</td>
                 <td><span class="status-badge ${statusClass(cita.estado)}">${statusLabel(cita.estado)}</span></td>
                 <td class="table-actions">
-                    <button class="btn-mini" data-view="${cita.id}">Ver</button>
-                    <button class="btn-mini" data-done="${cita.id}">Atendida</button>
-                    <button class="btn-mini danger" data-cancel="${cita.id}">Cancelar</button>
+                    ${actions.join("")}
                 </td>
             `;
             if (state.seleccionada === cita.id) {
@@ -271,14 +303,37 @@ document.addEventListener("DOMContentLoaded", () => {
         detalleServicio.textContent = cita.servicio;
         detalleNotas.textContent = cita.notas || "Sin notas";
         alerta.style.display = cita.estado === "cancelada" ? "block" : "none";
+        toggleActionButtons(cita.estado);
     }
 
     async function markAttended(id) {
+        if (!confirmLock()) return;
         await updateEstado(id, "atendida");
     }
 
     async function cancelCita(id) {
-        await updateEstado(id, "cancelada");
+        if (!confirmLock()) return;
+        if (!cancelModal) {
+            await updateEstado(id, "cancelada");
+            return;
+        }
+        cancelTextarea.value = "";
+        cancelError.style.display = "none";
+        cancelModal.dataset.citaId = id;
+        cancelModal.classList.add("is-open");
+        cancelTextarea.focus();
+    }
+
+    function confirmLock() {
+        return window.confirm("¿Estas seguro? Una vez hecho no se podrá revertir");
+    }
+
+    function toggleActionButtons(estado) {
+        const disabled = ["cancelada", "atendida"].includes(estado);
+        document.querySelectorAll("[data-cita-action='mark-attended']").forEach(btn => btn.disabled = disabled);
+        document.querySelectorAll("[data-cita-action='cancel']").forEach(btn => btn.disabled = disabled);
+        document.querySelectorAll("[data-done]").forEach(btn => btn.disabled = disabled);
+        document.querySelectorAll("[data-cancel]").forEach(btn => btn.disabled = disabled);
     }
 
     function selectCita(id) {
@@ -287,7 +342,7 @@ document.addEventListener("DOMContentLoaded", () => {
         renderDetail();
     }
 
-    async function updateEstado(id, estado) {
+    async function updateEstado(id, estado, motivo="") {
         const url = api.citaEstado && api.citaEstado.replace("__id__", id);
         if (!url) {
             return;
@@ -296,10 +351,11 @@ document.addEventListener("DOMContentLoaded", () => {
             const resp = await fetch(url, {
                 method: "POST",
                 headers: buildHeaders(true),
-                body: JSON.stringify({ estado }),
+                body: JSON.stringify({ estado, motivo_cancelacion: motivo }),
             });
             const body = await resp.text();
             if (!resp.ok) {
+                alert(body || "No se pudo actualizar la cita.");
                 return;
             }
             const data = body ? JSON.parse(body) : {};
@@ -355,6 +411,32 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         });
     });
+
+    if (cancelConfirmBtn) {
+        cancelConfirmBtn.addEventListener("click", async () => {
+            const motivo = (cancelTextarea.value || "").trim();
+            if (!motivo) {
+                cancelError.textContent = "Debes ingresar un motivo para cancelar.";
+                cancelError.style.display = "block";
+                return;
+            }
+            cancelError.style.display = "none";
+            const id = Number(cancelModal.dataset.citaId || 0);
+            if (!id) return;
+            await updateEstado(id, "cancelada", motivo);
+            cancelModal.classList.remove("is-open");
+        });
+    }
+    if (cancelCloseBtn) {
+        cancelCloseBtn.addEventListener("click", () => {
+            cancelModal.classList.remove("is-open");
+        });
+    }
+    if (cancelModal) {
+        cancelModal.addEventListener("click", (e) => {
+            if (e.target === cancelModal) cancelModal.classList.remove("is-open");
+        });
+    }
 
     state.seleccionada = state.citas.length ? state.citas[0].id : null;
     updateTotals();
