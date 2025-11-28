@@ -89,14 +89,50 @@
                 <div>
                     <div class="pill">Cliente</div>
                     <h3 style="margin:6px 0 0;">{{ user.get_full_name|default:user.username }}</h3>
-                    <p style="color:var(--text-muted); margin:4px 0 0;">
-                        Rut: {{ cliente.rut }} · {{ user.email }} · {{ cliente.telefono|default:"-" }} · {{ cliente.direccion|default:"-" }}
-                    </p>
                 </div>
                 <button class="btn btn-outline js-close-modal" type="button">&times;</button>
             </div>
 
             <div class="modal-body">
+                <div class="card" style="padding:14px;">
+                    <form method="post" class="cliente-edit-form" data-stay-section="sec-usuarios">
+                        {% csrf_token %}
+                        <input type="hidden" name="form_type" value="editar_cliente">
+                        <input type="hidden" name="cliente_id" value="{{ cliente.id }}">
+                        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap:12px;">
+                            <div class="form-field">
+                                <label>Nombre</label>
+                                <input type="text" name="first_name" value="{{ user.first_name }}" data-original="{{ user.first_name }}">
+                            </div>
+                            <div class="form-field">
+                                <label>Apellido</label>
+                                <input type="text" name="last_name" value="{{ user.last_name }}" data-original="{{ user.last_name }}">
+                            </div>
+                            <div class="form-field">
+                                <label>Correo</label>
+                                <input type="email" name="email" value="{{ user.email }}" data-original="{{ user.email }}">
+                            </div>
+                            <div class="form-field">
+                                <label>Rut</label>
+                                <input type="text" name="rut" value="{{ cliente.rut }}" data-original="{{ cliente.rut }}" disabled>
+                            </div>
+                            <div class="form-field">
+                                <label>Teléfono</label>
+                                <input type="text" name="telefono" value="{{ cliente.telefono }}" data-original="{{ cliente.telefono }}">
+                            </div>
+                            <div class="form-field">
+                                <label>Dirección</label>
+                                <input type="text" name="direccion" value="{{ cliente.direccion }}" data-original="{{ cliente.direccion }}">
+                            </div>
+                        </div>
+                        <div class="form-actions" style="justify-content:flex-end; gap:8px; margin-top:10px;">
+                            <button type="button" class="btn-small btn-ghost" data-action="edit">Editar</button>
+                            <button type="button" class="btn-small btn-ghost" data-action="cancel" disabled style="opacity:0.8;">Cancelar</button>
+                            <button type="submit" class="btn-small btn-primary" data-action="submit" disabled>Aceptar</button>
+                        </div>
+                    </form>
+                </div>
+
                 <div class="card" style="padding:14px;">
                     <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
                         <h4 style="margin:0;">Mascotas</h4>
@@ -167,6 +203,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const modals = document.querySelectorAll('.modal-overlay');
     const searchForm = document.querySelector('form[data-stay-section]');
     const photoButtons = document.querySelectorAll('.js-open-photo');
+    const editForms = document.querySelectorAll('.cliente-edit-form');
 
     function openModal(targetId) {
         const modal = document.getElementById(targetId);
@@ -212,5 +249,49 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         });
     }
+
+    editForms.forEach(form => {
+        const fields = form.querySelectorAll('input');
+        const editBtn = form.querySelector('[data-action="edit"]');
+        const cancelBtn = form.querySelector('[data-action="cancel"]');
+        const submitBtn = form.querySelector('[data-action="submit"]');
+
+        function setEditable(enabled) {
+            fields.forEach(f => {
+                if (f.name !== 'rut' && f.type !== 'hidden') {
+                    f.disabled = !enabled;
+                }
+            });
+            if (cancelBtn) cancelBtn.disabled = !enabled;
+            if (submitBtn) submitBtn.disabled = !enabled;
+            if (editBtn) editBtn.disabled = enabled;
+        }
+
+        function resetValues() {
+            fields.forEach(f => {
+                if (f.dataset.original !== undefined) {
+                    f.value = f.dataset.original;
+                }
+            });
+        }
+
+        setEditable(false);
+
+        if (editBtn) {
+            editBtn.addEventListener('click', () => setEditable(true));
+        }
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', () => {
+                resetValues();
+                setEditable(false);
+            });
+        }
+        form.addEventListener('submit', () => {
+            const hash = '#sec-usuarios';
+            if (!form.action.includes('#')) {
+                form.action = (form.action || '') + hash;
+            }
+        });
+    });
 });
 </script>

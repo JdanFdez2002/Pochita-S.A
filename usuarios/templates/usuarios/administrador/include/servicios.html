@@ -1,0 +1,402 @@
+﻿{% load l10n %}
+<div class="card servicios-admin-card">
+    <h2 style="margin-top:0;">Gestionar Servicios</h2>
+    <p style="color:var(--text-muted); margin:4px 0 14px;">Crear secciones y servicios. Los cambios se reflejan en recepcion.</p>
+
+    <div class="servicios-admin-grid">
+        <div class="servicios-admin-box">
+            <h3 class="servicios-admin-title">Nueva seccion</h3>
+            <form method="post" class="servicios-admin-form">
+                {% csrf_token %}
+                <input type="hidden" name="form_type" value="create_section">
+                <div class="form-grid">
+                    <div class="form-field">
+                        <label for="{{ servicio_seccion_form.nombre.id_for_label }}">Nombre</label>
+                        {{ servicio_seccion_form.nombre }}
+                    </div>
+                    <div class="form-field" style="grid-column: 1 / -1;">
+                        <label for="{{ servicio_seccion_form.descripcion.id_for_label }}">Descripcion</label>
+                        {{ servicio_seccion_form.descripcion }}
+                    </div>
+                    <div class="form-field">
+                        <label for="{{ servicio_seccion_form.orden.id_for_label }}">Orden</label>
+                        {{ servicio_seccion_form.orden }}
+                    </div>
+                    <label class="checkbox-inline">
+                        <input type="checkbox" name="activo" {% if servicio_seccion_form.instance.activo or not servicio_seccion_form.instance.pk %}checked{% endif %}> Activa
+                    </label>
+                </div>
+                <div class="form-actions" style="justify-content:flex-end; margin-top:10px;">
+                    <button class="btn-small btn-primary" type="submit">Crear seccion</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="servicios-admin-box">
+            <h3 class="servicios-admin-title">Nuevo servicio</h3>
+            <form method="post" class="servicios-admin-form">
+                {% csrf_token %}
+                <input type="hidden" name="form_type" value="create_service">
+                <div class="form-grid">
+                    <div class="form-field">
+                        <label for="{{ servicio_form.nombre.id_for_label }}">Nombre</label>
+                        {{ servicio_form.nombre }}
+                    </div>
+                    <div class="form-field">
+                        <label for="{{ servicio_form.seccion.id_for_label }}">Seccion</label>
+                        {{ servicio_form.seccion }}
+                    </div>
+                    <div class="form-field">
+                        <label for="{{ servicio_form.precio_referencial.id_for_label }}">Precio referencial</label>
+                        {{ servicio_form.precio_referencial }}
+                    </div>
+                    <div class="form-field">
+                        <label for="{{ servicio_form.unidad_precio.id_for_label }}">Unidad</label>
+                        {{ servicio_form.unidad_precio }}
+                    </div>
+                    <div class="form-field">
+                        <label for="{{ servicio_form.duracion_minutos.id_for_label }}">Duracion (min)</label>
+                        {{ servicio_form.duracion_minutos }}
+                    </div>
+                </div>
+                <div class="form-field" style="grid-column: 1 / -1;">
+                    <label for="{{ servicio_form.descripcion.id_for_label }}">Descripcion</label>
+                    {{ servicio_form.descripcion }}
+                </div>
+                <div class="form-field">
+                    <label for="{{ servicio_form.etiquetas.id_for_label }}">Etiquetas (coma)</label>
+                    {{ servicio_form.etiquetas }}
+                </div>
+                <label class="checkbox-inline"><input type="checkbox" name="destacado"> Destacado</label>
+                <label class="checkbox-inline"><input type="checkbox" name="activo" checked> Activo</label>
+                <div class="form-actions" style="justify-content:flex-end; margin-top:10px;">
+                    <button class="btn-small btn-primary" type="submit">Crear servicio</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="servicios-admin-box" style="margin-bottom:16px;">
+        <button type="button" class="btn btn-outline" id="toggle-sin-seccion" style="width:100%;">Servicios sin seccion</button>
+        <div id="panel-sin-seccion" style="display:none; margin-top:10px;">
+            {% if servicios_sin_seccion %}
+                <div class="table-responsive">
+                    <table class="recep-table compact">
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Precio</th>
+                                <th>Unidad</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for servicio in servicios_sin_seccion %}
+                            <tr>
+                                <td>{{ servicio.nombre }}</td>
+                                <td>{{ servicio.precio_referencial|default:"-" }}</td>
+                                <td>{{ servicio.unidad_precio|default:"-" }}</td>
+                                <td>
+                                    <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                                        <form method="post" style="display:flex; gap:6px; align-items:center;">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="form_type" value="reassign_service">
+                                            <input type="hidden" name="service_id" value="{{ servicio.id }}">
+                                            <select name="seccion_id">
+                                                <option value="">Sin seccion</option>
+                                                {% for sec in servicio_secciones %}
+                                                    <option value="{{ sec.id }}">{{ sec.nombre }}</option>
+                                                {% endfor %}
+                                            </select>
+                                            <button type="submit" class="btn-small btn-primary-lite">Asignar</button>
+                                        </form>
+                                        <button type="button" class="btn-small btn-ghost js-open-modal" data-target="modal-delete-servicio-{{ servicio.id }}">Eliminar</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p style="color:var(--text-muted); margin:8px 0 0;">No hay servicios sin seccion.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="servicios-section">
+        {% for seccion in servicio_secciones %}
+            <div class="card" style="margin-bottom:12px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
+                    <h3 style="margin:0;">{{ seccion.nombre }}</h3>
+                    <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                        <button type="button" class="btn-small btn-primary-lite js-open-modal" data-target="modal-edit-seccion-{{ seccion.id }}">Editar</button>
+                        <button type="button" class="btn-small btn-ghost js-open-modal" data-target="modal-delete-seccion-{{ seccion.id }}">Eliminar seccion</button>
+                    </div>
+                </div>
+                <p style="color:var(--text-muted); margin:4px 0 10px;">{{ seccion.descripcion }}</p>
+                <div class="table-responsive">
+                    <table class="recep-table compact">
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Precio</th>
+                                <th>Unidad</th>
+                                <th>Tags</th>
+                                <th>Estado</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for servicio in seccion.servicios.all %}
+                            <tr>
+                                <td>{{ servicio.nombre }}</td>
+                                <td>
+                                    {% if servicio.precio_referencial %}
+                                        {{ servicio.precio_referencial }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td>{{ servicio.unidad_precio|default:"-" }}</td>
+                                <td>{{ servicio.etiquetas|default:"-" }}</td>
+                                <td>{{ servicio.activo|yesno:"Activo,Inactivo" }}</td>
+                                <td>
+                                    <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                                        <button type="button" class="btn-small btn-primary-lite js-open-modal" data-target="modal-servicio-{{ servicio.id }}">Editar</button>
+                                        <button type="button" class="btn-small btn-ghost js-open-modal" data-target="modal-delete-servicio-{{ servicio.id }}">Eliminar</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" style="color:var(--text-muted); text-align:center;">Sin servicios en esta seccion.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        {% empty %}
+            <p style="color:var(--text-muted); margin:0;">Aun no hay secciones creadas.</p>
+        {% endfor %}
+    </div>
+</div>
+
+{% for seccion in servicio_secciones %}
+    {% for servicio in seccion.servicios.all %}
+    <div class="modal-overlay service-modal" id="modal-servicio-{{ servicio.id }}">
+        <div class="modal-card small">
+            <div class="modal-header">
+                <div>
+                    <div class="pill">Servicio</div>
+                    <h3 style="margin:6px 0 0;">Editar {{ servicio.nombre }}</h3>
+                </div>
+                <button class="btn btn-outline js-close-modal" type="button">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form method="post" class="servicios-admin-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="form_type" value="update_service">
+                    <input type="hidden" name="service_id" value="{{ servicio.id }}">
+                    <div class="form-grid">
+                        <div class="form-field">
+                            <label>Nombre</label>
+                            <input type="text" name="nombre" value="{{ servicio.nombre }}" required>
+                        </div>
+                        <div class="form-field">
+                            <label>Seccion</label>
+                            <select name="seccion">
+                                <option value="" {% if not servicio.seccion %}selected{% endif %}>Sin seccion</option>
+                                {% for sec in servicio_secciones %}
+                                    <option value="{{ sec.id }}" {% if servicio.seccion and servicio.seccion.id == sec.id %}selected{% endif %}>{{ sec.nombre }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                          <div class="form-field">
+                              <label>Precio referencial</label>
+                              <input type="number" step="0.01" name="precio_referencial" value="{{ servicio.precio_referencial|default_if_none:''|unlocalize }}">
+                          </div>
+                        <div class="form-field">
+                            <label>Unidad</label>
+                            <input type="text" name="unidad_precio" value="{{ servicio.unidad_precio }}">
+                        </div>
+                          <div class="form-field">
+                              <label>Duracion (min)</label>
+                              <input type="number" name="duracion_minutos" value="{{ servicio.duracion_minutos|default_if_none:''|unlocalize }}" placeholder="-">
+                          </div>
+                    </div>
+                    <div class="form-field" style="grid-column:1 / -1;">
+                        <label>Descripcion</label>
+                        <textarea name="descripcion" rows="4">{{ servicio.descripcion }}</textarea>
+                    </div>
+                    <div class="form-field">
+                        <label>Etiquetas (coma)</label>
+                        <input type="text" name="etiquetas" value="{{ servicio.etiquetas }}">
+                    </div>
+                    <label class="checkbox-inline"><input type="checkbox" name="destacado" {% if servicio.destacado %}checked{% endif %}> Destacado</label>
+                    <label class="checkbox-inline"><input type="checkbox" name="activo" {% if servicio.activo %}checked{% endif %}> Activo</label>
+                    <div class="form-actions" style="justify-content:flex-end; margin-top:12px;">
+                        <button type="button" class="btn-small btn-ghost js-close-modal">Cancelar</button>
+                        <button type="submit" class="btn-small btn-primary">Guardar cambios</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="modal-overlay service-modal" id="modal-delete-servicio-{{ servicio.id }}">
+        <div class="modal-card small">
+            <div class="modal-header">
+                <div>
+                    <div class="pill">Eliminar</div>
+                    <h3 style="margin:6px 0 0;">Eliminar {{ servicio.nombre }}</h3>
+                </div>
+                <button class="btn btn-outline js-close-modal" type="button">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="color:var(--text-muted);">¿Deseas eliminar este servicio? Esta acción no elimina la sección.</p>
+                <form method="post" style="display:flex; justify-content:flex-end; gap:8px;">
+                    {% csrf_token %}
+                    <input type="hidden" name="form_type" value="delete_service">
+                    <input type="hidden" name="service_id" value="{{ servicio.id }}">
+                    <button type="button" class="btn-small btn-ghost js-close-modal">Cancelar</button>
+                    <button type="submit" class="btn-small btn-danger">Eliminar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+{% endfor %}
+
+{% for servicio in servicios_sin_seccion %}
+<div class="modal-overlay service-modal" id="modal-delete-servicio-{{ servicio.id }}">
+    <div class="modal-card small">
+        <div class="modal-header">
+            <div>
+                <div class="pill">Eliminar</div>
+                <h3 style="margin:6px 0 0;">Eliminar {{ servicio.nombre }}</h3>
+            </div>
+            <button class="btn btn-outline js-close-modal" type="button">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p style="color:var(--text-muted);">¿Deseas eliminar este servicio?</p>
+            <form method="post" style="display:flex; justify-content:flex-end; gap:8px;">
+                {% csrf_token %}
+                <input type="hidden" name="form_type" value="delete_service">
+                <input type="hidden" name="service_id" value="{{ servicio.id }}">
+                <button type="button" class="btn-small btn-ghost js-close-modal">Cancelar</button>
+                <button type="submit" class="btn-small btn-danger">Eliminar</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+{% for seccion in servicio_secciones %}
+<div class="modal-overlay service-modal" id="modal-edit-seccion-{{ seccion.id }}">
+    <div class="modal-card small">
+        <div class="modal-header">
+            <div>
+                <div class="pill">Seccion</div>
+                <h3 style="margin:6px 0 0;">Editar {{ seccion.nombre }}</h3>
+            </div>
+            <button class="btn btn-outline js-close-modal" type="button">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form method="post" class="servicios-admin-form">
+                {% csrf_token %}
+                <input type="hidden" name="form_type" value="update_section">
+                <input type="hidden" name="section_id" value="{{ seccion.id }}">
+                <div class="form-grid">
+                    <div class="form-field">
+                        <label>Nombre</label>
+                        <input type="text" name="nombre" value="{{ seccion.nombre }}" required>
+                    </div>
+                    <div class="form-field" style="grid-column:1 / -1;">
+                        <label>Descripcion</label>
+                        <textarea name="descripcion" rows="3">{{ seccion.descripcion }}</textarea>
+                    </div>
+                    <div class="form-field">
+                        <label>Orden</label>
+                        <input type="number" name="orden" value="{{ seccion.orden|default_if_none:'' }}">
+                    </div>
+                    <label class="checkbox-inline" style="grid-column:1 / -1;">
+                        <input type="checkbox" name="activo" {% if seccion.activo %}checked{% endif %}> Activa
+                    </label>
+                </div>
+                <div class="form-actions" style="justify-content:flex-end; margin-top:12px;">
+                    <button type="button" class="btn-small btn-ghost js-close-modal">Cancelar</button>
+                    <button type="submit" class="btn-small btn-primary">Guardar cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay service-modal" id="modal-delete-seccion-{{ seccion.id }}">
+    <div class="modal-card small">
+        <div class="modal-header">
+            <div>
+                <div class="pill">Eliminar</div>
+                <h3 style="margin:6px 0 0;">Eliminar {{ seccion.nombre }}</h3>
+            </div>
+            <button class="btn btn-outline js-close-modal" type="button">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p style="color:var(--text-muted);">¿Deseas eliminar esta seccion? Los servicios permaneceran, solo perderan la referencia de seccion.</p>
+            <form method="post" style="display:flex; justify-content:flex-end; gap:8px;">
+                {% csrf_token %}
+                <input type="hidden" name="form_type" value="delete_section">
+                <input type="hidden" name="section_id" value="{{ seccion.id }}">
+                <button type="button" class="btn-small btn-ghost js-close-modal">Cancelar</button>
+                <button type="submit" class="btn-small btn-danger">Eliminar</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endfor %}
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const serviceButtons = document.querySelectorAll('.js-open-modal');
+    const modals = document.querySelectorAll('.service-modal');
+    const toggleSinSeccion = document.getElementById('toggle-sin-seccion');
+    const panelSinSeccion = document.getElementById('panel-sin-seccion');
+
+    function openModal(id) {
+        const modal = document.getElementById(id);
+        if (modal) modal.classList.add('is-open');
+    }
+    function closeModal(modal) {
+        modal.classList.remove('is-open');
+    }
+
+    serviceButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const target = btn.dataset.target;
+            if (target) openModal(target);
+        });
+    });
+
+    modals.forEach(modal => {
+        const closeBtns = modal.querySelectorAll('.js-close-modal');
+        closeBtns.forEach(btn => btn.addEventListener('click', () => closeModal(modal)));
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeModal(modal);
+        });
+    });
+
+    if (toggleSinSeccion && panelSinSeccion) {
+        toggleSinSeccion.addEventListener('click', () => {
+            const isOpen = panelSinSeccion.style.display === 'block';
+            panelSinSeccion.style.display = isOpen ? 'none' : 'block';
+        });
+    }
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            modals.forEach(modal => closeModal(modal));
+        }
+    });
+});
+</script>
+

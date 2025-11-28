@@ -13,13 +13,24 @@ from .forms import (
     ClienteAuthenticationForm,
     ClientePerfilForm,
     AdministradorPerfilForm,
+    ServicioForm,
+    ServicioSeccionForm,
     MascotaForm,
     PersonalAuthenticationForm,
     RegistroClienteForm,
     RecepcionistaPerfilForm,
     VeterinarioPerfilForm,
 )
-from .models import Administrador, Cliente, Mascota, Perfil, Recepcionista, Veterinario
+from .models import (
+    Administrador,
+    Cliente,
+    Mascota,
+    Perfil,
+    Recepcionista,
+    Servicio,
+    ServicioSeccion,
+    Veterinario,
+)
 
 
 
@@ -155,6 +166,16 @@ class DashboardClienteView(PerfilDashboardMixin):
             Mascota.objects.filter(cliente=cliente).order_by("nombre"),
         )
         context.setdefault("mascota_form", MascotaForm())
+        context["servicio_secciones"] = (
+            ServicioSeccion.objects.filter(activo=True)
+            .prefetch_related("servicios")
+            .order_by("orden", "nombre")
+        )
+        context["servicios"] = (
+            Servicio.objects.filter(activo=True, seccion__activo=True)
+            .select_related("seccion")
+            .order_by("seccion__orden", "nombre")
+        )
         return context
 
     def post(self, request, *args, **kwargs):
@@ -215,7 +236,34 @@ class DashboardRecepcionistaView(PerfilDashboardMixin):
         page_obj = paginator.get_page(page_number)
         context["clientes_page"] = page_obj
         context["query"] = query
+        context["servicio_secciones"] = (
+            ServicioSeccion.objects.filter(activo=True)
+            .prefetch_related("servicios")
+            .order_by("orden", "nombre")
+        )
         return context
+
+    def post(self, request, *args, **kwargs):
+        if request.POST.get("form_type") == "editar_cliente":
+            cliente_id = request.POST.get("cliente_id")
+            try:
+                cliente = Cliente.objects.select_related("perfil__user").get(id=cliente_id)
+            except Cliente.DoesNotExist:
+                return redirect(reverse("usuarios:dashboard_recepcionista") + "#sec-usuarios")
+            user = cliente.perfil.user
+            # Actualizar datos permitidos (rut no editable)
+            user.first_name = request.POST.get("first_name", user.first_name)
+            user.last_name = request.POST.get("last_name", user.last_name)
+            email = request.POST.get("email", user.email)
+            if email:
+                user.email = email
+                user.username = email
+            cliente.telefono = request.POST.get("telefono", cliente.telefono)
+            cliente.direccion = request.POST.get("direccion", cliente.direccion)
+            user.save(update_fields=["first_name", "last_name", "email", "username"])
+            cliente.save(update_fields=["telefono", "direccion"])
+            return redirect(reverse("usuarios:dashboard_recepcionista") + "#sec-usuarios")
+        return super().post(request, *args, **kwargs)
 
 
 class DashboardVeterinarioView(PerfilDashboardMixin):
@@ -247,6 +295,85 @@ class DashboardAdministradorView(PerfilDashboardMixin):
         base = super().get_initial(instance)
         base["empresa_representante"] = instance.empresa_representante or ""
         return base
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["servicio_seccion_form"] = kwargs.get(
+            "servicio_seccion_form", ServicioSeccionForm()
+        )
+        context["servicio_form"] = kwargs.get("servicio_form", ServicioForm())
+        context["servicio_secciones"] = (
+            ServicioSeccion.objects.all()
+            .prefetch_related("servicios")
+            .order_by("orden", "nombre")
+        )
+        context["servicios"] = Servicio.objects.select_related("seccion").all()
+        context["servicios_sin_seccion"] = (
+            Servicio.objects.filter(seccion__isnull=True)
+            .select_related("seccion")
+            .order_by("nombre")
+        )
+        return context
+
+    def post(self, request, *args, **kwargs):
+        form_type = request.POST.get("form_type")
+        redirect_url = reverse("usuarios:dashboard_administrador") + "#sec-servicios"
+
+        if form_type == "create_section":
+            form = ServicioSeccionForm(request.POST)
+            if form.is_valid():
+                form.save()
+                return redirect(redirect_url)
+            return self.render_to_response(
+                self.get_context_data(servicio_seccion_form=form, servicio_form=ServicioForm())
+            )
+
+        if form_type == "delete_section":
+            section_id = request.POST.get("section_id")
+            ServicioSeccion.objects.filter(id=section_id).delete()
+            return redirect(redirect_url)
+
+        if form_type == "update_section":
+            section_id = request.POST.get("section_id")
+            instance = ServicioSeccion.objects.filter(id=section_id).first()
+            if instance:
+                form = ServicioSeccionForm(request.POST, instance=instance)
+                if form.is_valid():
+                    form.save()
+                    return redirect(redirect_url)
+            return self.render_to_response(self.get_context_data())
+
+        if form_type == "reassign_service":
+            service_id = request.POST.get("service_id")
+            section_id = request.POST.get("seccion_id")
+            servicio = Servicio.objects.filter(id=service_id).first()
+            if servicio:
+                seccion = (
+                    ServicioSeccion.objects.filter(id=section_id).first()
+                    if section_id
+                    else None
+                )
+                servicio.seccion = seccion
+                servicio.save(update_fields=["seccion"])
+            return redirect(redirect_url)
+
+        if form_type == "create_service" or form_type == "update_service":
+            service_id = request.POST.get("service_id")
+            instance = Servicio.objects.filter(id=service_id).first() if service_id else None
+            form = ServicioForm(request.POST, instance=instance)
+            if form.is_valid():
+                form.save()
+                return redirect(redirect_url)
+            return self.render_to_response(
+                self.get_context_data(servicio_form=form, servicio_seccion_form=ServicioSeccionForm())
+            )
+
+        if form_type == "delete_service":
+            service_id = request.POST.get("service_id")
+            Servicio.objects.filter(id=service_id).delete()
+            return redirect(redirect_url)
+
+        return super().post(request, *args, **kwargs)
 
 
 def registro_clientes_view(request):

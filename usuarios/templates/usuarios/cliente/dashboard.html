@@ -7,6 +7,7 @@
     <a href="#" class="menu-link" data-target="sec-inicio">Inicio</a>
     <a href="#" class="menu-link" data-target="sec-mascotas">Mis Mascotas</a>
     <a href="#" class="menu-link" data-target="sec-citas">Citas Medicas</a>
+    <a href="#" class="menu-link" data-target="sec-servicios">Servicios</a>
     <a href="#" class="menu-link is-active" data-target="sec-datos">Mis datos</a>
     <a href="{% url 'usuarios:logout' %}" class="menu-link logout">Cerrar sesion</a>
 {% endblock %}
@@ -22,6 +23,10 @@
 
     <section id="sec-citas" class="dashboard-section">
         {% include "usuarios/cliente/include/citas.html" %}
+    </section>
+
+    <section id="sec-servicios" class="dashboard-section">
+        {% include "usuarios/cliente/include/servicios.html" %}
     </section>
 
     <section id="sec-datos" class="dashboard-section is-active">

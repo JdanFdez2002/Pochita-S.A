@@ -789,6 +789,39 @@ body, html {
     gap: 8px;
 }
 
+/* Servicios admin forms */
+.servicios-admin-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 14px;
+    margin-bottom: 16px;
+}
+.servicios-admin-box {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: rgba(255,255,255,0.02);
+    padding: 14px;
+}
+.servicios-admin-title {
+    margin: 0 0 8px;
+    color: var(--primary);
+}
+.servicios-admin-form .form-field label {
+    color: var(--text-muted);
+    font-weight: 600;
+}
+.servicios-admin-form .form-field input,
+.servicios-admin-form .form-field textarea,
+.servicios-admin-form .form-field select {
+    width: 100%;
+}
+.checkbox-inline {
+    color: var(--text-muted);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .sidebar { display: none; }

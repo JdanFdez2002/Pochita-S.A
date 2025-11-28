@@ -104,6 +104,11 @@ class Administrador(PersonalBase):
 
 
 class Mascota(models.Model):
+    class EstadoReproductivo(models.TextChoices):
+        SIN_CASTRAR = "sin_castrar", "Sin castrar"
+        ESTERILIZADO = "esterilizado", "Esterilizado"
+        DESCONOCIDO = "desconocido", "Desconocido"
+
     class Tipo(models.TextChoices):
         PERRO = "perro", "Perro"
         GATO = "gato", "Gato"
@@ -128,14 +133,34 @@ class Mascota(models.Model):
     tipo = models.CharField(max_length=20, choices=Tipo.choices)
     sexo = models.CharField(max_length=20, choices=Sexo.choices, default=Sexo.DESCONOCIDO)
     edad_aproximada = models.PositiveIntegerField(blank=True, null=True)
+    fecha_nacimiento = models.DateField(blank=True, null=True)
     senas_particulares = models.TextField(blank=True)
     raza = models.CharField(max_length=120, blank=True)
     foto = models.ImageField(upload_to="mascotas/", blank=True, null=True)
-    tiene_ficha_clinica = models.BooleanField(default=False)
+    estado_reproductivo = models.CharField(
+        max_length=20,
+        choices=EstadoReproductivo.choices,
+        default=EstadoReproductivo.DESCONOCIDO,
+    )
+    microchip = models.CharField(max_length=50, blank=True)
     creado_en = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"{self.nombre} ({self.tipo})"
+
+    @property
+    def tiene_ficha_clinica(self):
+        """
+        Determina si existe una ficha clínica asociada. Evita dependencias
+        circulares usando apps.get_model; si no existe el modelo retorna False.
+        """
+        from django.apps import apps
+
+        try:
+            FichaClinica = apps.get_model("veterinarios", "FichaClinica")
+        except LookupError:
+            return False
+        return FichaClinica.objects.filter(mascota=self).exists()
 
     def delete(self, *args, **kwargs):
         # Elimina la foto asociada del almacenamiento al borrar la mascota
@@ -146,6 +171,52 @@ class Mascota(models.Model):
     class Meta:
         verbose_name = "Mascota"
         verbose_name_plural = "Mascotas"
+
+
+class ServicioSeccion(models.Model):
+    nombre = models.CharField(max_length=255)
+    descripcion = models.TextField(blank=True)
+    orden = models.PositiveIntegerField(default=0)
+    activo = models.BooleanField(default=True)
+    creado_en = models.DateTimeField(auto_now_add=True)
+    actualizado_en = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Seccion de Servicio"
+        verbose_name_plural = "Secciones de Servicios"
+        ordering = ["orden", "nombre"]
+
+    def __str__(self):
+        return self.nombre
+
+
+class Servicio(models.Model):
+    nombre = models.CharField(max_length=255)
+    descripcion = models.TextField(blank=True)
+    seccion = models.ForeignKey(
+        ServicioSeccion, on_delete=models.SET_NULL, null=True, blank=True, related_name="servicios"
+    )
+    precio_referencial = models.DecimalField(
+        max_digits=10, decimal_places=2, blank=True, null=True
+    )
+    unidad_precio = models.CharField(
+        max_length=50, blank=True, help_text="Ej: por visita, por dosis, por día"
+    )
+    duracion_minutos = models.PositiveIntegerField(blank=True, null=True)
+    destacado = models.BooleanField(default=False)
+    etiquetas = models.CharField(
+        max_length=255, blank=True, help_text="Separar con comas (ej: incluye certificado, 24/7)"
+    )
+    activo = models.BooleanField(default=True)
+    creado_en = models.DateTimeField(auto_now_add=True)
+    actualizado_en = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.nombre
+
+    class Meta:
+        verbose_name = "Servicio"
+        verbose_name_plural = "Servicios"
 
 
 @receiver(post_save, sender=User)
